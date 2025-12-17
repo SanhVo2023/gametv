@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lật Hình Giáng Sinh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Dancing+Script:wght@700&display=swap');
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #011574; /* Deep blue background */
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+            animation: bodyFadeIn 0.8s ease-out both;
+        }
+
+        /* Animated background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: -20%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%),
+                radial-gradient(circle at 80% 30%, rgba(56,189,248,0.18), transparent 40%),
+                radial-gradient(circle at 60% 75%, rgba(94,234,212,0.12), transparent 45%),
+                conic-gradient(from 0deg, rgba(255,255,255,0.06), rgba(0,0,0,0), rgba(255,255,255,0.04), rgba(0,0,0,0));
+            filter: blur(4px);
+            opacity: 0.35;
+            animation: swirl 30s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: -10%;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(255,255,255,0.04) 0,
+                rgba(255,255,255,0.04) 8px,
+                rgba(255,255,255,0.00) 8px,
+                rgba(255,255,255,0.00) 16px
+            );
+            opacity: 0.25;
+            animation: drift 18s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes swirl {
+            from { transform: rotate(0deg) scale(1); }
+            to { transform: rotate(360deg) scale(1.05); }
+        }
+
+        @keyframes drift {
+            from { transform: translate3d(-10px, -10px, 0) skewX(-1deg); }
+            to { transform: translate3d(10px, 10px, 0) skewX(1deg); }
+        }
+
+        @keyframes bodyFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(1.02);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Snow Effect */
+        .snow-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: #fff;
+            user-select: none;
+            z-index: 1;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+        }
+
+        .ambient-light {
+            position: absolute;
+            width: 150vw;
+            height: 150vw;
+            background: radial-gradient(circle, rgba(248, 250, 252, 0.15) 0%, rgba(59, 130, 246, 0.10) 35%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+            animation: breathe 8s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- CARD CSS --- */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px; /* Increased gap */
+            width: 100%;
+            max-width: 400px;
+            perspective: 1000px;
+        }
+
+        .card-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Floating idle animation */
+        .card-container:not(.vanished):hover {
+            transform: translateY(-5px) scale(1.05);
+            z-index: 10;
+        }
+
+        /* Tap/Click feedback */
+        .card-container:active:not(.vanished) {
+            transform: translateY(0) scale(0.96);
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+            box-shadow: 0 15px 30px -5px rgba(251, 191, 36, 0.4); /* Gold glow when flipped */
+        }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Card Back (Pattern) */
+        .face-back {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            border: 2px solid #fca5a5;
+        }
+        
+        /* Magical Pattern Overlay */
+        .face-back::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+                radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            opacity: 0.5;
+        }
+
+        .face-back::after {
+            content: '🎁';
+            font-size: 32px;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
+            animation: pulse-icon 2s infinite ease-in-out;
+        }
+        
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Card Front (Icon) */
+        .face-front {
+            background: radial-gradient(circle at center, #fffbeb 0%, #fef3c7 100%);
+            transform: rotateY(180deg);
+            border: 3px solid #fbbf24;
+            box-shadow: inset 0 0 15px rgba(251, 191, 36, 0.3);
+        }
+
+        .face-front i {
+            font-size: 48px; /* Enlarged Icon */
+            background: linear-gradient(135deg, #dc2626 0%, #16a34a 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 2px rgba(0,0,0,0.15));
+            transform: translateZ(20px); /* Parallax feel */
+        }
+
+        /* ANIMATIONS */
+        .pop-in {
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Magical Vanish Animation */
+        .vanish-anim {
+            animation: magicalDissolve 0.8s forwards ease-in-out;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes magicalDissolve {
+            0% { 
+                transform: scale(1) rotateY(180deg); 
+                opacity: 1;
+                filter: brightness(1);
+            }
+            40% {
+                transform: scale(1.1) rotateY(180deg) translateY(-10px); 
+                opacity: 1;
+                filter: brightness(2) drop-shadow(0 0 20px gold);
+            }
+            100% { 
+                transform: scale(0) rotateY(180deg) rotate(20deg); 
+                opacity: 0; 
+                filter: brightness(3);
+            }
+        }
+
+        /* Timer Bar */
+        .timer-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #facc15, #f87171);
+            width: 100%;
+            transition: width 1s linear;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        /* Timer critical state animation */
+        .timer-container.critical .timer-fill {
+            animation: pulseTimer 0.8s infinite alternate;
+        }
+
+        @keyframes pulseTimer {
+            from {
+                box-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
+                filter: brightness(1);
+            }
+            to {
+                box-shadow: 0 0 22px rgba(248, 113, 113, 1);
+                filter: brightness(1.3);
+            }
+        }
+
+        /* Game area slide-up when appearing */
+        .slide-up-in {
+            animation: slideUpIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes slideUpIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .holiday-font { font-family: 'Dancing Script', cursive; }
+
+        /* Low-key watermark */
+        #mv-logo {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            width: 110px;
+            opacity: 0.45;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 3;
+            transition: opacity 0.4s ease;
+        }
+
+        #mv-logo:hover {
+            opacity: 0.65;
+        }
+
+        /* Loading badge */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .dot-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #fbbf24;
+            box-shadow: 0 0 0 rgba(251,191,36,0.7);
+            animation: pulse 1.2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(251,191,36,0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(251,191,36,0); }
+            100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="ambient-light"></div>
+    <div class="snow-container" id="snow-container"></div>
+    <img id="mv-logo" src="https://file.hstatic.net/200000689681/file/logo_footer-01_b5cfb9c3472547eeafc85fada2b7963f.png" alt="Mắt Việt">
+
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-md p-4 flex flex-col items-center gap-6">
+        
+        <!-- Header -->
+        <div class="text-center space-y-1 relative">
+            <h1 class="text-5xl font-bold holiday-font text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-red-300 to-yellow-200 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] pb-2 animate-pulse">
+                Trí Nhớ Giáng Sinh
+            </h1>
+            <p class="text-yellow-100 text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 drop-shadow-md">
+                <i class="fa-solid fa-star text-yellow-400"></i> Tìm Cặp Hình Trong 60s <i class="fa-solid fa-star text-yellow-400"></i>
+            </p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="login-section" class="w-full glass-panel rounded-2xl p-6 transition-all duration-500 border border-white/20">
+            <div class="text-center mb-4">
+                <div class="w-20 h-20 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl ring-4 ring-yellow-500/50 animate-bounce">
+                    <i class="fa-solid fa-wand-magic-sparkles text-3xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold holiday-font text-white">Thử Thách Phép Thuật</h3>
+                <p class="text-xs text-gray-300 mt-2 font-mono">Nhập số điện thoại để mở khóa</p>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="tel" id="phone-input" class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-4 text-center text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 transition-all text-xl tracking-widest shadow-inner" placeholder="09xxxxxxx">
+                
+                <button onclick="startGame()" class="w-full bg-gradient-to-r from-green-600 to-emerald-800 hover:from-green-500 hover:to-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-green-900/50 transition-all transform active:scale-95 border-t border-green-400 text-lg">
+                    BẮT ĐẦU NGAY
+                </button>
+                <p id="attempts-text" class="text-center text-sm font-mono text-yellow-100 opacity-100">Đang kiểm tra lượt chơi...</p>
+                <div id="attempts-pill" class="hidden justify-center">
+                    <span class="pill"><span class="dot-pulse"></span><span id="attempts-pill-text">Đang tải</span></span>
+                </div>
+                <p id="attempts-error" class="text-center text-sm font-mono text-red-200 opacity-100 hidden font-bold"></p>
+            </div>
+        </div>
+
+        <!-- Game Area (Hidden) -->
+        <div id="game-area" class="hidden w-full flex flex-col items-center">
+            
+            <!-- HUD -->
+            <div class="w-full flex justify-between items-center px-4 mb-2 bg-black/30 rounded-full py-2 border border-white/10 backdrop-blur-sm">
+                <div class="text-sm font-bold text-yellow-300 flex items-center gap-2">
+                    <i class="fa-solid fa-hourglass-half animate-pulse"></i> <span id="timer-text" class="font-mono text-lg">60s</span>
+                </div>
+                <div class="text-sm font-bold text-gray-300">
+                    Điểm: <span id="matches-text" class="text-white text-lg">0/6</span>
+                </div>
+                <div class="text-xs font-bold text-emerald-200 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> <span id="hud-attempts">--/2</span>
+                </div>
+            </div>
+            <div id="timer-container" class="timer-container mb-6 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                <div id="timer-bar" class="timer-fill"></div>
+            </div>
+
+            <!-- Grid -->
+            <div class="game-grid" id="grid-container">
+                <!-- Cards injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- End Game Modal -->
+    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-sm mx-6 p-8 rounded-3xl text-center relative transform scale-90 transition-transform duration-300 border-2" id="modal-content">
+            
+            <!-- Particle decoration -->
+            <div class="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12">✨</div>
+            <div class="absolute -bottom-10 -left-10 text-8xl opacity-10 -rotate-12">✨</div>
+            
+            <div id="modal-icon-container" class="w-28 h-28 rounded-full flex items-center justify-center mx-auto -mt-20 mb-6 shadow-[0_0_40px_rgba(251,191,36,0.4)] ring-4 ring-white relative z-10">
+                <i id="modal-icon" class="fa-solid fa-trophy text-5xl text-white"></i>
+            </div>
+
+            <h2 id="modal-title" class="text-4xl font-bold holiday-font text-white mb-2 drop-shadow-lg"></h2>
+            <p id="modal-msg" class="text-gray-300 mb-6 text-sm"></p>
+
+            <div id="prize-box" class="hidden bg-black/60 rounded-xl p-5 mb-6 border border-yellow-500/50 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                <div id="prize-text" class="text-2xl font-bold text-yellow-400 uppercase tracking-wide"></div>
+                <div id="prize-code" class="font-mono text-white text-lg mt-2 bg-white/10 py-1 px-3 rounded inline-block border border-white/20"></div>
+            </div>
+
+            <button onclick="resetGame()" class="w-full bg-white text-gray-900 font-bold py-4 rounded-xl hover:bg-gray-100 transition-colors shadow-xl text-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i> Chơi Lại
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const ICONS = [
+            'fa-gift', 
+            'fa-snowflake', 
+            'fa-sleigh', 
+            'fa-bell', 
+            'fa-tree', 
+            'fa-snowman', 
+            'fa-candy-cane', 
+            'fa-star'
+        ];
+        
+        const GAME_DURATION = 60; // Seconds
+        const ATTEMPTS_PER_DAY = 2;
+        const SHEET_HTML_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQK-jgSHLIG4mOXU1gHFRregxyDP5K_xbeSTElNG_r2jesZfM-QNxTVyicj846JJ2_HWJm0DdFxj8DN/pubhtml?gid=48702679&single=true';
+        const FORM_POST_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScvMZzoq2NR3EN6v77G3VPtvq0PO11XaHmamvz7s0SuTIDalA/formResponse';
+        const POLL_INTERVAL_MS = 4000;
+        const POLL_TIMEOUT_MS = 25000;
+        const POLL_START_DELAY_MS = 3000; // GAS takes ~3s
+
+        let cards = []; // Array of {id, icon, flipped, matched}
+        let flippedCards = []; // Currently flipped cards (max 2)
+        let matchedPairs = 0;
+        let timer = GAME_DURATION;
+        let timerInterval = null;
+        let isGameActive = false;
+        let isProcessing = false; // Block clicks during check
+        let attemptsUsed = 0;
+        let attemptsLeft = ATTEMPTS_PER_DAY;
+        let currentPhone = '';
+        let isCheckingAttempts = false;
+        let pollIntervalHandle = null;
+
+        // INIT SNOW
+        function createSnowflakes() {
+            const snowContainer = document.getElementById('snow-container');
+            // Increased from 50 to 200 for heavy snow
+            for (let i = 0; i < 200; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.classList.add('snowflake');
+                snowflake.innerHTML = Math.random() > 0.5 ? '❄' : '✦';
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                // Faster fall speed: 3s to 8s
+                snowflake.style.animationDuration = Math.random() * 5 + 3 + 's'; 
+                snowflake.style.animationDelay = Math.random() * 5 + 's';
+                snowflake.style.fontSize = Math.random() * 10 + 5 + 'px';
+                snowflake.style.opacity = Math.random() * 0.6 + 0.2; // Slightly more visible
+                snowContainer.appendChild(snowflake);
+            }
+        }
+
+        // GAME LOGIC
+        async function startGame() {
+            const input = document.getElementById('phone-input');
+            const login = document.getElementById('login-section');
+            const gameArea = document.getElementById('game-area');
+
+            const phone = (input.value || '').trim();
+            if (phone.length <= 8) {
+                input.style.transform = 'translateX(10px)';
+                setTimeout(() => input.style.transform = 'translateX(-10px)', 100);
+                setTimeout(() => input.style.transform = 'translateX(0)', 200);
+                return;
+            }
+
+            currentPhone = phone;
+
+            // Prevent double-clicks
+            if (isCheckingAttempts) return;
+            isCheckingAttempts = true;
+            setAttemptsStatus('Đang kiểm tra lượt...', true);
+            try {
+                await reconcileAttemptsFromSheet(currentPhone);
+            } catch (err) {
+                console.error(err);
+                setAttemptsError('Không đọc được lượt từ sheet. Thử lại hoặc kiểm tra mạng.');
+            } finally {
+                isCheckingAttempts = false;
+            }
+
+            if (attemptsLeft <= 0) {
+                setAttemptsError('Hết lượt chơi hôm nay. Vui lòng quay lại sau 0h.');
+                flashAttempts();
+                return;
+            }
+
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Track attempt in-memory for this session
+            attemptsUsed = Math.min(ATTEMPTS_PER_DAY, attemptsUsed + 1);
+            attemptsLeft = Math.max(0, ATTEMPTS_PER_DAY - attemptsUsed);
+            updateAttemptsUI();
+            
+            // Animation
+            login.style.opacity = '0';
+            login.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                login.classList.add('hidden');
+                gameArea.classList.remove('hidden');
+                gameArea.classList.add('slide-up-in');
+                initBoard();
+                startTimer();
+            }, 400);
+        }
+
+        function initBoard() {
+            const grid = document.getElementById('grid-container');
+            grid.innerHTML = '';
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            isProcessing = false;
+
+            document.getElementById('matches-text').innerText = '0/6';
+            document.getElementById('hud-attempts').innerText = `${attemptsLeft}/${ATTEMPTS_PER_DAY}`;
+
+            // Generate Pairs for 4x3 grid (12 cards = 6 pairs)
+            const selectedIcons = ICONS.slice(0, 6);
+            let iconPairs = [...selectedIcons, ...selectedIcons];
+            
+            // Shuffle
+            iconPairs.sort(() => Math.random() - 0.5);
+
+            iconPairs.forEach((icon, index) => {
+                const cardData = {
+                    id: index,
+                    icon: icon,
+                    isFlipped: false,
+                    isMatched: false
+                };
+                cards.push(cardData);
+
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-container pop-in';
+                cardContainer.id = `container-${index}`;
+                cardContainer.style.animationDelay = `${index * 0.05}s`;
+                
+                cardContainer.innerHTML = `
+                    <div class="card" id="card-${index}">
+                        <div class="face face-back"></div>
+                        <div class="face face-front">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                    </div>
+                `;
+                
+                cardContainer.onclick = () => handleCardClick(index);
+                grid.appendChild(cardContainer);
+            });
+
+            isGameActive = true;
+        }
+
+        function handleCardClick(index) {
+            if (!isGameActive || isProcessing) return;
+            
+            const cardData = cards[index];
+            if (cardData.isFlipped || cardData.isMatched) return;
+
+            // Flip Logic
+            flipCardVisual(index, true);
+            cardData.isFlipped = true;
+            flippedCards.push(index);
+            playFlipSound();
+
+            if (flippedCards.length === 2) {
+                isProcessing = true;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [id1, id2] = flippedCards;
+            const card1 = cards[id1];
+            const card2 = cards[id2];
+
+            if (card1.icon === card2.icon) {
+                // Match Found
+                playMatchSound();
+                card1.isMatched = true;
+                card2.isMatched = true;
+                
+                // Add Magical Vanish Effect
+                const container1 = document.getElementById(`container-${id1}`);
+                const container2 = document.getElementById(`container-${id2}`);
+                
+                setTimeout(() => {
+                    // Trigger Vanish Animation
+                    container1.classList.add('vanished');
+                    container2.classList.add('vanished');
+                    
+                    // Apply animation class to the inner card for the dissolve effect
+                    document.getElementById(`card-${id1}`).classList.add('vanish-anim');
+                    document.getElementById(`card-${id2}`).classList.add('vanish-anim');
+
+                    matchedPairs++;
+                    document.getElementById('matches-text').innerText = `${matchedPairs}/6`;
+                    
+                    // Create mini sparkle burst at card location (optional simple VFX)
+                    createMiniBurst(container1);
+                    createMiniBurst(container2);
+
+                    flippedCards = [];
+                    isProcessing = false;
+
+                    if (matchedPairs === 6) {
+                        setTimeout(() => endGame(true), 1000);
+                    }
+                }, 500); // Wait for flip to finish slightly
+
+            } else {
+                // No Match
+                setTimeout(() => {
+                    flipCardVisual(id1, false);
+                    flipCardVisual(id2, false);
+                    card1.isFlipped = false;
+                    card2.isFlipped = false;
+                    flippedCards = [];
+                    isProcessing = false;
+                    playErrorSound();
+                }, 800);
+            }
+        }
+
+        function createMiniBurst(element) {
+            // Simple visual feedback using existing DOM, ideally use canvas-confetti for specific coords
+            // but we can just do a global confetti burst for magic feeling
+            const rect = element.getBoundingClientRect();
+            const x = (rect.left + rect.width / 2) / window.innerWidth;
+            const y = (rect.top + rect.height / 2) / window.innerHeight;
+            
+            confetti({
+                particleCount: 20,
+                spread: 30,
+                startVelocity: 15,
+                origin: { x: x, y: y },
+                colors: ['#fbbf24', '#ffffff'],
+                disableForReducedMotion: true
+            });
+        }
+
+        function flipCardVisual(index, isFront) {
+            const cardEl = document.getElementById(`card-${index}`);
+            if (isFront) cardEl.classList.add('flipped');
+            else cardEl.classList.remove('flipped');
+        }
+
+        function startTimer() {
+            timer = GAME_DURATION;
+            updateTimerUI();
+            
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!isGameActive) return;
+                timer--;
+                updateTimerUI();
+                
+                if (timer <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timer-text').innerText = `${timer}s`;
+            const pct = (timer / GAME_DURATION) * 100;
+            document.getElementById('timer-bar').style.width = `${pct}%`;
+
+            const timerContainer = document.getElementById('timer-container');
+            if (pct <= 30) {
+                timerContainer.classList.add('critical');
+            } else {
+                timerContainer.classList.remove('critical');
+            }
+        }
+
+        // Attempts handling (per user, reset daily) with sheet reconciliation
+        function getTodayKey() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        async function fetchSheetRows() {
+            const res = await fetch(SHEET_HTML_URL, { cache: 'no-store' });
+            if (!res.ok) throw new Error('Sheet fetch failed');
+            const text = await res.text();
+            return parseSheetHtml(text);
+        }
+
+        function parseSheetHtml(text) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            // Published sheet renders as tables; we read tbody rows
+            const rows = Array.from(doc.querySelectorAll('table tbody tr'));
+            const dataRows = rows.filter(r => {
+                const cells = r.querySelectorAll('td,th');
+                if (cells.length < 6) return false;
+                const first = cells[0].textContent.trim();
+                return first.toLowerCase() !== 'dấu thời gian';
+            });
+            return dataRows.map(r => {
+                const cells = Array.from(r.querySelectorAll('td,th')).map(c => c.textContent.trim());
+                return {
+                    timestamp: cells[0] || '',
+                    phone: cells[1] || '',
+                    result: cells[2] || '',
+                    status: cells[3] || '',
+                    voucher: cells[4] || '',
+                    value: cells[5] || ''
+                };
+            });
+        }
+
+        function isToday(ts) {
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return false;
+            const today = new Date();
+            return d.getFullYear() === today.getFullYear() &&
+                   d.getMonth() === today.getMonth() &&
+                   d.getDate() === today.getDate();
+        }
+
+        async function reconcileAttemptsFromSheet(phone) {
+            setAttemptsError('');
+            setAttemptsStatus('Đang kiểm tra lượt...', true);
+            try {
+                const rows = await fetchSheetRows();
+                const todayRows = rows.filter(r => r.phone === phone && isToday(r.timestamp));
+                attemptsUsed = Math.min(ATTEMPTS_PER_DAY, todayRows.length);
+                setAttemptsStatus(`Đã ghi nhận ${attemptsUsed} lượt hôm nay`, false);
+            } catch (err) {
+                console.warn('Sheet fetch failed', err);
+                attemptsUsed = ATTEMPTS_PER_DAY;
+                setAttemptsError('Không đọc được sheet, tạm khóa lượt chơi.');
+            }
+
+            attemptsLeft = Math.max(0, ATTEMPTS_PER_DAY - attemptsUsed);
+            updateAttemptsUI();
+        }
+
+        function updateAttemptsUI() {
+            const el = document.getElementById('attempts-text');
+            const pill = document.getElementById('attempts-pill');
+            const pillText = document.getElementById('attempts-pill-text');
+            const hud = document.getElementById('hud-attempts');
+            if (el) el.innerText = `Lượt còn lại: ${attemptsLeft}/${ATTEMPTS_PER_DAY} (reset 0h)`;
+            if (pill && pillText) {
+                pill.classList.remove('hidden');
+                pillText.innerText = `${attemptsLeft} lượt còn lại`;
+            }
+            if (hud) hud.innerText = `${attemptsLeft}/${ATTEMPTS_PER_DAY}`;
+        }
+
+        function flashAttempts() {
+            const el = document.getElementById('attempts-text');
+            if (!el) return;
+            el.classList.add('animate-pulse');
+            setTimeout(() => el.classList.remove('animate-pulse'), 1200);
+        }
+
+        function setAttemptsStatus(text, loading) {
+            const el = document.getElementById('attempts-text');
+            const pill = document.getElementById('attempts-pill');
+            const pillText = document.getElementById('attempts-pill-text');
+            if (el) el.innerText = text || '';
+            if (pill && pillText) {
+                pill.classList.remove('hidden');
+                pillText.innerText = loading ? 'Đang tải' : `${attemptsLeft} lượt còn lại`;
+            }
+        }
+
+        function setAttemptsError(text) {
+            const el = document.getElementById('attempts-error');
+            if (!el) return;
+            if (!text) {
+                el.classList.add('hidden');
+                el.innerText = '';
+            } else {
+                el.classList.remove('hidden');
+                el.innerText = text;
+            }
+        }
+
+        function endGame(isWin) {
+            isGameActive = false;
+            clearInterval(timerInterval);
+            if (pollIntervalHandle) {
+                clearInterval(pollIntervalHandle);
+                pollIntervalHandle = null;
+            }
+            
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modal-content');
+            const title = document.getElementById('modal-title');
+            const msg = document.getElementById('modal-msg');
+            const iconContainer = document.getElementById('modal-icon-container');
+            const icon = document.getElementById('modal-icon');
+            const prizeBox = document.getElementById('prize-box');
+
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'auto';
+            content.classList.remove('scale-90');
+            content.classList.add('scale-100');
+
+            if (isWin) {
+                // Win State
+                iconContainer.className = "w-28 h-28 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-full flex items-center justify-center mx-auto -mt-20 mb-6 shadow-2xl ring-4 ring-white relative z-10 animate-bounce";
+                icon.className = "fa-solid fa-crown text-5xl text-white";
+                content.classList.add('border-yellow-400');
+                
+                title.innerText = "PHÉP MÀU XẢY RA!";
+                msg.innerText = `Bạn đã giải mã trong ${GAME_DURATION - timer} giây!`;
+                
+                // Prize waiting state
+                prizeBox.classList.remove('hidden');
+                document.getElementById('prize-text').innerText = "Đang chờ voucher...";
+                document.getElementById('prize-code').innerText = "Đang xử lý";
+                startVoucherPolling();
+
+                // Big Confetti
+                var duration = 3000;
+                var end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: ['#fbbf24', '#ef4444', '#ffffff']
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: ['#fbbf24', '#22c55e', '#ffffff']
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+
+                playWinSound();
+            } else {
+                // Loss State
+                iconContainer.className = "w-28 h-28 bg-gray-700 rounded-full flex items-center justify-center mx-auto -mt-20 mb-6 shadow-2xl ring-4 ring-gray-500 relative z-10";
+                icon.className = "fa-solid fa-hourglass-end text-5xl text-white";
+                content.classList.add('border-gray-500');
+                
+                title.innerText = "HẾT GIỜ!";
+                msg.innerText = "Phép thuật đã tan biến. Hãy thử lại!";
+                prizeBox.classList.add('hidden');
+            }
+
+            // Submit result
+            submitResult(isWin ? 'win' : 'lose');
+        }
+
+        function resetGame() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modal-content');
+            
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            content.classList.remove('scale-100');
+            content.classList.add('scale-90');
+            
+            initBoard();
+            startTimer();
+        }
+
+        // AUDIO
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playFlipSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        function playMatchSound() {
+            const now = audioCtx.currentTime;
+            // Magical Chime
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.05, now + i*0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.08 + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i*0.08);
+                osc.stop(now + i*0.08 + 0.5);
+            });
+        }
+
+        function playErrorSound() {
+             const now = audioCtx.currentTime;
+             const osc = audioCtx.createOscillator();
+             const gain = audioCtx.createGain();
+             osc.type = 'sawtooth';
+             osc.frequency.setValueAtTime(150, now);
+             osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+             gain.gain.setValueAtTime(0.1, now);
+             gain.gain.linearRampToValueAtTime(0, now + 0.2);
+             osc.connect(gain);
+             gain.connect(audioCtx.destination);
+             osc.start(now);
+             osc.stop(now + 0.2);
+        }
+
+        function playWinSound() {
+            const now = audioCtx.currentTime;
+            // Fanfare
+            [523, 659, 784, 1046, 784, 1046].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = freq;
+                const duration = i === 5 ? 1.0 : 0.2;
+                gain.gain.setValueAtTime(0.05, now + i*0.2);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.2 + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i*0.2);
+                osc.stop(now + i*0.2 + duration);
+            });
+        }
+
+        function submitResult(result) {
+            if (!currentPhone) return;
+            const formData = new FormData();
+            formData.append('entry.1084802864', currentPhone);
+            formData.append('entry.1399009874', result);
+            // Fire and forget
+            fetch(FORM_POST_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            }).catch(err => console.warn('Form submit failed', err));
+        }
+
+        function latestTodayRow(rows, phone) {
+            const todayRows = rows.filter(r => r.phone === phone && isToday(r.timestamp));
+            if (!todayRows.length) return null;
+            // newest by timestamp
+            return todayRows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+        }
+
+        function updatePrizeFromRow(row) {
+            const prizeTextEl = document.getElementById('prize-text');
+            const prizeCodeEl = document.getElementById('prize-code');
+            if (!prizeTextEl || !prizeCodeEl) return;
+            const status = row?.status || '';
+            const voucher = row?.voucher || '';
+            const value = row?.value || '';
+            if (voucher || value || status) {
+                prizeTextEl.innerText = value || 'Voucher đã cấp';
+                prizeCodeEl.innerText = voucher || status || 'Đang xử lý';
+                return true;
+            }
+            return false;
+        }
+
+        function startVoucherPolling() {
+            const start = Date.now();
+            const prizeTextEl = document.getElementById('prize-text');
+            const prizeCodeEl = document.getElementById('prize-code');
+            if (prizeTextEl) prizeTextEl.innerText = "Đang chờ voucher (~3s)...";
+            if (prizeCodeEl) prizeCodeEl.innerText = "Đang xử lý";
+            if (pollIntervalHandle) clearInterval(pollIntervalHandle);
+
+            setTimeout(() => {
+                pollIntervalHandle = setInterval(async () => {
+                    if (!currentPhone) return;
+                    if (Date.now() - start > POLL_TIMEOUT_MS) {
+                        clearInterval(pollIntervalHandle);
+                        pollIntervalHandle = null;
+                        if (prizeTextEl) prizeTextEl.innerText = "Hết thời gian chờ voucher";
+                        if (prizeCodeEl) prizeCodeEl.innerText = "Thử lại sau";
+                        return;
+                    }
+                    try {
+                        const rows = await fetchSheetRows();
+                        const latest = latestTodayRow(rows, currentPhone);
+                        if (latest && updatePrizeFromRow(latest)) {
+                            clearInterval(pollIntervalHandle);
+                            pollIntervalHandle = null;
+                        }
+                    } catch (err) {
+                        console.warn('Polling sheet failed', err);
+                    }
+                }, POLL_INTERVAL_MS);
+            }, POLL_START_DELAY_MS);
+        }
+
+        createSnowflakes();
+    </script>
+</body>
+</html>
