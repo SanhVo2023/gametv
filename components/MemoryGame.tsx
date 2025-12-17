@@ -283,6 +283,39 @@ function SnowLayer() {
   return <div ref={containerRef} className="snow-container" />;
 }
 
+function SparkleLayer() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.innerHTML = "";
+    for (let i = 0; i < 30; i++) {
+      const sparkle = document.createElement("div");
+      sparkle.classList.add("sparkle");
+      sparkle.style.left = `${Math.random() * 100}%`;
+      sparkle.style.top = `${Math.random() * 100}%`;
+      sparkle.style.animationDelay = `${Math.random() * 3}s`;
+      container.appendChild(sparkle);
+    }
+  }, []);
+
+  return <div ref={containerRef} className="sparkle-layer" />;
+}
+
+function ChristmasDecorations() {
+  return (
+    <>
+      <div className="ornament">🎄</div>
+      <div className="ornament">🔔</div>
+      <div className="ornament">⭐</div>
+      <div className="ornament">🎁</div>
+      <div className="holly-corner top-left">🎄</div>
+      <div className="holly-corner top-right">🎄</div>
+    </>
+  );
+}
+
 type MemoryGameProps = {
   /**
    * full: LP + phone + game (single page)
@@ -324,6 +357,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
   const [prizeText, setPrizeText] = useState("");
   const [prizeCode, setPrizeCode] = useState("");
   const [voucherFetched, setVoucherFetched] = useState(false);
+  const [voucherError, setVoucherError] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -384,14 +418,16 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
   const startVoucherPolling = (currentPhone: string) => {
     const start = Date.now();
-    setPrizeText("Đang chờ voucher (~3s)...");
-    setPrizeCode("Đang xử lý");
+    setPrizeText("Đang chờ voucher...");
+    setPrizeCode("");
+    setVoucherFetched(false);
+    setVoucherError(false);
     if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
 
     setTimeout(() => {
       pollIntervalRef.current = setInterval(async () => {
         if (!currentPhone) return;
-          if (Date.now() - start > POLL_TIMEOUT_MS) {
+        if (Date.now() - start > POLL_TIMEOUT_MS) {
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
@@ -399,6 +435,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
           setPrizeText("Hết thời gian chờ voucher");
           setPrizeCode("Vui lòng liên hệ CSKH");
           setVoucherFetched(true);
+          setVoucherError(true);
           return;
         }
         try {
@@ -414,6 +451,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             setPrizeText("Gửi voucher thất bại");
             setPrizeCode("Vui lòng liên hệ CSKH");
             setVoucherFetched(true);
+            setVoucherError(true);
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
@@ -425,6 +463,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             setPrizeText(value || "Voucher đã cấp");
             setPrizeCode(voucher || "");
             setVoucherFetched(true);
+            setVoucherError(false);
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
@@ -605,7 +644,16 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     submitResult(phone.trim(), win ? "win" : "lose");
   };
 
-  const handleResetGame = () => {
+  const handleResetGame = async () => {
+    // Re-check attempts from sheet before allowing replay
+    const { left } = await updateAttemptsFromSheet(phone.trim());
+    if (left <= 0) {
+      setAttemptsError("Hết lượt chơi hôm nay. Vui lòng quay lại sau 0h.");
+      setShowModal(false);
+      setShowGameArea(false);
+      setStep("phone");
+      return;
+    }
     setShowModal(false);
     initBoard();
     startTimer();
@@ -642,6 +690,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       <div className="glow-layer" />
       <div className="ambient-light" />
       <SnowLayer />
+      <SparkleLayer />
+      <ChristmasDecorations />
       {!isEmbed && (
         <img
           id="mv-logo"
@@ -722,78 +772,78 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             )}
 
             {step === "phone" && (
-              <div className="glass-panel w-full rounded-2xl border border-white/20 p-8 transition-all duration-500">
-                <div className="mb-6 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg">
-                    <i className="fa-solid fa-mobile-screen-button text-2xl text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white">Nhập số điện thoại</h3>
-                  <p className="mt-2 text-sm text-slate-300">
-                    Để kiểm tra lượt chơi và nhận voucher qua SMS
-                  </p>
-                </div>
+              <div className="w-full">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mb-4 text-slate-400 hover:text-white hover:bg-white/10"
+                  onClick={() => setStep("landing")}
+                >
+                  <i className="fa-solid fa-arrow-left mr-2" />
+                  Quay lại
+                </Button>
 
-                <div className="space-y-5">
-                  <div className="relative">
+                <div className="glass-panel w-full rounded-2xl border border-white/10 p-6 transition-all duration-500">
+                  <div className="mb-5 text-center">
+                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-amber-500">
+                      <i className="fa-solid fa-mobile-screen-button text-xl text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">Nhập số điện thoại</h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Để kiểm tra lượt chơi và nhận voucher qua SMS
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full rounded-xl border-2 border-white/20 bg-black/50 px-4 py-4 text-center text-2xl font-bold tracking-[0.25em] text-white placeholder-gray-500 shadow-inner transition-all focus:outline-none focus:border-yellow-400 focus:bg-black/60"
+                      className="w-full rounded-lg border border-white/15 bg-black/40 px-4 py-3 text-center text-xl tracking-[0.2em] text-white placeholder-gray-500 transition-all focus:outline-none focus:border-yellow-400/50"
                       placeholder="0912345678"
                     />
-                  </div>
 
-                  <Button
-                    size="lg"
-                    className="w-full text-lg font-bold py-6"
-                    onClick={handleStartGame}
-                    disabled={isCheckingAttempts || phone.trim().length < 9}
-                  >
-                    {isCheckingAttempts ? (
-                      <>
-                        <i className="fa-solid fa-spinner fa-spin mr-2" />
-                        Đang kiểm tra...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fa-solid fa-gamepad mr-2" />
-                        VÀO GAME
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      size="lg"
+                      className="w-full py-5"
+                      onClick={handleStartGame}
+                      disabled={isCheckingAttempts || phone.trim().length < 9}
+                    >
+                      {isCheckingAttempts ? (
+                        <>
+                          <i className="fa-solid fa-spinner fa-spin mr-2" />
+                          Đang kiểm tra...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-gamepad mr-2" />
+                          VÀO GAME
+                        </>
+                      )}
+                    </Button>
 
-                  <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-300">Lượt chơi hôm nay:</span>
-                      <span className="flex items-center gap-2">
-                        <span className="dot-pulse" />
-                        <span className="text-lg font-bold text-yellow-400">{attemptsLeft}/{ATTEMPTS_PER_DAY}</span>
-                      </span>
+                    <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400">Lượt chơi hôm nay:</span>
+                        <span className="flex items-center gap-2">
+                          <span className="dot-pulse" />
+                          <span className="font-semibold text-yellow-400">{attemptsLeft}/{ATTEMPTS_PER_DAY}</span>
+                        </span>
+                      </div>
+                      {attemptsStatus && !attemptsError && (
+                        <p className="mt-2 text-center text-xs text-slate-500">
+                          {attemptsStatus}
+                        </p>
+                      )}
                     </div>
-                    {attemptsStatus && !attemptsError && (
-                      <p className="mt-2 text-center text-xs text-slate-400">
-                        {attemptsStatus}
-                      </p>
+
+                    {attemptsError && (
+                      <div className="rounded-lg border border-red-500/20 bg-red-900/20 p-3 text-center">
+                        <i className="fa-solid fa-circle-exclamation text-red-400 mr-2 text-sm" />
+                        <span className="text-xs text-red-300">{attemptsError}</span>
+                      </div>
                     )}
                   </div>
-
-                  {attemptsError && (
-                    <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-4 text-center">
-                      <i className="fa-solid fa-circle-exclamation text-red-400 mr-2" />
-                      <span className="text-sm font-medium text-red-200">{attemptsError}</span>
-                    </div>
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full border border-white/10 bg-transparent text-slate-300 hover:bg-white/5 hover:text-white"
-                    onClick={() => setStep("landing")}
-                  >
-                    <i className="fa-solid fa-arrow-left mr-2" />
-                    Quay lại trang chủ
-                  </Button>
                 </div>
               </div>
             )}
@@ -914,23 +964,30 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                     </div>
                     <p className="mt-2 text-xs text-slate-400">Vui lòng chờ trong giây lát</p>
                   </div>
+                ) : voucherError ? (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border-2 border-red-500/50 bg-gradient-to-b from-red-900/40 to-black/60 p-5">
+                      <p className="text-xs uppercase tracking-wider text-red-300/80 mb-1">Có lỗi xảy ra</p>
+                      <div className="text-2xl font-bold text-red-400">
+                        {prizeText}
+                      </div>
+                      <p className="mt-3 text-sm text-slate-400">{prizeCode}</p>
+                    </div>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="rounded-xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-900/40 to-black/60 p-5">
-                      <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">Phần thưởng của bạn</p>
+                      <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">🎁 Phần thưởng của bạn</p>
                       <div className="text-3xl font-black text-yellow-400 drop-shadow-lg">
                         {prizeText || "Voucher"}
                       </div>
-                      {prizeCode && !prizeCode.includes("liên hệ") && (
+                      {prizeCode && (
                         <>
                           <p className="mt-3 text-xs text-slate-400">Mã voucher:</p>
                           <div className="mt-1 inline-block rounded-lg border border-yellow-500/30 bg-black/60 px-4 py-2 font-mono text-xl font-bold tracking-wider text-white">
                             {prizeCode}
                           </div>
                         </>
-                      )}
-                      {prizeCode && prizeCode.includes("liên hệ") && (
-                        <p className="mt-3 text-sm text-red-300">{prizeCode}</p>
                       )}
                     </div>
                     
@@ -948,13 +1005,13 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             {!modalWin && (
               <div className="mb-6 rounded-xl border border-slate-500/30 bg-slate-900/30 p-4">
                 <p className="text-sm text-slate-300">
-                  Đừng nản chí! Bạn còn <span className="font-bold text-yellow-400">{Math.max(0, attemptsLeft - 1)}</span> lượt chơi hôm nay.
+                  Đừng nản chí! Hãy thử lại nhé.
                 </p>
               </div>
             )}
 
             <div className="space-y-3">
-              {modalWin && voucherFetched && prizeCode && !prizeCode.includes("liên hệ") && (
+              {modalWin && voucherFetched && !voucherError && prizeCode && (
                 <Button
                   size="lg"
                   className="w-full"
@@ -969,7 +1026,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                 </Button>
               )}
 
-              {attemptsLeft > 1 && (
+              {attemptsLeft > 0 && (
                 <Button
                   variant="outline"
                   size="lg"

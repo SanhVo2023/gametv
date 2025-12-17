@@ -61,23 +61,31 @@ export default function LandingPage() {
           </details>
         </div>
 
-        <section className="w-full space-y-4 text-sm text-slate-100/95">
-          <div className="info-card">
-            <h2 className="mb-1 text-base font-semibold text-yellow-200">
-              Nội dung chương trình “Vui Giáng Sinh – Khui Voucher Khủng”
-            </h2>
-            <p className="mb-2">
-              Nhân dịp mùa lễ hội Giáng Sinh, Mắt Việt mang đến cơ hội nhận voucher giảm thêm lên đến{" "}
-              <b>200.000đ</b> cùng nhiều ưu đãi hấp dẫn khi mua sắm và chăm sóc thị lực tại cửa hàng.
-            </p>
-            <p className="text-xs text-slate-200">
-              Chương trình áp dụng độc quyền tại 5 cửa hàng Mắt Việt và dành cho khách hàng Mắt Việt.
-            </p>
-          </div>
+        <section className="w-full space-y-3 text-sm text-slate-100/95">
+          <details className="info-card group">
+            <summary className="cursor-pointer text-base font-semibold text-yellow-200 flex items-center gap-2">
+              <i className="fa-solid fa-gift text-yellow-400" />
+              Nội dung chương trình
+              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 space-y-2">
+              <p>
+                Nhân dịp mùa lễ hội Giáng Sinh, Mắt Việt mang đến cơ hội nhận voucher giảm thêm lên đến{" "}
+                <b>200.000đ</b> cùng nhiều ưu đãi hấp dẫn khi mua sắm và chăm sóc thị lực tại cửa hàng.
+              </p>
+              <p className="text-xs text-slate-300">
+                Chương trình áp dụng độc quyền tại 5 cửa hàng Mắt Việt và dành cho khách hàng Mắt Việt.
+              </p>
+            </div>
+          </details>
 
-          <div className="info-card">
-            <h3 className="mb-1 text-sm font-semibold text-yellow-200">Cách tham gia</h3>
-            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
+          <details className="info-card group">
+            <summary className="cursor-pointer text-sm font-semibold text-yellow-200 flex items-center gap-2">
+              <i className="fa-solid fa-play text-yellow-400" />
+              Cách tham gia
+              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform group-open:rotate-180" />
+            </summary>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-200">
               <li>
                 <b>Cách 1 – Tại cửa hàng:</b> Đến một trong các cửa hàng Mắt Việt, quét mã QR tại quầy để tham gia
                 minigame khui quà và nhận voucher giảm thêm đến 200.000đ.
@@ -87,29 +95,37 @@ export default function LandingPage() {
                 Sinh, sau đó mang voucher nhận được đến cửa hàng để áp dụng.
               </li>
             </ul>
-          </div>
+          </details>
 
-          <div className="info-card">
-            <h3 className="mb-1 text-sm font-semibold text-yellow-200">Ưu đãi & mức voucher</h3>
-            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
+          <details className="info-card group">
+            <summary className="cursor-pointer text-sm font-semibold text-yellow-200 flex items-center gap-2">
+              <i className="fa-solid fa-tags text-yellow-400" />
+              Ưu đãi & mức voucher
+              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform group-open:rotate-180" />
+            </summary>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-200">
               <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
               <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
               <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
               <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
               <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
             </ul>
-          </div>
+          </details>
 
-          <div className="info-card">
-            <h3 className="mb-1 text-sm font-semibold text-yellow-200">Cửa hàng áp dụng</h3>
-            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
+          <details className="info-card group">
+            <summary className="cursor-pointer text-sm font-semibold text-yellow-200 flex items-center gap-2">
+              <i className="fa-solid fa-location-dot text-yellow-400" />
+              Cửa hàng áp dụng
+              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform group-open:rotate-180" />
+            </summary>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-200">
               <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
               <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
               <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
               <li>Mắt Việt 3 Tháng 2 – Quận 10.</li>
               <li>Mắt Việt Hoàng Diệu 2 – TP. Thủ Đức.</li>
             </ul>
-          </div>
+          </details>
         </section>
       </div>
     </div>
