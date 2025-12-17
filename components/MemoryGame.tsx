@@ -149,29 +149,52 @@ async function fetchSheetRows(): Promise<SheetRow[]> {
   const text = await res.text();
   const parser = new DOMParser();
   const doc = parser.parseFromString(text, "text/html");
-  const rows = Array.from(doc.querySelectorAll("table tbody tr"));
+  
+  // Try multiple selectors - Google Sheets HTML structure varies
+  let rows = Array.from(doc.querySelectorAll("table tbody tr"));
+  if (rows.length === 0) {
+    rows = Array.from(doc.querySelectorAll("table tr"));
+  }
+  if (rows.length === 0) {
+    rows = Array.from(doc.querySelectorAll("tr"));
+  }
+  
+  console.log("[Sheet] Total TR elements found:", rows.length);
+  
+  // Debug: show raw HTML structure
+  if (rows.length > 0) {
+    const firstRow = rows[0];
+    const cells = Array.from(firstRow.querySelectorAll("td,th")).map(c => c.textContent?.trim() || "");
+    console.log("[Sheet] First row cells:", cells);
+  }
   
   // Find header row to detect column indices
   let phoneColIdx = 1;
-  for (const row of rows) {
+  let headerRowIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
     const cells = Array.from(row.querySelectorAll("td,th")).map(
       (c) => c.textContent?.trim().toLowerCase() || ""
     );
-    const idx = cells.findIndex((c) => c.includes("điện thoại") || c.includes("phone"));
+    const idx = cells.findIndex((c) => c.includes("điện thoại") || c.includes("phone") || c.includes("số điện"));
     if (idx !== -1) {
       phoneColIdx = idx;
-      console.log("[Sheet] Header found, phone column index:", phoneColIdx, "cells:", cells);
+      headerRowIdx = i;
+      console.log("[Sheet] Header found at row", i, "phone column index:", phoneColIdx, "cells:", cells);
       break;
     }
   }
 
-  const dataRows = rows.filter((r) => {
+  // Get data rows (skip header and any rows before it)
+  const dataRows = rows.slice(headerRowIdx + 1).filter((r) => {
     const cells = r.querySelectorAll("td,th");
     if (cells.length < 3) return false;
-    const firstCell = cells[0].textContent?.trim().toLowerCase() || "";
-    // Skip header row
-    return !firstCell.includes("thời gian") && !firstCell.includes("timestamp");
+    const firstCell = cells[0].textContent?.trim() || "";
+    // Skip empty rows or header-like rows
+    return firstCell.length > 0 && !firstCell.toLowerCase().includes("thời gian");
   });
+
+  console.log("[Sheet] Data rows after filtering:", dataRows.length);
 
   const result = dataRows.map((r) => {
     const cells = Array.from(r.querySelectorAll("td,th")).map(
@@ -191,7 +214,8 @@ async function fetchSheetRows(): Promise<SheetRow[]> {
   console.log("[Sheet] Parsed rows sample:", result.slice(0, 3).map(r => ({
     phone: r.phone,
     phoneNorm: normalizePhone(r.phone),
-    result: r.result
+    result: r.result,
+    value: r.value
   })));
 
   return result;
