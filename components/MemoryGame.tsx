@@ -18,8 +18,9 @@ const ICONS = [
 
 const GAME_DURATION = 60;
 const ATTEMPTS_PER_DAY = 2;
+// Use the inner iframe URL which contains the actual table data
 const SHEET_HTML_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQK-jgSHLIG4mOXU1gHFRregxyDP5K_xbeSTElNG_r2jesZfM-QNxTVyicj846JJ2_HWJm0DdFxj8DN/pubhtml?gid=48702679&single=true";
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQK-jgSHLIG4mOXU1gHFRregxyDP5K_xbeSTElNG_r2jesZfM-QNxTVyicj846JJ2_HWJm0DdFxj8DN/pubhtml/sheet?headers=false&gid=48702679";
 const FORM_POST_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLScvMZzoq2NR3EN6v77G3VPtvq0PO11XaHmamvz7s0SuTIDalA/formResponse";
 const POLL_INTERVAL_MS = 4000;
