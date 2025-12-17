@@ -323,6 +323,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
   const [modalWin, setModalWin] = useState(false);
   const [prizeText, setPrizeText] = useState("");
   const [prizeCode, setPrizeCode] = useState("");
+  const [voucherFetched, setVoucherFetched] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -389,13 +391,14 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     setTimeout(() => {
       pollIntervalRef.current = setInterval(async () => {
         if (!currentPhone) return;
-        if (Date.now() - start > POLL_TIMEOUT_MS) {
+          if (Date.now() - start > POLL_TIMEOUT_MS) {
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
           }
           setPrizeText("Hết thời gian chờ voucher");
-          setPrizeCode("Thử lại sau");
+          setPrizeCode("Vui lòng liên hệ CSKH");
+          setVoucherFetched(true);
           return;
         }
         try {
@@ -409,7 +412,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
           if (failed) {
             setPrizeText("Gửi voucher thất bại");
-            setPrizeCode("Vui lòng liên hệ CSKH hoặc thử lại");
+            setPrizeCode("Vui lòng liên hệ CSKH");
+            setVoucherFetched(true);
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
@@ -417,9 +421,10 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             return;
           }
 
-          if (voucher || value || status) {
+          if (voucher || value) {
             setPrizeText(value || "Voucher đã cấp");
-            setPrizeCode(voucher || status || "Đang xử lý");
+            setPrizeCode(voucher || "");
+            setVoucherFetched(true);
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
@@ -564,7 +569,9 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
     if (win) {
       setPrizeText("Đang chờ voucher...");
-      setPrizeCode("Đang xử lý");
+      setPrizeCode("");
+      setVoucherFetched(false);
+      setCopied(false);
       startVoucherPolling(phone.trim());
 
       const duration = 3000;
@@ -715,55 +722,77 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             )}
 
             {step === "phone" && (
-              <div className="glass-panel w-full rounded-2xl border border-white/20 p-6 transition-all duration-500">
-                <div className="mb-4 text-center">
-                  <h3 className="holiday-subtitle">Nhập số điện thoại</h3>
-                  <p className="mt-2 text-xs text-gray-200">
-                    Hệ thống sẽ kiểm tra lượt chơi của SĐT trên Google Sheet hôm nay.
+              <div className="glass-panel w-full rounded-2xl border border-white/20 p-8 transition-all duration-500">
+                <div className="mb-6 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg">
+                    <i className="fa-solid fa-mobile-screen-button text-2xl text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Nhập số điện thoại</h3>
+                  <p className="mt-2 text-sm text-slate-300">
+                    Để kiểm tra lượt chơi và nhận voucher qua SMS
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-xl border border-white/20 bg-black/40 px-4 py-4 text-center text-xl tracking-[0.3em] text-white placeholder-gray-500 shadow-inner focus:outline-none focus:border-yellow-400"
-                    placeholder="09xxxxxxx"
-                  />
+                <div className="space-y-5">
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full rounded-xl border-2 border-white/20 bg-black/50 px-4 py-4 text-center text-2xl font-bold tracking-[0.25em] text-white placeholder-gray-500 shadow-inner transition-all focus:outline-none focus:border-yellow-400 focus:bg-black/60"
+                      placeholder="0912345678"
+                    />
+                  </div>
 
                   <Button
                     size="lg"
-                    className="w-full"
+                    className="w-full text-lg font-bold py-6"
                     onClick={handleStartGame}
-                    disabled={isCheckingAttempts}
+                    disabled={isCheckingAttempts || phone.trim().length < 9}
                   >
-                    {isCheckingAttempts ? "Đang kiểm tra..." : "VÀO GAME"}
+                    {isCheckingAttempts ? (
+                      <>
+                        <i className="fa-solid fa-spinner fa-spin mr-2" />
+                        Đang kiểm tra...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-gamepad mr-2" />
+                        VÀO GAME
+                      </>
+                    )}
                   </Button>
 
-                  <p className="text-center font-mono text-sm text-yellow-100">
-                    {attemptsStatus}
-                  </p>
-                  <div className="flex justify-center">
-                    <span className="pill">
-                      <span className="dot-pulse" />
-                      <span>{attemptsLeft} lượt còn lại</span>
-                    </span>
+                  <div className="rounded-xl border border-white/10 bg-black/30 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-300">Lượt chơi hôm nay:</span>
+                      <span className="flex items-center gap-2">
+                        <span className="dot-pulse" />
+                        <span className="text-lg font-bold text-yellow-400">{attemptsLeft}/{ATTEMPTS_PER_DAY}</span>
+                      </span>
+                    </div>
+                    {attemptsStatus && !attemptsError && (
+                      <p className="mt-2 text-center text-xs text-slate-400">
+                        {attemptsStatus}
+                      </p>
+                    )}
                   </div>
+
                   {attemptsError && (
-                    <p className="text-center font-mono text-sm font-bold text-red-200">
-                      {attemptsError}
-                    </p>
+                    <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-4 text-center">
+                      <i className="fa-solid fa-circle-exclamation text-red-400 mr-2" />
+                      <span className="text-sm font-medium text-red-200">{attemptsError}</span>
+                    </div>
                   )}
 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[11px] hover:bg-white/10"
+                    className="w-full border border-white/10 bg-transparent text-slate-300 hover:bg-white/5 hover:text-white"
                     onClick={() => setStep("landing")}
                   >
                     <i className="fa-solid fa-arrow-left mr-2" />
-                    Quay lại
+                    Quay lại trang chủ
                   </Button>
                 </div>
               </div>
@@ -843,8 +872,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
-          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 p-8 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-8 text-center">
             <div className="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12">
               ✨
             </div>
@@ -853,49 +882,115 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             </div>
 
             <div
-              className={`mx-auto -mt-20 mb-6 flex h-28 w-28 items-center justify-center rounded-full ring-4 ring-white shadow-2xl ${
+              className={`mx-auto -mt-20 mb-4 flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white shadow-2xl ${
                 modalWin
-                  ? "bg-gradient-to-br from-yellow-300 to-yellow-600 animate-bounce"
+                  ? "bg-gradient-to-br from-yellow-300 to-yellow-600"
                   : "bg-gray-700"
               }`}
             >
               <i
-                className={`fa-solid text-5xl text-white ${
+                className={`fa-solid text-4xl text-white ${
                   modalWin ? "fa-crown" : "fa-hourglass-end"
                 }`}
               />
             </div>
 
-            <h2 className="mb-2 text-4xl font-bold holiday-font text-white drop-shadow-lg">
-              {modalWin ? "Bạn đã chiến thắng!" : "Hết giờ"}
+            <h2 className="mb-2 text-3xl font-bold holiday-font text-white drop-shadow-lg">
+              {modalWin ? "🎉 Chúc mừng!" : "Hết giờ"}
             </h2>
-            <p className="mb-6 text-sm text-gray-300">
+            <p className="mb-4 text-sm text-slate-300">
               {modalWin
-                ? `Hoàn thành sau ${GAME_DURATION - timer}s. Đang kiểm tra voucher...`
-                : "Phép thuật đã tan biến. Thử lại nhé!"}
+                ? `Bạn đã hoàn thành trong ${GAME_DURATION - timer}s`
+                : "Thời gian đã hết. Hãy thử lại nhé!"}
             </p>
 
             {modalWin && (
-              <div className="group relative mb-6 overflow-hidden rounded-xl border border-yellow-500/50 bg-black/60 p-5">
-                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
-                <div className="text-2xl font-bold uppercase tracking-wide text-yellow-400">
-                  {prizeText || "Đang chờ voucher..."}
-                </div>
-                <div className="mt-2 inline-block rounded border border-white/20 bg-white/10 px-3 py-1 font-mono text-lg text-white">
-                  {prizeCode || "Đang xử lý"}
-                </div>
+              <div className="mb-6 space-y-4">
+                {!voucherFetched ? (
+                  <div className="rounded-xl border border-yellow-500/30 bg-black/50 p-5">
+                    <div className="flex items-center justify-center gap-3">
+                      <i className="fa-solid fa-spinner fa-spin text-2xl text-yellow-400" />
+                      <span className="text-lg text-yellow-200">Đang lấy voucher...</span>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">Vui lòng chờ trong giây lát</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-900/40 to-black/60 p-5">
+                      <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">Phần thưởng của bạn</p>
+                      <div className="text-3xl font-black text-yellow-400 drop-shadow-lg">
+                        {prizeText || "Voucher"}
+                      </div>
+                      {prizeCode && !prizeCode.includes("liên hệ") && (
+                        <>
+                          <p className="mt-3 text-xs text-slate-400">Mã voucher:</p>
+                          <div className="mt-1 inline-block rounded-lg border border-yellow-500/30 bg-black/60 px-4 py-2 font-mono text-xl font-bold tracking-wider text-white">
+                            {prizeCode}
+                          </div>
+                        </>
+                      )}
+                      {prizeCode && prizeCode.includes("liên hệ") && (
+                        <p className="mt-3 text-sm text-red-300">{prizeCode}</p>
+                      )}
+                    </div>
+                    
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-900/20 p-4">
+                      <div className="flex items-center justify-center gap-2 text-emerald-300">
+                        <i className="fa-solid fa-message-sms text-lg" />
+                        <span className="text-sm font-medium">Voucher sẽ được gửi qua SMS đến số {phone}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full bg-white text-gray-900 hover:bg-gray-100"
-              onClick={handleResetGame}
-            >
-              <i className="fa-solid fa-rotate-right mr-2" />
-              Chơi Lại
-            </Button>
+            {!modalWin && (
+              <div className="mb-6 rounded-xl border border-slate-500/30 bg-slate-900/30 p-4">
+                <p className="text-sm text-slate-300">
+                  Đừng nản chí! Bạn còn <span className="font-bold text-yellow-400">{Math.max(0, attemptsLeft - 1)}</span> lượt chơi hôm nay.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {modalWin && voucherFetched && prizeCode && !prizeCode.includes("liên hệ") && (
+                <Button
+                  size="lg"
+                  className="w-full"
+                  onClick={() => {
+                    navigator.clipboard.writeText(prizeCode);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  <i className={`fa-solid ${copied ? "fa-check" : "fa-copy"} mr-2`} />
+                  {copied ? "Đã sao chép!" : "Sao chép mã"}
+                </Button>
+              )}
+
+              {attemptsLeft > 1 && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full border-white/20 bg-white/10 text-white hover:bg-white/20"
+                  onClick={handleResetGame}
+                >
+                  <i className="fa-solid fa-rotate-right mr-2" />
+                  Chơi lại
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                size="lg"
+                className="w-full text-slate-300 hover:text-white hover:bg-white/10"
+                onClick={backToLanding}
+              >
+                <i className="fa-solid fa-home mr-2" />
+                Về trang chủ
+              </Button>
+            </div>
           </div>
         </div>
       )}
