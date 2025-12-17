@@ -600,7 +600,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       )}
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 p-4">
-        <div className="absolute right-2 top-2 flex items-center gap-2 text-xs text-yellow-100">
+        <div className="fixed bottom-4 left-4 z-20 flex items-center gap-2 text-xs text-yellow-100">
           <Button
             variant="ghost"
             size="sm"
