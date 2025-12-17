@@ -164,62 +164,13 @@ async function fetchSheetRows(): Promise<SheetRow[]> {
   });
 }
 
-function parseSheetTimestamp(ts: string): Date | null {
-  if (!ts) return null;
-  // Sheet is in format "dd/MM/yyyy HH:mm:ss"
-  const [datePart, timePart] = ts.split(" ");
-  const [dayStr, monthStr, yearStr] = datePart.split(/[\/.-]/);
-  const day = Number(dayStr);
-  const month = Number(monthStr);
-  const year = Number(yearStr);
-  if (!day || !month || !year) return null;
-  let hours = 0;
-  let minutes = 0;
-  let seconds = 0;
-  if (timePart) {
-    const [h, m, s] = timePart.split(":");
-    hours = Number(h) || 0;
-    minutes = Number(m) || 0;
-    seconds = Number(s) || 0;
-  }
-  const d = new Date(year, month - 1, day, hours, minutes, seconds);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
-}
-
-function isToday(ts: string) {
-  const d = parseSheetTimestamp(ts);
-  if (!d) return false;
-  const today = new Date();
-  return (
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate()
+function latestWinForPhone(rows: SheetRow[], phone: string): SheetRow | null {
+  const phoneWins = rows.filter(
+    (r) => r.phone === phone && r.result?.toLowerCase() === "win"
   );
-}
-
-function latestTodayRow(rows: SheetRow[], phone: string): SheetRow | null {
-  const todayRows = rows.filter(
-    (r) => r.phone === phone && isToday(r.timestamp)
-  );
-  if (!todayRows.length) return null;
-  return todayRows.sort((a, b) => {
-    const da = parseSheetTimestamp(a.timestamp)?.getTime() ?? 0;
-    const db = parseSheetTimestamp(b.timestamp)?.getTime() ?? 0;
-    return db - da;
-  })[0];
-}
-
-function latestTodayWin(rows: SheetRow[], phone: string): SheetRow | null {
-  const todayWinRows = rows.filter(
-    (r) => r.phone === phone && isToday(r.timestamp) && r.result?.toLowerCase() === "win"
-  );
-  if (!todayWinRows.length) return null;
-  return todayWinRows.sort((a, b) => {
-    const da = parseSheetTimestamp(a.timestamp)?.getTime() ?? 0;
-    const db = parseSheetTimestamp(b.timestamp)?.getTime() ?? 0;
-    return db - da;
-  })[0];
+  if (!phoneWins.length) return null;
+  // Rows come in chronological order from the sheet; take the last one
+  return phoneWins[phoneWins.length - 1];
 }
 
 function submitResult(phone: string, result: "win" | "lose") {
@@ -330,10 +281,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     setAttemptsStatus("Đang kiểm tra lượt...");
     try {
       const rows = await fetchSheetRows();
-      const todayRows = rows.filter(
-        (r) => r.phone === p && isToday(r.timestamp)
-      );
-      const used = Math.min(ATTEMPTS_PER_DAY, todayRows.length);
+      const phoneRows = rows.filter((r) => r.phone === p);
+      const used = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
       const left = Math.max(0, ATTEMPTS_PER_DAY - used);
       setAttemptsUsed(used);
       setAttemptsStatus(`Đã đọc sheet: ${used} lượt hôm nay → còn ${left} lượt`);
@@ -383,7 +332,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
         }
         try {
           const rows = await fetchSheetRows();
-          const latestWin = latestTodayWin(rows, currentPhone);
+          const latestWin = latestWinForPhone(rows, currentPhone);
           if (!latestWin) return;
           const status = (latestWin.status || "").toLowerCase();
           const voucher = latestWin.voucher || "";

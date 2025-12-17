@@ -10,7 +10,7 @@ export default function LandingPage() {
       <div className="glow-layer" />
       <div className="ambient-light" />
 
-      <div className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-8 p-4">
+      <div className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-10 p-4 pb-10">
         <div className="hero-banner">
           <img
             src="https://cdn.hstatic.net/files/200000689681/article/artboard_1__10__073cf5b38b54400bb7eabdec9da754d9.png"
@@ -60,6 +60,57 @@ export default function LandingPage() {
             </div>
           </details>
         </div>
+
+        <section className="w-full space-y-4 text-sm text-slate-100/95">
+          <div className="info-card">
+            <h2 className="mb-1 text-base font-semibold text-yellow-200">
+              Nội dung chương trình “Vui Giáng Sinh – Khui Voucher Khủng”
+            </h2>
+            <p className="mb-2">
+              Nhân dịp mùa lễ hội Giáng Sinh, Mắt Việt mang đến cơ hội nhận voucher giảm thêm lên đến{" "}
+              <b>200.000đ</b> cùng nhiều ưu đãi hấp dẫn khi mua sắm và chăm sóc thị lực tại cửa hàng.
+            </p>
+            <p className="text-xs text-slate-200">
+              Chương trình áp dụng độc quyền tại 5 cửa hàng Mắt Việt và dành cho khách hàng Mắt Việt.
+            </p>
+          </div>
+
+          <div className="info-card">
+            <h3 className="mb-1 text-sm font-semibold text-yellow-200">Cách tham gia</h3>
+            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
+              <li>
+                <b>Cách 1 – Tại cửa hàng:</b> Đến một trong các cửa hàng Mắt Việt, quét mã QR tại quầy để tham gia
+                minigame khui quà và nhận voucher giảm thêm đến 200.000đ.
+              </li>
+              <li>
+                <b>Cách 2 – Online:</b> Quét QR / truy cập link chương trình, tham gia minigame lật hình quà Giáng
+                Sinh, sau đó mang voucher nhận được đến cửa hàng để áp dụng.
+              </li>
+            </ul>
+          </div>
+
+          <div className="info-card">
+            <h3 className="mb-1 text-sm font-semibold text-yellow-200">Ưu đãi & mức voucher</h3>
+            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
+              <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
+              <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
+              <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
+              <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
+              <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
+            </ul>
+          </div>
+
+          <div className="info-card">
+            <h3 className="mb-1 text-sm font-semibold text-yellow-200">Cửa hàng áp dụng</h3>
+            <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
+              <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
+              <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
+              <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
+              <li>Mắt Việt 3 Tháng 2 – Quận 10.</li>
+              <li>Mắt Việt Hoàng Diệu 2 – TP. Thủ Đức.</li>
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
   );
