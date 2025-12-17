@@ -10,7 +10,7 @@ export default function LandingPage() {
       <div className="glow-layer" />
       <div className="ambient-light" />
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 p-4">
+      <div className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-8 p-4">
         <div className="hero-banner">
           <img
             src="https://cdn.hstatic.net/files/200000689681/article/artboard_1__10__073cf5b38b54400bb7eabdec9da754d9.png"

@@ -164,9 +164,32 @@ async function fetchSheetRows(): Promise<SheetRow[]> {
   });
 }
 
+function parseSheetTimestamp(ts: string): Date | null {
+  if (!ts) return null;
+  // Sheet is in format "dd/MM/yyyy HH:mm:ss"
+  const [datePart, timePart] = ts.split(" ");
+  const [dayStr, monthStr, yearStr] = datePart.split(/[\/.-]/);
+  const day = Number(dayStr);
+  const month = Number(monthStr);
+  const year = Number(yearStr);
+  if (!day || !month || !year) return null;
+  let hours = 0;
+  let minutes = 0;
+  let seconds = 0;
+  if (timePart) {
+    const [h, m, s] = timePart.split(":");
+    hours = Number(h) || 0;
+    minutes = Number(m) || 0;
+    seconds = Number(s) || 0;
+  }
+  const d = new Date(year, month - 1, day, hours, minutes, seconds);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
+
 function isToday(ts: string) {
-  const d = new Date(ts);
-  if (Number.isNaN(d.getTime())) return false;
+  const d = parseSheetTimestamp(ts);
+  if (!d) return false;
   const today = new Date();
   return (
     d.getFullYear() === today.getFullYear() &&
@@ -180,9 +203,11 @@ function latestTodayRow(rows: SheetRow[], phone: string): SheetRow | null {
     (r) => r.phone === phone && isToday(r.timestamp)
   );
   if (!todayRows.length) return null;
-  return todayRows.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  )[0];
+  return todayRows.sort((a, b) => {
+    const da = parseSheetTimestamp(a.timestamp)?.getTime() ?? 0;
+    const db = parseSheetTimestamp(b.timestamp)?.getTime() ?? 0;
+    return db - da;
+  })[0];
 }
 
 function latestTodayWin(rows: SheetRow[], phone: string): SheetRow | null {
@@ -190,9 +215,11 @@ function latestTodayWin(rows: SheetRow[], phone: string): SheetRow | null {
     (r) => r.phone === phone && isToday(r.timestamp) && r.result?.toLowerCase() === "win"
   );
   if (!todayWinRows.length) return null;
-  return todayWinRows.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  )[0];
+  return todayWinRows.sort((a, b) => {
+    const da = parseSheetTimestamp(a.timestamp)?.getTime() ?? 0;
+    const db = parseSheetTimestamp(b.timestamp)?.getTime() ?? 0;
+    return db - da;
+  })[0];
 }
 
 function submitResult(phone: string, result: "win" | "lose") {
@@ -729,7 +756,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
         {showGameArea && (
           <div className="slide-up-in flex w-full flex-col items-center">
-            <div className="mb-2 flex w-full items-center justify-between">
+            <div className="mb-3 flex w-full items-center justify-between">
               <Button
                 variant="ghost"
                 size="sm"
@@ -739,30 +766,27 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                 <i className="fa-solid fa-arrow-left mr-2" />
                 Trang chủ
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="border border-white/15 bg-black/20 px-3 py-2 text-[11px] hover:bg-white/10"
-                onClick={() => {
-                  const el = document.getElementById("rules-inline");
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-              >
-                <i className="fa-solid fa-circle-info mr-2" />
-                Thể lệ
-              </Button>
             </div>
-            <div className="mb-2 flex w-full items-center justify-between rounded-full border border-white/10 bg-black/30 px-4 py-2 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-sm font-bold text-yellow-300">
-                <i className="fa-solid fa-hourglass-half animate-pulse" />
-                <span className="font-mono text-lg">{timer}s</span>
+            <div className="mb-2 flex w-full items-center justify-between rounded-full border border-yellow-500/40 bg-gradient-to-r from-black/60 via-black/40 to-black/60 px-4 py-2 backdrop-blur-md shadow-[0_0_25px_rgba(250,204,21,0.25)]">
+              <div className="flex flex-col items-start text-xs font-semibold uppercase tracking-[0.18em] text-yellow-200">
+                <span className="opacity-80">Thời gian</span>
+                <span className="flex items-center gap-2 text-base font-bold text-yellow-300">
+                  <i className="fa-solid fa-hourglass-half animate-pulse" />
+                  <span className="font-mono text-lg">{timer}s</span>
+                </span>
               </div>
-              <div className="text-sm font-bold text-gray-300">
-                Điểm: <span className="text-lg text-white">{matchedPairs}/6</span>
+              <div className="flex flex-col items-center text-xs font-semibold uppercase tracking-[0.18em] text-slate-200">
+                <span className="opacity-80">Cặp trùng</span>
+                <span className="text-lg font-bold text-white">{matchedPairs}/6</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-200">
-                <i className="fa-solid fa-bolt" />
-                <span>Lượt chơi: {attemptsLeft}/{ATTEMPTS_PER_DAY}</span>
+              <div className="flex flex-col items-end text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
+                <span className="opacity-80">Lượt chơi</span>
+                <span className="flex items-center gap-1 text-sm">
+                  <i className="fa-solid fa-bolt" />
+                  <span className="font-mono text-base">
+                    {attemptsLeft}/{ATTEMPTS_PER_DAY}
+                  </span>
+                </span>
               </div>
             </div>
             <div
@@ -797,13 +821,6 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
               ))}
             </div>
 
-            <details id="rules-inline" className="info-card mt-4 w-full max-w-md">
-              <summary className="font-semibold text-white">Thể lệ & cách chơi</summary>
-              <div className="mt-2 space-y-2 text-xs text-slate-200">
-                <p>Mỗi SĐT có <b>2 lượt/ngày</b>. Bạn có <b>60 giây</b> để tìm đủ 6 cặp hình.</p>
-                <p>Nếu thắng, hệ thống sẽ tự động gửi voucher và hiển thị mã/giá trị ngay trong popup.</p>
-              </div>
-            </details>
           </div>
         )}
       </div>

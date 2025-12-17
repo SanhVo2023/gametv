@@ -13,7 +13,7 @@ const baseClasses =
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-gradient-to-r from-emerald-600 to-emerald-800 text-white hover:from-emerald-500 hover:to-emerald-700 border-t border-emerald-300 shadow-lg shadow-emerald-900/40",
+    "bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 hover:from-amber-300 hover:via-yellow-300 hover:to-amber-400 border-t border-yellow-200 shadow-lg shadow-yellow-900/40",
   outline:
     "border border-slate-600 bg-transparent text-slate-100 hover:bg-slate-800/60",
   ghost: "bg-transparent text-slate-100 hover:bg-slate-800/40"
