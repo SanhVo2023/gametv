@@ -150,25 +150,51 @@ async function fetchSheetRows(): Promise<SheetRow[]> {
   const parser = new DOMParser();
   const doc = parser.parseFromString(text, "text/html");
   const rows = Array.from(doc.querySelectorAll("table tbody tr"));
+  
+  // Find header row to detect column indices
+  let phoneColIdx = 1;
+  for (const row of rows) {
+    const cells = Array.from(row.querySelectorAll("td,th")).map(
+      (c) => c.textContent?.trim().toLowerCase() || ""
+    );
+    const idx = cells.findIndex((c) => c.includes("điện thoại") || c.includes("phone"));
+    if (idx !== -1) {
+      phoneColIdx = idx;
+      console.log("[Sheet] Header found, phone column index:", phoneColIdx, "cells:", cells);
+      break;
+    }
+  }
+
   const dataRows = rows.filter((r) => {
     const cells = r.querySelectorAll("td,th");
-    if (cells.length < 6) return false;
-    const first = cells[0].textContent?.trim() || "";
-    return first.toLowerCase() !== "dấu thời gian";
+    if (cells.length < 3) return false;
+    const firstCell = cells[0].textContent?.trim().toLowerCase() || "";
+    // Skip header row
+    return !firstCell.includes("thời gian") && !firstCell.includes("timestamp");
   });
-  return dataRows.map((r) => {
+
+  const result = dataRows.map((r) => {
     const cells = Array.from(r.querySelectorAll("td,th")).map(
       (c) => c.textContent?.trim() || ""
     );
     return {
-      timestamp: cells[0] || "",
-      phone: cells[1] || "",
-      result: cells[2] || "",
-      status: cells[3] || "",
-      voucher: cells[4] || "",
-      value: cells[5] || ""
+      timestamp: cells[phoneColIdx - 1] || cells[0] || "",
+      phone: cells[phoneColIdx] || "",
+      result: cells[phoneColIdx + 1] || "",
+      status: cells[phoneColIdx + 2] || "",
+      voucher: cells[phoneColIdx + 3] || "",
+      value: cells[phoneColIdx + 4] || ""
     };
   });
+
+  // Debug: log first few rows
+  console.log("[Sheet] Parsed rows sample:", result.slice(0, 3).map(r => ({
+    phone: r.phone,
+    phoneNorm: normalizePhone(r.phone),
+    result: r.result
+  })));
+
+  return result;
 }
 
 function latestWinForPhone(rows: SheetRow[], phone: string): SheetRow | null {
@@ -290,14 +316,22 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     try {
       const rows = await fetchSheetRows();
       const normInput = normalizePhone(p);
-      const phoneRows = rows.filter((r) => normalizePhone(r.phone) === normInput);
+      console.log("[Check] Input phone normalized:", normInput, "total rows:", rows.length);
+      const phoneRows = rows.filter((r) => {
+        const normSheet = normalizePhone(r.phone);
+        const match = normSheet === normInput;
+        if (match) console.log("[Check] MATCH:", r.phone, "→", normSheet);
+        return match;
+      });
+      console.log("[Check] Matching rows:", phoneRows.length);
       const used = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
       const left = Math.max(0, ATTEMPTS_PER_DAY - used);
       setAttemptsUsed(used);
       setAttemptsStatus(`Đã đọc sheet: ${used} lượt hôm nay → còn ${left} lượt`);
       setAttemptsLeft(left);
       return { used, left };
-    } catch {
+    } catch (err) {
+      console.error("[Check] Sheet fetch error:", err);
       setAttemptsUsed(ATTEMPTS_PER_DAY);
       setAttemptsLeft(0);
       setAttemptsError("Không đọc được sheet, tạm khóa lượt chơi.");
