@@ -29,6 +29,13 @@ const BANNER_URL =
   "https://cdn.hstatic.net/files/200000689681/article/artboard_1__10__073cf5b38b54400bb7eabdec9da754d9.png";
 const STATUS_FAIL_KEYWORDS = ["fail", "không", "bo qua", "bỏ qua"];
 
+// Normalize phone: remove all non-digit chars for string-to-string comparison
+const normalizePhone = (s: string) =>
+  (s || "")
+    .replace(/\u00A0/g, " ") // convert non-breaking spaces
+    .replace(/\D/g, "")      // keep only digits
+    .trim();
+
 type Card = {
   id: number;
   icon: string;
@@ -165,8 +172,9 @@ async function fetchSheetRows(): Promise<SheetRow[]> {
 }
 
 function latestWinForPhone(rows: SheetRow[], phone: string): SheetRow | null {
+  const normInput = normalizePhone(phone);
   const phoneWins = rows.filter(
-    (r) => r.phone === phone && r.result?.toLowerCase() === "win"
+    (r) => normalizePhone(r.phone) === normInput && r.result?.toLowerCase() === "win"
   );
   if (!phoneWins.length) return null;
   // Rows come in chronological order from the sheet; take the last one
@@ -281,7 +289,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     setAttemptsStatus("Đang kiểm tra lượt...");
     try {
       const rows = await fetchSheetRows();
-      const phoneRows = rows.filter((r) => r.phone === p);
+      const normInput = normalizePhone(p);
+      const phoneRows = rows.filter((r) => normalizePhone(r.phone) === normInput);
       const used = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
       const left = Math.max(0, ATTEMPTS_PER_DAY - used);
       setAttemptsUsed(used);
