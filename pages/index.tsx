@@ -27,9 +27,10 @@ export default function LandingPage() {
 
         <div className="w-full max-w-3xl flex flex-col items-center gap-6">
           <div 
-            className={`relative space-y-2 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
-            style={{ animationDelay: "0.3s" }}
+            className={`glass-panel w-full rounded-2xl border border-white/20 p-6 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
+            style={{ animationDelay: "0.5s" }}
           >
+          <div className="relative space-y-2 text-center">
             <h1 className="holiday-title whitespace-nowrap">Trí Nhớ Giáng Sinh</h1>
             <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md whitespace-nowrap">
               <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0s" }} />
@@ -38,10 +39,6 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div 
-            className={`glass-panel w-full rounded-2xl border border-white/20 p-6 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
-            style={{ animationDelay: "0.5s" }}
-          >
           <p className="text-sm text-slate-100/90 leading-relaxed">
             Minigame Giáng Sinh từ Mắt Việt. Lật hình quà tặng để nhận voucher giảm thêm đến{" "}
             <span className="font-bold text-yellow-400 text-base">200.000đ</span> khi mua sắm tại 5 cửa hàng Mắt Việt.
@@ -57,16 +54,19 @@ export default function LandingPage() {
               CHƠI NGAY
             </Button>
           </div>
+        </div>
 
+        <section className="w-full space-y-3 text-sm text-slate-100/95">
           <details 
-            className="info-card mt-5 space-y-2 text-left text-sm leading-relaxed"
+            className="info-card group"
             style={{ animationDelay: "0.7s" }}
           >
-            <summary className="font-semibold text-white cursor-pointer hover:text-yellow-300 transition-colors">
-              <i className="fa-solid fa-info-circle mr-2 text-yellow-400" />
+            <summary className="cursor-pointer text-base font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
+              <i className="fa-solid fa-info-circle text-yellow-400" />
               Thông tin và thể lệ
+              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform duration-300 group-open:rotate-180" />
             </summary>
-            <div className="space-y-2 text-slate-100/90 mt-3">
+            <div className="mt-3 space-y-2 text-slate-100/90">
               <p>
                 "Vui Giáng Sinh – Khui Voucher Khủng" áp dụng độc quyền tại 5 cửa hàng Mắt Việt.
               </p>
@@ -78,9 +78,7 @@ export default function LandingPage() {
               </ul>
             </div>
           </details>
-        </div>
 
-        <section className="w-full space-y-3 text-sm text-slate-100/95">
           <details 
             className="info-card group"
             style={{ animationDelay: "0.8s" }}

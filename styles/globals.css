@@ -9,8 +9,8 @@ body,
 }
 
 body {
-  font-family: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   background-color: #011574;
   color: white;
   overflow-x: hidden;
@@ -327,6 +327,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .card.flipped {
@@ -344,6 +345,7 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  will-change: transform;
 }
 
 .face-back {
@@ -400,6 +402,7 @@ body {
 
 .face-front i {
   font-size: 48px;
+  line-height: 1;
   background: linear-gradient(135deg, #dc2626 0%, #16a34a 100%);
   -webkit-background-clip: text;
   background-clip: text;

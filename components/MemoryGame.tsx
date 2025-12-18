@@ -6,14 +6,14 @@ import confetti from "canvas-confetti";
 import { Button } from "./ui/button";
 
 const ICONS = [
-  "gift-1",
-  "gift-2",
-  "gift-3",
-  "gift-4",
-  "gift-5",
-  "gift-6",
-  "gift-7",
-  "gift-8"
+  "fa-gift",
+  "fa-snowflake",
+  "fa-sleigh",
+  "fa-bell",
+  "fa-tree",
+  "fa-snowman",
+  "fa-candy-cane",
+  "fa-star"
 ];
 
 const GAME_DURATION = 60;
@@ -80,37 +80,6 @@ type SheetRow = {
   status: string;
   voucher: string;
   value: string;
-};
-
-const GiftIcon: React.FC<{ size?: number; variant?: number }> = ({
-  size = 40,
-  variant = 1
-}) => {
-  const bodyColor =
-    variant === 2 ? "#fb923c" : variant === 3 ? "#f97316" : "#f97316";
-  const ribbonColor =
-    variant === 4 ? "#fde047" : variant === 5 ? "#facc15" : "#facc15";
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      aria-hidden="true"
-    >
-      <rect x="8" y="14" width="32" height="26" rx="4" fill={bodyColor} />
-      <rect x="22" y="14" width="4" height="26" fill={ribbonColor} />
-      <rect x="8" y="24" width="32" height="4" fill={ribbonColor} />
-      <path
-        d="M18 14c-2.2 0-4-1.8-4-4 0-2 1.6-3.6 3.6-3.6 2.4 0 4.8 2.4 5.4 6.8H18z"
-        fill="#fed7aa"
-      />
-      <path
-        d="M30 14c2.2 0 4-1.8 4-4 0-2-1.6-3.6-3.6-3.6-2.4 0-4.8 2.4-5.4 6.8H30z"
-        fill="#fed7aa"
-      />
-    </svg>
-  );
 };
 
 let audioCtx: AudioContext | null = null;
@@ -432,6 +401,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const voucherPollRunIdRef = useRef(0);
   const isGameActiveRef = useRef(false);
   const resultSubmittedRef = useRef(false);
 
@@ -439,6 +410,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (pollStartTimeoutRef.current) clearTimeout(pollStartTimeoutRef.current);
     };
   }, []);
 
@@ -490,21 +462,42 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
   };
 
   const startVoucherPolling = (currentPhone: string) => {
+    // New polling run. Any stale async responses from older runs must be ignored.
+    const runId = ++voucherPollRunIdRef.current;
     const start = Date.now();
     setPrizeText("Đang chờ voucher...");
     setPrizeCode("");
     setVoucherFetched(false);
     setVoucherError(false);
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
 
-    setTimeout(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (pollStartTimeoutRef.current) {
+      clearTimeout(pollStartTimeoutRef.current);
+      pollStartTimeoutRef.current = null;
+    }
+
+    const stopPolling = () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollStartTimeoutRef.current) {
+        clearTimeout(pollStartTimeoutRef.current);
+        pollStartTimeoutRef.current = null;
+      }
+    };
+
+    pollStartTimeoutRef.current = setTimeout(() => {
       pollIntervalRef.current = setInterval(async () => {
+        // Ignore any work from older runs
+        if (voucherPollRunIdRef.current !== runId) return;
         if (!currentPhone) return;
         if (Date.now() - start > POLL_TIMEOUT_MS) {
-          if (pollIntervalRef.current) {
-            clearInterval(pollIntervalRef.current);
-            pollIntervalRef.current = null;
-          }
+          stopPolling();
+          if (voucherPollRunIdRef.current !== runId) return;
           setPrizeText("Hết thời gian chờ voucher");
           setPrizeCode("Vui lòng liên hệ CSKH");
           setVoucherFetched(true);
@@ -513,6 +506,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
         }
         try {
           const rows = await fetchSheetRows();
+          if (voucherPollRunIdRef.current !== runId) return;
           const latestWin = latestWinForPhone(rows, currentPhone);
           if (!latestWin) return;
           const status = (latestWin.status || "").trim();
@@ -520,16 +514,14 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
           const voucher = latestWin.voucher || "";
           const value = latestWin.value || "";
 
-          // Check for "sent" status (success)
-          if (statusLower === "sent") {
+          // Success rule: stop immediately once we have voucher/value (even if status isn't "sent")
+          // This prevents UI flipping if sheet updates status later or if older polls time out.
+          if (voucher || value || statusLower === "sent") {
             setPrizeText(value || "Voucher đã cấp");
             setPrizeCode(voucher || "");
             setVoucherFetched(true);
             setVoucherError(false);
-            if (pollIntervalRef.current) {
-              clearInterval(pollIntervalRef.current);
-              pollIntervalRef.current = null;
-            }
+            stopPolling();
             return;
           }
 
@@ -539,10 +531,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             setPrizeCode(status);
             setVoucherFetched(true);
             setVoucherError(true);
-            if (pollIntervalRef.current) {
-              clearInterval(pollIntervalRef.current);
-              pollIntervalRef.current = null;
-            }
+            stopPolling();
             return;
           }
         } catch {
@@ -925,8 +914,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                       )}
                     </Button>
 
-                    <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                      <div className="flex items-center justify-between text-sm">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 text-sm">
                         <span className="text-slate-400">Lượt chơi hôm nay:</span>
                         <span className="flex items-center gap-2">
                           <span className="dot-pulse" />
@@ -1013,10 +1002,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                   >
                     <div className="face face-back" />
                     <div className="face face-front">
-                      <GiftIcon
-                        size={36}
-                        variant={(parseInt(card.icon.split("-")[1] || "1", 10) % 5) + 1}
-                      />
+                      <i className={`fa-solid ${card.icon}`} />
                     </div>
                   </div>
                 </div>
@@ -1029,20 +1015,9 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-          <div
-            className={`glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-5 text-center ${
-              modalWin ? "max-h-[80vh] overflow-y-auto" : ""
-            }`}
-          >
-            <div className="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12">
-              ✨
-            </div>
-            <div className="absolute -bottom-10 -left-10 text-8xl opacity-10 -rotate-12">
-              ✨
-            </div>
-
+          <div className="relative w-full max-w-sm scale-100">
             <div
-              className={`mx-auto -mt-20 mb-4 flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white shadow-2xl ${
+              className={`absolute left-1/2 top-0 z-10 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full ring-4 ring-white shadow-2xl ${
                 modalWin
                   ? "bg-gradient-to-br from-yellow-300 to-yellow-600"
                   : "bg-gray-700"
@@ -1055,82 +1030,92 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
               />
             </div>
 
-            <h2 className="mb-2 text-3xl font-bold holiday-font text-white drop-shadow-lg">
-              {modalWin ? "🎉 Chúc mừng!" : "Hết giờ"}
-            </h2>
-            <p className="mb-4 text-sm text-slate-300">
-              {modalWin
-                ? `Bạn đã hoàn thành trong ${GAME_DURATION - timer}s`
-                : "Thời gian đã hết. Hãy thử lại nhé!"}
-            </p>
+            <div className="glass-panel relative rounded-3xl border-2 border-white/20">
+              <div className="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12 pointer-events-none">
+                ✨
+              </div>
+              <div className="absolute -bottom-10 -left-10 text-8xl opacity-10 -rotate-12 pointer-events-none">
+                ✨
+              </div>
 
-            {modalWin && (
-              <div className="mb-6 space-y-4">
-                {!voucherFetched ? (
-                  <div className="rounded-xl border border-yellow-500/30 bg-black/50 p-5">
-                    <div className="flex items-center justify-center gap-3">
-                      <i className="fa-solid fa-spinner fa-spin text-2xl text-yellow-400" />
-                      <span className="text-lg text-yellow-200">Đang lấy voucher...</span>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-400">Vui lòng chờ trong giây lát</p>
-                  </div>
-                ) : voucherError ? (
-                  <div className="space-y-3">
-                    <div className="rounded-xl border-2 border-red-500/50 bg-gradient-to-b from-red-900/40 to-black/60 p-5">
-                      <p className="text-xs uppercase tracking-wider text-red-300/80 mb-1">Có lỗi xảy ra</p>
-                      <div className="text-2xl font-bold text-red-400">
-                        {prizeText}
+              <div className="rounded-3xl px-5 pb-5 pt-16 text-center overflow-hidden">
+                <div className="max-h-[calc(90vh-3.5rem)] overflow-y-auto overflow-x-visible pr-1">
+              <h2 className="mb-2 text-3xl font-bold holiday-font text-white drop-shadow-lg">
+                {modalWin ? "🎉 Chúc mừng!" : "Hết giờ"}
+              </h2>
+              <p className="mb-4 text-sm text-slate-300">
+                {modalWin
+                  ? `Bạn đã hoàn thành trong ${GAME_DURATION - timer}s`
+                  : "Thời gian đã hết. Hãy thử lại nhé!"}
+              </p>
+
+              {modalWin && (
+                <div className="mb-6 space-y-4">
+                  {!voucherFetched ? (
+                    <div className="rounded-xl border border-yellow-500/30 bg-black/50 p-5">
+                      <div className="flex items-center justify-center gap-3">
+                        <i className="fa-solid fa-spinner fa-spin text-2xl text-yellow-400" />
+                        <span className="text-lg text-yellow-200">Đang lấy voucher...</span>
                       </div>
-                      <p className="mt-3 text-sm text-slate-400">{prizeCode}</p>
+                      <p className="mt-2 text-xs text-slate-400">Vui lòng chờ trong giây lát</p>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="rounded-xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-900/40 to-black/60 p-5">
-                      <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">🎁 Phần thưởng của bạn</p>
-                      <div className="text-2xl font-black text-yellow-400 drop-shadow-lg leading-snug">
-                        {voucherThresholdText(prizeText || "")}
-                      </div>
-                      {prizeCode && (
-                        <>
-                          <p className="mt-3 text-xs text-slate-400">Mã voucher:</p>
-                          <div className="mt-1 inline-block rounded-lg border border-yellow-500/30 bg-black/60 px-4 py-2 font-mono text-xl font-bold tracking-wider text-white">
-                            {prizeCode}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    
-                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-900/20 p-4">
-                      <div className="flex items-center justify-center gap-2 text-emerald-300">
-                        <i className="fa-solid fa-message-sms text-lg" />
-                        <span className="text-sm font-medium">Voucher sẽ được gửi qua SMS đến số {phone}</span>
+                  ) : voucherError ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border-2 border-red-500/50 bg-gradient-to-b from-red-900/40 to-black/60 p-5">
+                        <p className="text-xs uppercase tracking-wider text-red-300/80 mb-1">Có lỗi xảy ra</p>
+                        <div className="text-2xl font-bold text-red-400">
+                          {prizeText}
+                        </div>
+                        <p className="mt-3 text-sm text-slate-400">{prizeCode}</p>
                       </div>
                     </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-900/40 to-black/60 p-5">
+                        <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">🎁 Phần thưởng của bạn</p>
+                        <div className="text-2xl font-black text-yellow-400 drop-shadow-lg leading-snug">
+                          {voucherThresholdText(prizeText || "")}
+                        </div>
+                        {prizeCode && (
+                          <>
+                            <p className="mt-3 text-xs text-slate-400">Mã voucher:</p>
+                            <div className="mt-1 inline-block rounded-lg border border-yellow-500/30 bg-black/60 px-4 py-2 font-mono text-xl font-bold tracking-wider text-white">
+                              {prizeCode}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-900/20 p-4">
+                        <div className="flex items-center justify-center gap-2 text-emerald-300">
+                          <i className="fa-solid fa-message-sms text-lg" />
+                          <span className="text-sm font-medium">Voucher sẽ được gửi qua SMS đến số {phone}</span>
+                        </div>
+                      </div>
 
-                    <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
-                      <details className="info-card group">
-                        <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                          <i className="fa-solid fa-tags text-yellow-400 text-xs" />
-                          Ưu đãi & mức voucher
-                          <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
-                        </summary>
-                        <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
-                          <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
-                          <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
-                          <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
-                          <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
-                          <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
-                        </ul>
-                      </details>
+                      <div className="mt-4 space-y-2 max-h-64 overflow-y-auto overflow-x-hidden pr-1">
+                        <details className="info-card group">
+                          <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
+                            <i className="fa-solid fa-tags text-yellow-400 text-xs" />
+                            Ưu đãi & mức voucher
+                            <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
+                          </summary>
+                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
+                            <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
+                            <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
+                            <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
+                            <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
+                            <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
+                          </ul>
+                        </details>
 
-                      <details className="info-card group">
-                        <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                          <i className="fa-solid fa-location-dot text-yellow-400 text-xs" />
-                          Cửa hàng áp dụng
-                          <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
-                        </summary>
-                        <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
+                        <details className="info-card group">
+                          <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
+                            <i className="fa-solid fa-location-dot text-yellow-400 text-xs" />
+                            Cửa hàng áp dụng
+                            <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
+                          </summary>
+                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
                           <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
                           <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
                           <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
@@ -1189,6 +1174,9 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                 <i className="fa-solid fa-home mr-2" />
                 Về trang chủ
               </Button>
+            </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
