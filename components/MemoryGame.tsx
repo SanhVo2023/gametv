@@ -447,7 +447,15 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     // On login, overwrite local state from sheet (source of truth for the day).
     setAttemptsUsed(used);
     setAttemptsLeft(left);
-    setAttemptsStatus(`Đã đọc sheet: ${used} lượt hôm nay → còn ${left} lượt`);
+    if (left > 0) {
+      setAttemptsStatus(
+        `Hôm nay bạn đã chơi ${used}/${ATTEMPTS_PER_DAY} lượt. Bạn còn ${left} lượt.`
+      );
+    } else {
+      setAttemptsStatus(
+        `Hôm nay bạn đã dùng đủ ${ATTEMPTS_PER_DAY} lượt. Hẹn gặp bạn vào ngày mai 🎄`
+      );
+    }
 
     return { used, left };
     } catch (err) {
@@ -513,7 +521,9 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
           stopPolling();
           if (voucherPollRunIdRef.current !== runId) return;
           setPrizeText("Hết thời gian chờ voucher");
-          setPrizeCode("Vui lòng liên hệ CSKH");
+          setPrizeCode(
+            "Nếu bạn chưa nhận được SMS sau khoảng 10 phút, vui lòng liên hệ CSKH Mắt Việt hoặc mang màn hình này đến cửa hàng để được hỗ trợ."
+          );
           setVoucherFetched(true);
           setVoucherError(true);
           return;
@@ -542,7 +552,9 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
           // Check for error status (contains "Lỗi" or "Bỏ qua")
           if (status.includes("Lỗi") || status.includes("Bỏ qua") || status.includes("bỏ qua")) {
             setPrizeText("Gửi voucher thất bại");
-            setPrizeCode(status);
+            setPrizeCode(
+              `${status}. Vui lòng liên hệ CSKH Mắt Việt hoặc mang màn hình này đến cửa hàng để được hỗ trợ.`
+            );
             setVoucherFetched(true);
             setVoucherError(true);
             stopPolling();
@@ -619,9 +631,15 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     const newLeft = Math.max(0, ATTEMPTS_PER_DAY - newUsed);
     setAttemptsUsed(newUsed);
     setAttemptsLeft(newLeft);
-    setAttemptsStatus(
-      `Bạn đã dùng ${newUsed}/${ATTEMPTS_PER_DAY} lượt hôm nay → còn ${newLeft} lượt`
-    );
+    if (newLeft > 0) {
+      setAttemptsStatus(
+        `Bạn đã chơi ${newUsed}/${ATTEMPTS_PER_DAY} lượt hôm nay. Bạn còn ${newLeft} lượt.`
+      );
+    } else {
+      setAttemptsStatus(
+        `Bạn đã dùng hết ${ATTEMPTS_PER_DAY} lượt chơi hôm nay. Chúc mừng và hẹn gặp lại vào ngày mai 🎄`
+      );
+    }
 
     const ctx = ensureAudioCtx(soundOn);
     if (ctx && ctx.state === "suspended") ctx.resume();
