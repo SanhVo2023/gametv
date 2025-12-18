@@ -270,6 +270,17 @@ function voucherThresholdText(value: string): string {
   return value || "Voucher";
 }
 
+function splitVoucherHighlight(value: string): { amount: string; rest: string } {
+  if (!value) return { amount: "", rest: "" };
+  // Expect formats like: "Voucher 200.000đ cho hoá đơn từ 1.100.000đ."
+  const match = value.match(/Voucher\s+([\d\.\,]+đ)(.*)/i);
+  if (!match) {
+    return { amount: "", rest: value };
+  }
+  const [, amount, rest] = match;
+  return { amount: amount.trim(), rest: rest.trim() };
+}
+
 function submitResult(phone: string, result: "win" | "lose") {
   if (!phone) return;
   const formData = new FormData();
@@ -430,12 +441,20 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
         return isTodayRow;
       });
       console.log("[Check] Matching today rows:", phoneRows.length);
-      const used = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
-      const left = Math.max(0, ATTEMPTS_PER_DAY - used);
-      setAttemptsUsed(used);
-      setAttemptsStatus(`Đã đọc sheet: ${used} lượt hôm nay → còn ${left} lượt`);
-      setAttemptsLeft(left);
-      return { used, left };
+      const usedFromSheet = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
+      const leftFromSheet = Math.max(0, ATTEMPTS_PER_DAY - usedFromSheet);
+
+      // Never decrease attemptsUsed or increase attemptsLeft based on slow sheet writes.
+      setAttemptsUsed((prev) => Math.max(prev, usedFromSheet));
+      setAttemptsLeft((prev) => Math.min(prev, leftFromSheet));
+
+      const effectiveUsed = Math.max(attemptsUsed, usedFromSheet);
+      const effectiveLeft = Math.min(attemptsLeft, leftFromSheet);
+      setAttemptsStatus(
+        `Đã đọc sheet: ${effectiveUsed} lượt hôm nay → còn ${effectiveLeft} lượt`
+      );
+
+      return { used: effectiveUsed, left: effectiveLeft };
     } catch (err) {
       console.error("[Check] Sheet fetch error:", err);
       setAttemptsUsed(ATTEMPTS_PER_DAY);
@@ -600,6 +619,16 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       return;
     }
 
+    // Consume one attempt locally so UI never jumps back to 2/2 due to slow sheet updates.
+    const baseUsed = Math.max(attemptsUsed, fetched.used);
+    const newUsed = Math.min(ATTEMPTS_PER_DAY, baseUsed + 1);
+    const newLeft = Math.max(0, ATTEMPTS_PER_DAY - newUsed);
+    setAttemptsUsed(newUsed);
+    setAttemptsLeft((prev) => Math.min(prev, newLeft));
+    setAttemptsStatus(
+      `Bạn đã dùng ${newUsed}/${ATTEMPTS_PER_DAY} lượt hôm nay → còn ${newLeft} lượt`
+    );
+
     const ctx = ensureAudioCtx(soundOn);
     if (ctx && ctx.state === "suspended") ctx.resume();
 
@@ -728,26 +757,19 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     }
   };
 
-  const handleResetGame = async () => {
-    // Re-check attempts from sheet before allowing replay
-    try {
-      const { left } = await updateAttemptsFromSheet(phone.trim());
-      if (left <= 0) {
-        setAttemptsError("Hết lượt chơi hôm nay. Vui lòng quay lại sau 0h.");
-        setShowModal(false);
-        setShowGameArea(false);
-        setStep("phone");
-        return;
-      }
-      setShowModal(false);
-      initBoard();
-      startTimer();
-    } catch (err) {
-      setAttemptsError("Hệ thống lỗi");
+  const handleResetGame = () => {
+    // Use local state to decide if user still has attempts left in this session.
+    if (attemptsLeft <= 0) {
+      setAttemptsError("Hết lượt chơi hôm nay. Vui lòng quay lại sau 0h.");
       setShowModal(false);
       setShowGameArea(false);
       setStep("phone");
+      return;
     }
+
+    setShowModal(false);
+    initBoard();
+    startTimer();
   };
 
   const backToLanding = () => {
@@ -1073,14 +1095,51 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                     <div className="space-y-3">
                       <div className="rounded-xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-900/40 to-black/60 p-5">
                         <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">🎁 Phần thưởng của bạn</p>
-                        <div className="text-2xl font-black text-yellow-400 drop-shadow-lg leading-snug">
-                          {voucherThresholdText(prizeText || "")}
+                        <div className="text-2xl leading-snug text-white">
+                          {(() => {
+                            const base = voucherThresholdText(prizeText || "");
+                            const { amount, rest } = splitVoucherHighlight(base);
+                            if (!amount) {
+                              return (
+                                <span className="font-black text-yellow-400 drop-shadow-lg">
+                                  {base}
+                                </span>
+                              );
+                            }
+                            return (
+                              <>
+                                <span className="font-black text-yellow-400 drop-shadow-lg">
+                                  {amount}
+                                </span>
+                                {rest && (
+                                  <span className="ml-1 font-semibold">
+                                    {` ${rest}`}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                         {prizeCode && (
                           <>
                             <p className="mt-3 text-xs text-slate-400">Mã voucher:</p>
-                            <div className="mt-1 inline-block rounded-lg border border-yellow-500/30 bg-black/60 px-4 py-2 font-mono text-xl font-bold tracking-wider text-white">
-                              {prizeCode}
+                            <div className="mt-1 inline-flex items-center gap-2">
+                              <div className="inline-block rounded-lg border border-yellow-500/30 bg-black/60 px-4 py-2 font-mono text-xl font-bold tracking-wider text-white">
+                                {prizeCode}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-yellow-500/40 bg-black/40 text-xs text-yellow-300 hover:bg-yellow-500/20"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(prizeCode);
+                                  setCopied(true);
+                                  setTimeout(() => setCopied(false), 2000);
+                                }}
+                              >
+                                <i className={`fa-solid ${copied ? "fa-check" : "fa-copy"} mr-1`} />
+                                {copied ? "Đã sao chép" : "Copy"}
+                              </Button>
                             </div>
                           </>
                         )}
@@ -1096,34 +1155,30 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                       <div className="mt-4 space-y-2 max-h-64 overflow-y-auto overflow-x-hidden pr-1">
                         <details className="info-card group">
                           <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                            <i className="fa-solid fa-tags text-yellow-400 text-xs" />
-                            Ưu đãi & mức voucher
+                            <i className="fa-solid fa-circle-question text-yellow-400 text-xs" />
+                            Cách sử dụng
                             <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
                           </summary>
-                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
-                            <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
-                            <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
-                            <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
-                            <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
-                            <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
-                          </ul>
+                          <div className="mt-2 space-y-2 text-[10px] text-slate-200">
+                            <p className="font-semibold text-yellow-200">Mức voucher & ưu đãi</p>
+                            <ul className="list-disc space-y-1 pl-4">
+                              <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
+                              <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
+                              <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
+                              <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
+                              <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
+                            </ul>
+                            <p className="mt-2 font-semibold text-yellow-200">Cửa hàng áp dụng</p>
+                            <ul className="mt-1 list-disc space-y-1 pl-4">
+                              <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
+                              <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
+                              <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
+                              <li>Mắt Việt 3 Tháng 2 – Quận 10.</li>
+                              <li>Mắt Việt Hoàng Diệu 2 – TP. Thủ Đức.</li>
+                            </ul>
+                          </div>
                         </details>
-
-                        <details className="info-card group">
-                          <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                            <i className="fa-solid fa-location-dot text-yellow-400 text-xs" />
-                            Cửa hàng áp dụng
-                            <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
-                          </summary>
-                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
-                          <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
-                          <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
-                          <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
-                          <li>Mắt Việt 3 Tháng 2 – Quận 10.</li>
-                          <li>Mắt Việt Hoàng Diệu 2 – TP. Thủ Đức.</li>
-                        </ul>
-                      </details>
-                    </div>
+                      </div>
                   </div>
                 )}
               </div>
@@ -1138,21 +1193,6 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
             )}
 
             <div className="space-y-3">
-              {modalWin && voucherFetched && !voucherError && prizeCode && (
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={() => {
-                    navigator.clipboard.writeText(prizeCode);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                >
-                  <i className={`fa-solid ${copied ? "fa-check" : "fa-copy"} mr-2`} />
-                  {copied ? "Đã sao chép!" : "Sao chép mã"}
-                </Button>
-              )}
-
               {attemptsLeft === 1 && (
                 <Button
                   variant="outline"
