@@ -33,10 +33,10 @@ export default function LandingPage() {
             className={`relative space-y-2 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
             style={{ animationDelay: "0.3s" }}
           >
-            <h1 className="holiday-title">Trí Nhớ Giáng Sinh</h1>
-            <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md">
+            <h1 className="holiday-title whitespace-nowrap">Trí Nhớ Giáng Sinh</h1>
+            <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md whitespace-nowrap">
               <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0s" }} />
-              Lật hình nhận voucher đến 200K
+              Lật hình 100% trúng quà
               <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0.5s" }} />
             </p>
           </div>
@@ -53,7 +53,7 @@ export default function LandingPage() {
           <div className="mt-6 flex flex-col gap-3">
             <Button
               size="lg"
-              className="w-full text-lg font-bold py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className="w-full text-base font-bold py-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
               onClick={() => router.push("/play")}
             >
               <i className="fa-solid fa-gamepad mr-2" />
@@ -67,7 +67,7 @@ export default function LandingPage() {
           >
             <summary className="font-semibold text-white cursor-pointer hover:text-yellow-300 transition-colors">
               <i className="fa-solid fa-info-circle mr-2 text-yellow-400" />
-              Thông tin chương trình & thể lệ
+              Thông tin và thể lệ
             </summary>
             <div className="space-y-2 text-slate-100/90 mt-3">
               <p>

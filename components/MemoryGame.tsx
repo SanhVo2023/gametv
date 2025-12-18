@@ -786,10 +786,10 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                   />
                 </div>
                 <div className="relative space-y-1 text-center">
-                  <h1 className="holiday-title">Trí Nhớ Giáng Sinh</h1>
-                  <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md">
+                  <h1 className="holiday-title whitespace-nowrap">Trí Nhớ Giáng Sinh</h1>
+                  <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md whitespace-nowrap">
                     <i className="fa-solid fa-star text-yellow-400" />
-                    Lật hình nhận voucher đến 200K
+                    Lật hình 100% trúng quà
                     <i className="fa-solid fa-star text-yellow-400" />
                   </p>
                 </div>
@@ -814,7 +814,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
                   <details className="info-card mt-4 space-y-2 text-sm leading-relaxed">
                     <summary className="font-semibold text-white">
-                      Thông tin chương trình & thể lệ
+                      Thông tin và thể lệ
                     </summary>
                     <div className="space-y-2 text-slate-100/90">
                       <p>
