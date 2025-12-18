@@ -71,9 +71,10 @@ export default function LandingPage() {
                 "Vui Giáng Sinh – Khui Voucher Khủng" áp dụng độc quyền tại 5 cửa hàng Mắt Việt.
               </p>
               <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
-                <li>Voucher: 50K (đơn 500K), 100K (700K), 150K (900K), 200K (1.1M).</li>
+                <li>Voucher: 50K, 100K, 150K, 200K.</li>
                 <li>Ưu đãi thêm: -15% tròng kính chính hãng; -10% gọng & kính mát nguyên giá.</li>
                 <li>Mỗi SĐT 2 lượt/ngày, số lượng voucher có hạn.</li>
+                <li>Voucher có thể áp dụng đồng thời các chương trình khuyến mãi khác.</li>
               </ul>
             </div>
           </details>

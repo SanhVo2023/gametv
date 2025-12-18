@@ -261,6 +261,15 @@ function latestWinForPhone(rows: SheetRow[], phone: string): SheetRow | null {
   return phoneWins[phoneWins.length - 1];
 }
 
+function voucherThresholdText(value: string): string {
+  const v = value.replace(/\s/gi, "").toLowerCase();
+  if (v.startsWith("50")) return "Voucher 50.000đ cho hoá đơn từ 500.000đ.";
+  if (v.startsWith("100")) return "Voucher 100.000đ cho hoá đơn từ 700.000đ.";
+  if (v.startsWith("150")) return "Voucher 150.000đ cho hoá đơn từ 900.000đ.";
+  if (v.startsWith("200")) return "Voucher 200.000đ cho hoá đơn từ 1.100.000đ.";
+  return value || "Voucher";
+}
+
 function submitResult(phone: string, result: "win" | "lose") {
   if (!phone) return;
   const formData = new FormData();
@@ -746,7 +755,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
   const critical = (timer / GAME_DURATION) * 100 <= 30;
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#011574]">
+    <div className="relative flex min-h-screen items-start justify-center pt-4 overflow-hidden bg-[#011574]">
       <div className="aurora-layer" />
       <div className="glow-layer" />
       <div className="ambient-light" />
@@ -821,10 +830,11 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                         “Vui Giáng Sinh – Khui Voucher Khủng”: lật hình nhận voucher giảm thêm đến 200.000đ.
                       </p>
                       <ul className="list-disc space-y-1 pl-5 text-xs text-slate-200">
-                        <li>Voucher: 50K (đơn 500K), 100K (700K), 150K (900K), 200K (1.1M).</li>
+                        <li>Voucher: 50K, 100K, 150K, 200K.</li>
                         <li>Ưu đãi thêm: -15% tròng kính chính hãng; -10% gọng & kính mát nguyên giá.</li>
                         <li>Áp dụng tại: 183B CMT8, Quốc Hương, Hoàng Hoa Thám, 3 Tháng 2, Hoàng Diệu 2.</li>
                         <li>Mỗi SĐT 2 lượt/ngày. Số lượng voucher có hạn.</li>
+                        <li>Voucher có thể áp dụng đồng thời các chương trình khuyến mãi khác.</li>
                       </ul>
                     </div>
                   </details>
@@ -983,8 +993,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-6 text-center max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-5 text-center max-h-[80vh] overflow-y-auto">
             <div className="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12">
               ✨
             </div>
@@ -1039,8 +1049,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                   <div className="space-y-3">
                     <div className="rounded-xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-900/40 to-black/60 p-5">
                       <p className="text-xs uppercase tracking-wider text-yellow-300/80 mb-1">🎁 Phần thưởng của bạn</p>
-                      <div className="text-3xl font-black text-yellow-400 drop-shadow-lg">
-                        {prizeText || "Voucher"}
+                      <div className="text-2xl font-black text-yellow-400 drop-shadow-lg leading-snug">
+                        {voucherThresholdText(prizeText || "")}
                       </div>
                       {prizeCode && (
                         <>
