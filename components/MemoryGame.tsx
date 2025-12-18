@@ -6,14 +6,14 @@ import confetti from "canvas-confetti";
 import { Button } from "./ui/button";
 
 const ICONS = [
-  "fa-gift",
-  "fa-snowflake",
-  "fa-sleigh",
-  "fa-bell",
-  "fa-tree",
-  "fa-snowman",
-  "fa-candy-cane",
-  "fa-star"
+  "gift-1",
+  "gift-2",
+  "gift-3",
+  "gift-4",
+  "gift-5",
+  "gift-6",
+  "gift-7",
+  "gift-8"
 ];
 
 const GAME_DURATION = 60;
@@ -80,6 +80,37 @@ type SheetRow = {
   status: string;
   voucher: string;
   value: string;
+};
+
+const GiftIcon: React.FC<{ size?: number; variant?: number }> = ({
+  size = 40,
+  variant = 1
+}) => {
+  const bodyColor =
+    variant === 2 ? "#fb923c" : variant === 3 ? "#f97316" : "#f97316";
+  const ribbonColor =
+    variant === 4 ? "#fde047" : variant === 5 ? "#facc15" : "#facc15";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      aria-hidden="true"
+    >
+      <rect x="8" y="14" width="32" height="26" rx="4" fill={bodyColor} />
+      <rect x="22" y="14" width="4" height="26" fill={ribbonColor} />
+      <rect x="8" y="24" width="32" height="4" fill={ribbonColor} />
+      <path
+        d="M18 14c-2.2 0-4-1.8-4-4 0-2 1.6-3.6 3.6-3.6 2.4 0 4.8 2.4 5.4 6.8H18z"
+        fill="#fed7aa"
+      />
+      <path
+        d="M30 14c2.2 0 4-1.8 4-4 0-2-1.6-3.6-3.6-3.6-2.4 0-4.8 2.4-5.4 6.8H30z"
+        fill="#fed7aa"
+      />
+    </svg>
+  );
 };
 
 let audioCtx: AudioContext | null = null;
@@ -982,7 +1013,10 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                   >
                     <div className="face face-back" />
                     <div className="face face-front">
-                      <i className={`fa-solid ${card.icon}`} />
+                      <GiftIcon
+                        size={36}
+                        variant={(parseInt(card.icon.split("-")[1] || "1", 10) % 5) + 1}
+                      />
                     </div>
                   </div>
                 </div>
