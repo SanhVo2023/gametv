@@ -441,20 +441,15 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
         return isTodayRow;
       });
       console.log("[Check] Matching today rows:", phoneRows.length);
-      const usedFromSheet = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
-      const leftFromSheet = Math.max(0, ATTEMPTS_PER_DAY - usedFromSheet);
+    const used = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
+    const left = Math.max(0, ATTEMPTS_PER_DAY - used);
 
-      // Never decrease attemptsUsed or increase attemptsLeft based on slow sheet writes.
-      setAttemptsUsed((prev) => Math.max(prev, usedFromSheet));
-      setAttemptsLeft((prev) => Math.min(prev, leftFromSheet));
+    // On login, overwrite local state from sheet (source of truth for the day).
+    setAttemptsUsed(used);
+    setAttemptsLeft(left);
+    setAttemptsStatus(`Đã đọc sheet: ${used} lượt hôm nay → còn ${left} lượt`);
 
-      const effectiveUsed = Math.max(attemptsUsed, usedFromSheet);
-      const effectiveLeft = Math.min(attemptsLeft, leftFromSheet);
-      setAttemptsStatus(
-        `Đã đọc sheet: ${effectiveUsed} lượt hôm nay → còn ${effectiveLeft} lượt`
-      );
-
-      return { used: effectiveUsed, left: effectiveLeft };
+    return { used, left };
     } catch (err) {
       console.error("[Check] Sheet fetch error:", err);
       setAttemptsUsed(ATTEMPTS_PER_DAY);
@@ -619,12 +614,11 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       return;
     }
 
-    // Consume one attempt locally so UI never jumps back to 2/2 due to slow sheet updates.
-    const baseUsed = Math.max(attemptsUsed, fetched.used);
-    const newUsed = Math.min(ATTEMPTS_PER_DAY, baseUsed + 1);
+    // Consume one attempt locally after syncing with sheet.
+    const newUsed = Math.min(ATTEMPTS_PER_DAY, fetched.used + 1);
     const newLeft = Math.max(0, ATTEMPTS_PER_DAY - newUsed);
     setAttemptsUsed(newUsed);
-    setAttemptsLeft((prev) => Math.min(prev, newLeft));
+    setAttemptsLeft(newLeft);
     setAttemptsStatus(
       `Bạn đã dùng ${newUsed}/${ATTEMPTS_PER_DAY} lượt hôm nay → còn ${newLeft} lượt`
     );
