@@ -303,7 +303,8 @@ function SnowLayer() {
     const container = containerRef.current;
     if (!container) return;
     container.innerHTML = "";
-    for (let i = 0; i < 200; i++) {
+    const count = 110; // reduced for performance
+    for (let i = 0; i < count; i++) {
       const snowflake = document.createElement("div");
       snowflake.classList.add("snowflake");
       const speedClass = Math.random() > 0.6 ? "slow" : Math.random() > 0.5 ? "fast" : "";
@@ -672,18 +673,18 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       setCopied(false);
       startVoucherPolling(phone.trim());
 
-      const duration = 3000;
+      const duration = 1800;
       const end = Date.now() + duration;
       (function frame() {
         confetti({
-          particleCount: 5,
+          particleCount: 3,
           angle: 60,
           spread: 55,
           origin: { x: 0 },
           colors: ["#fbbf24", "#ef4444", "#ffffff"]
         });
         confetti({
-          particleCount: 5,
+          particleCount: 3,
           angle: 120,
           spread: 55,
           origin: { x: 1 },
@@ -994,7 +995,11 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-5 text-center max-h-[80vh] overflow-y-auto">
+          <div
+            className={`glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-5 text-center ${
+              modalWin ? "max-h-[80vh] overflow-y-auto" : ""
+            }`}
+          >
             <div className="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12">
               ✨
             </div>
