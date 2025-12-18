@@ -16,11 +16,8 @@ export default function LandingPage() {
       <div className="glow-layer" />
       <div className="ambient-light" />
 
-      <div className="relative z-10 flex w-full flex-col items-center gap-8 px-2 py-4 pb-12">
-        <div 
-          className={`hero-banner w-full ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
-          style={{ animationDelay: "0.1s" }}
-        >
+      <div className="relative z-10 flex w-full flex-col items-center gap-6 px-2 pt-2 pb-12">
+        <div className="hero-banner w-full">
           <img
             src="https://cdn.hstatic.net/files/200000689681/article/artboard_1__10__073cf5b38b54400bb7eabdec9da754d9.png"
             alt="Vui Giáng Sinh – Khui Voucher Khủng"
@@ -28,7 +25,7 @@ export default function LandingPage() {
           />
         </div>
 
-        <div className="w-full max-w-3xl flex flex-col items-center gap-8">
+        <div className="w-full max-w-3xl flex flex-col items-center gap-6">
           <div 
             className={`relative space-y-2 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
             style={{ animationDelay: "0.3s" }}

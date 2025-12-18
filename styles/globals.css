@@ -22,8 +22,9 @@ body {
 }
 
 .holiday-title {
-  @apply text-5xl font-bold pb-2;
   font-family: "Dancing Script", cursive;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
   background: linear-gradient(
     120deg,
     #facc15,
@@ -37,6 +38,8 @@ body {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
   background-size: 200% 200%;
   animation: holiday-gold-glow 4s ease-in-out infinite;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  margin: 0 0.5rem;
 }
 
 @keyframes holiday-gold-glow {
@@ -562,51 +565,27 @@ body {
 
 .hero-banner {
   position: relative;
-  width: calc(100% - 16px);
+  width: 100%;
   max-width: 100%;
-  aspect-ratio: 16 / 6;
-  border-radius: 0;
   overflow: hidden;
   box-shadow: none;
   border: none;
   background: transparent;
-  animation: bannerFloat 6s ease-in-out infinite;
-  transition: transform 0.3s ease;
-}
-
-.hero-banner:hover {
-  transform: translateY(-3px);
+  margin: 0;
+  padding: 0;
 }
 
 .hero-banner img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: contain;
   display: block;
   background-color: transparent;
   padding: 0;
-  animation: bannerGlow 3s ease-in-out infinite;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  margin: 0;
 }
 
 
-@keyframes bannerFloat {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes bannerGlow {
-  0%, 100% {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) brightness(1);
-  }
-  50% {
-    filter: drop-shadow(0 6px 12px rgba(251, 191, 36, 0.4)) brightness(1.05);
-  }
-}
 
 @keyframes shimmer {
   0% {
