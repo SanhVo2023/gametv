@@ -124,41 +124,6 @@ export default function LandingPage() {
             </ul>
           </details>
 
-          <details 
-            className="info-card group"
-            style={{ animationDelay: "1s" }}
-          >
-            <summary className="cursor-pointer text-sm font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
-              <i className="fa-solid fa-tags text-yellow-400" />
-              Ưu đãi & mức voucher
-              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform duration-300 group-open:rotate-180" />
-            </summary>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-200">
-              <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
-              <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
-              <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
-              <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
-              <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
-            </ul>
-          </details>
-
-          <details 
-            className="info-card group"
-            style={{ animationDelay: "1.1s" }}
-          >
-            <summary className="cursor-pointer text-sm font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
-              <i className="fa-solid fa-location-dot text-yellow-400" />
-              Cửa hàng áp dụng
-              <i className="fa-solid fa-chevron-down ml-auto text-xs transition-transform duration-300 group-open:rotate-180" />
-            </summary>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-200">
-              <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
-              <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
-              <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
-              <li>Mắt Việt 3 Tháng 2 – Quận 10.</li>
-              <li>Mắt Việt Hoàng Diệu 2 – TP. Thủ Đức.</li>
-            </ul>
-          </details>
         </section>
         </div>
       </div>

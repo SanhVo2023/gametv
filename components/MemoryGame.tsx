@@ -761,7 +761,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
         />
       )}
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 p-4">
+      <div className={`relative z-10 flex w-full max-w-md flex-col gap-6 p-4 ${showGameArea ? "items-start" : "items-center"}`}>
         <div className="fixed bottom-4 left-4 z-20 flex items-center gap-2 text-xs text-yellow-100">
           <Button
             variant="ghost"
@@ -983,8 +983,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-8 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="glass-panel relative w-full max-w-sm scale-100 rounded-3xl border-2 border-white/20 p-6 text-center max-h-[90vh] overflow-y-auto">
             <div className="absolute -top-10 -right-10 text-8xl opacity-10 rotate-12">
               ✨
             </div>
@@ -1057,6 +1057,38 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                         <i className="fa-solid fa-message-sms text-lg" />
                         <span className="text-sm font-medium">Voucher sẽ được gửi qua SMS đến số {phone}</span>
                       </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+                      <details className="info-card group">
+                        <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
+                          <i className="fa-solid fa-tags text-yellow-400 text-xs" />
+                          Ưu đãi & mức voucher
+                          <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
+                        </summary>
+                        <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
+                          <li>Voucher 50.000đ cho hoá đơn từ 500.000đ.</li>
+                          <li>Voucher 100.000đ cho hoá đơn từ 700.000đ.</li>
+                          <li>Voucher 150.000đ cho hoá đơn từ 900.000đ.</li>
+                          <li>Voucher 200.000đ cho hoá đơn từ 1.100.000đ.</li>
+                          <li>Ưu đãi thêm: 15% cho tròng kính chính hãng, 10% cho gọng kính & kính mát nguyên giá.</li>
+                        </ul>
+                      </details>
+
+                      <details className="info-card group">
+                        <summary className="cursor-pointer text-xs font-semibold text-yellow-200 flex items-center gap-2 hover:text-yellow-300 transition-colors">
+                          <i className="fa-solid fa-location-dot text-yellow-400 text-xs" />
+                          Cửa hàng áp dụng
+                          <i className="fa-solid fa-chevron-down ml-auto text-[10px] transition-transform duration-300 group-open:rotate-180" />
+                        </summary>
+                        <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] text-slate-200">
+                          <li>Mắt Việt 183B Cách Mạng Tháng Tám – Quận 3.</li>
+                          <li>Mắt Việt Quốc Hương – Thảo Điền, TP. Thủ Đức.</li>
+                          <li>Mắt Việt Hoàng Hoa Thám – Tân Bình.</li>
+                          <li>Mắt Việt 3 Tháng 2 – Quận 10.</li>
+                          <li>Mắt Việt Hoàng Diệu 2 – TP. Thủ Đức.</li>
+                        </ul>
+                      </details>
                     </div>
                   </div>
                 )}
