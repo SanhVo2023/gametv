@@ -37,6 +37,35 @@ const normalizePhone = (s: string) =>
     .replace(/\D/g, "")      // keep only digits
     .trim();
 
+// Parse sheet timestamp format: "DD/MM/YYYY HH:mm:ss"
+function parseSheetTimestamp(ts: string): Date | null {
+  if (!ts || !ts.trim()) return null;
+  const parts = ts.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+  if (!parts) return null;
+  const [, day, month, year, hour, minute, second] = parts;
+  const date = new Date(
+    parseInt(year),
+    parseInt(month) - 1,
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second)
+  );
+  // Validate date
+  if (isNaN(date.getTime())) return null;
+  return date;
+}
+
+// Check if date is today
+function isToday(date: Date): boolean {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+}
+
 type Card = {
   id: number;
   icon: string;
@@ -380,11 +409,13 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       console.log("[Check] Input phone normalized:", normInput, "total rows:", rows.length);
       const phoneRows = rows.filter((r) => {
         const normSheet = normalizePhone(r.phone);
-        const match = normSheet === normInput;
-        if (match) console.log("[Check] MATCH:", r.phone, "→", normSheet);
-        return match;
+        if (normSheet !== normInput) return false;
+        const rowDate = parseSheetTimestamp(r.timestamp);
+        const isTodayRow = rowDate && isToday(rowDate);
+        if (isTodayRow) console.log("[Check] MATCH TODAY:", r.phone, "→", normSheet, "date:", r.timestamp);
+        return isTodayRow;
       });
-      console.log("[Check] Matching rows:", phoneRows.length);
+      console.log("[Check] Matching today rows:", phoneRows.length);
       const used = Math.min(ATTEMPTS_PER_DAY, phoneRows.length);
       const left = Math.max(0, ATTEMPTS_PER_DAY - used);
       setAttemptsUsed(used);
@@ -395,7 +426,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       console.error("[Check] Sheet fetch error:", err);
       setAttemptsUsed(ATTEMPTS_PER_DAY);
       setAttemptsLeft(0);
-      setAttemptsError("Không đọc được sheet, tạm khóa lượt chơi.");
+      setAttemptsError("Hệ thống lỗi");
       return { used: ATTEMPTS_PER_DAY, left: 0 };
     }
   };
@@ -442,24 +473,13 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
           const rows = await fetchSheetRows();
           const latestWin = latestWinForPhone(rows, currentPhone);
           if (!latestWin) return;
-          const status = (latestWin.status || "").toLowerCase();
+          const status = (latestWin.status || "").trim();
+          const statusLower = status.toLowerCase();
           const voucher = latestWin.voucher || "";
           const value = latestWin.value || "";
-          const failed = STATUS_FAIL_KEYWORDS.some((k) => status.includes(k));
 
-          if (failed) {
-            setPrizeText("Gửi voucher thất bại");
-            setPrizeCode("Vui lòng liên hệ CSKH");
-            setVoucherFetched(true);
-            setVoucherError(true);
-            if (pollIntervalRef.current) {
-              clearInterval(pollIntervalRef.current);
-              pollIntervalRef.current = null;
-            }
-            return;
-          }
-
-          if (voucher || value) {
+          // Check for "sent" status (success)
+          if (statusLower === "sent") {
             setPrizeText(value || "Voucher đã cấp");
             setPrizeCode(voucher || "");
             setVoucherFetched(true);
@@ -468,6 +488,20 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
             }
+            return;
+          }
+
+          // Check for error status (contains "Lỗi" or "Bỏ qua")
+          if (status.includes("Lỗi") || status.includes("Bỏ qua") || status.includes("bỏ qua")) {
+            setPrizeText("Gửi voucher thất bại");
+            setPrizeCode(status);
+            setVoucherFetched(true);
+            setVoucherError(true);
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
+            return;
           }
         } catch {
           // ignore polling errors
@@ -497,7 +531,8 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
   const handleStartGame = async () => {
     const trimmed = phone.trim();
-    if (trimmed.length <= 8) {
+    if (trimmed.length < 9) {
+      setAttemptsError("Sai số điện thoại. Vui lòng dùng số điện thoại chính xác");
       return;
     }
 
@@ -506,9 +541,14 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     if (isCheckingAttempts) return;
     setIsCheckingAttempts(true);
     setAttemptsStatus("Đang kiểm tra lượt...");
+    setAttemptsError("");
     let fetched = { used: attemptsUsed, left: attemptsLeft };
     try {
       fetched = await updateAttemptsFromSheet(trimmed);
+    } catch (err) {
+      setAttemptsError("Hệ thống lỗi");
+      setIsCheckingAttempts(false);
+      return;
     } finally {
       setIsCheckingAttempts(false);
     }
@@ -646,17 +686,24 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
 
   const handleResetGame = async () => {
     // Re-check attempts from sheet before allowing replay
-    const { left } = await updateAttemptsFromSheet(phone.trim());
-    if (left <= 0) {
-      setAttemptsError("Hết lượt chơi hôm nay. Vui lòng quay lại sau 0h.");
+    try {
+      const { left } = await updateAttemptsFromSheet(phone.trim());
+      if (left <= 0) {
+        setAttemptsError("Hết lượt chơi hôm nay. Vui lòng quay lại sau 0h.");
+        setShowModal(false);
+        setShowGameArea(false);
+        setStep("phone");
+        return;
+      }
+      setShowModal(false);
+      initBoard();
+      startTimer();
+    } catch (err) {
+      setAttemptsError("Hệ thống lỗi");
       setShowModal(false);
       setShowGameArea(false);
       setStep("phone");
-      return;
     }
-    setShowModal(false);
-    initBoard();
-    startTimer();
   };
 
   const backToLanding = () => {
@@ -1026,7 +1073,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
                 </Button>
               )}
 
-              {attemptsLeft > 0 && (
+              {attemptsLeft === 1 && (
                 <Button
                   variant="outline"
                   size="lg"
