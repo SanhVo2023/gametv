@@ -16,9 +16,9 @@ export default function LandingPage() {
       <div className="glow-layer" />
       <div className="ambient-light" />
 
-      <div className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-8 p-4 pb-12">
+      <div className="relative z-10 flex w-full flex-col items-center gap-8 px-2 py-4 pb-12">
         <div 
-          className={`hero-banner ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
+          className={`hero-banner w-full ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
           style={{ animationDelay: "0.1s" }}
         >
           <img
@@ -28,22 +28,23 @@ export default function LandingPage() {
           />
         </div>
 
-        <div 
-          className={`relative space-y-2 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
-          style={{ animationDelay: "0.3s" }}
-        >
-          <h1 className="holiday-title">Trí Nhớ Giáng Sinh</h1>
-          <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md">
-            <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0s" }} />
-            Lật hình nhận voucher đến 200K
-            <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0.5s" }} />
-          </p>
-        </div>
+        <div className="w-full max-w-3xl flex flex-col items-center gap-8">
+          <div 
+            className={`relative space-y-2 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
+            style={{ animationDelay: "0.3s" }}
+          >
+            <h1 className="holiday-title">Trí Nhớ Giáng Sinh</h1>
+            <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-yellow-100 drop-shadow-md">
+              <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0s" }} />
+              Lật hình nhận voucher đến 200K
+              <i className="fa-solid fa-star text-yellow-400 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            </p>
+          </div>
 
-        <div 
-          className={`glass-panel w-full rounded-2xl border border-white/20 p-6 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
-          style={{ animationDelay: "0.5s" }}
-        >
+          <div 
+            className={`glass-panel w-full rounded-2xl border border-white/20 p-6 text-center ${mounted ? "animate-fade-in-up" : "opacity-0"}`}
+            style={{ animationDelay: "0.5s" }}
+          >
           <p className="text-sm text-slate-100/90 leading-relaxed">
             Minigame Giáng Sinh từ Mắt Việt. Lật hình quà tặng để nhận voucher giảm thêm đến{" "}
             <span className="font-bold text-yellow-400 text-base">200.000đ</span> khi mua sắm tại 5 cửa hàng Mắt Việt.
@@ -159,6 +160,7 @@ export default function LandingPage() {
             </ul>
           </details>
         </section>
+        </div>
       </div>
     </div>
   );

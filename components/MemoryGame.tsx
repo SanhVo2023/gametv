@@ -392,6 +392,7 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isGameActiveRef = useRef(false);
+  const resultSubmittedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -527,12 +528,17 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     setIsProcessing(false);
     setIsGameActive(true);
     isGameActiveRef.current = true;
+    resultSubmittedRef.current = false; // Reset submission flag for new game
   };
 
   const handleStartGame = async () => {
     const trimmed = phone.trim();
     if (trimmed.length < 9) {
       setAttemptsError("Sai số điện thoại. Vui lòng dùng số điện thoại chính xác");
+      // Redirect to phone page if not already there
+      if (step !== "phone") {
+        setStep("phone");
+      }
       return;
     }
 
@@ -548,6 +554,10 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
     } catch (err) {
       setAttemptsError("Hệ thống lỗi");
       setIsCheckingAttempts(false);
+      // Redirect to phone page on error
+      if (step !== "phone") {
+        setStep("phone");
+      }
       return;
     } finally {
       setIsCheckingAttempts(false);
@@ -681,7 +691,11 @@ export function MemoryGame({ mode = "full" }: MemoryGameProps) {
       setPrizeCode("");
     }
 
-    submitResult(phone.trim(), win ? "win" : "lose");
+    // Only submit result once per game
+    if (!resultSubmittedRef.current) {
+      resultSubmittedRef.current = true;
+      submitResult(phone.trim(), win ? "win" : "lose");
+    }
   };
 
   const handleResetGame = async () => {
