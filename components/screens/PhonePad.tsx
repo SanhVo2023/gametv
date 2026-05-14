@@ -131,7 +131,7 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
       <div className="screen-stack">
         <div className="zone gap-3 slide-up-in">
           <p className="text-eyebrow text-gold-light">Vision Care + Elite Day</p>
-          <h2 className="text-display font-black tracking-tight text-center text-balance">
+          <h2 className="text-h1 font-black tracking-tight text-center text-balance">
             Nhập <span className="text-gold-light">số điện thoại</span> để chơi
           </h2>
         </div>

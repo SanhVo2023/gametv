@@ -10,6 +10,7 @@ import {
   unlockAudio,
 } from "../lib/audio";
 import { getPrizes, spinWheel } from "../lib/gas";
+import { preloadPrizeImages } from "../lib/prizeImages";
 
 import LandingScreen from "./screens/LandingScreen";
 import PhonePad from "./screens/PhonePad";
@@ -34,9 +35,10 @@ export default function KioskApp() {
   // latency is hidden behind the WinTransition + the wheel's pre-spin delay.
   const spinPromiseRef = useRef<Promise<SpinResult> | null>(null);
 
-  // Load sound preference once.
+  // Load sound preference + warm the prize-photo cache once at app start.
   useEffect(() => {
     setSoundOn(loadSoundPreference());
+    preloadPrizeImages();
   }, []);
 
   // Lock portrait orientation when possible.

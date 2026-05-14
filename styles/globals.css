@@ -78,7 +78,7 @@ body {
   width: 100%;
   height: 100%;
   padding: clamp(24px, 3.5vh, 88px) clamp(24px, 3.5vw, 110px);
-  gap: clamp(18px, 2.6vh, 60px);
+  gap: clamp(24px, 4.4vh, 104px);
 }
 
 .zone {
@@ -748,6 +748,32 @@ body {
 @keyframes wiggleSoft {
   0%, 100% { transform: rotate(-2deg); }
   50%      { transform: rotate(2deg); }
+}
+
+/* One-shot diagonal light sweep across a card (prize reveal). */
+.shine-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 62%
+  );
+  transform: translateX(-130%);
+  animation: shineSweep 1.1s ease-out 0.45s 1;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes shineSweep {
+  to { transform: translateX(130%); }
 }
 
 /* ============================================================

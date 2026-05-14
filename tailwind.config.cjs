@@ -20,18 +20,18 @@ module.exports = {
       fontFamily: {
         sans: ["Montserrat", "system-ui", "-apple-system", "Segoe UI", "sans-serif"]
       },
-      /* Bounds are wide so the vw-preferred value governs across the whole
-         target range (≈550px preview → 2160px 4K TV) — text scales as a unit
-         with the canvas instead of snapping to a small min on the preview. */
+      /* Each step has a comfortable min (governs the ~700px preview) and a
+         generous max (governs the 2160px 4K TV) so the hierarchy stays gentle
+         at both ends — display is never absurdly huge, labels never tiny. */
       fontSize: {
-        display: ["clamp(2.4rem, 7.2vw, 9rem)", { lineHeight: "1.04", letterSpacing: "-0.02em", fontWeight: "900" }],
-        "display-xl": ["clamp(3rem, 9.4vw, 12rem)", { lineHeight: "1", letterSpacing: "-0.025em", fontWeight: "900" }],
-        h1: ["clamp(1.9rem, 5.2vw, 6.5rem)", { lineHeight: "1.08", letterSpacing: "-0.015em", fontWeight: "700" }],
-        h2: ["clamp(1.4rem, 3.7vw, 4.6rem)", { lineHeight: "1.16", fontWeight: "600" }],
-        body: ["clamp(1.05rem, 2.7vw, 3.4rem)", { lineHeight: "1.35", fontWeight: "400" }],
-        label: ["clamp(1rem, 2.4vw, 3rem)", { lineHeight: "1.2", fontWeight: "600", letterSpacing: "0.02em" }],
-        caption: ["clamp(0.85rem, 1.9vw, 2.4rem)", { lineHeight: "1.3", fontWeight: "500", letterSpacing: "0.04em" }],
-        eyebrow: ["clamp(0.8rem, 1.5vw, 1.9rem)", { lineHeight: "1.1", fontWeight: "700", letterSpacing: "0.28em" }]
+        display: ["clamp(2.4rem, 5.4vw, 8rem)", { lineHeight: "1.06", letterSpacing: "-0.02em", fontWeight: "900" }],
+        "display-xl": ["clamp(3rem, 7vw, 10rem)", { lineHeight: "1.02", letterSpacing: "-0.025em", fontWeight: "900" }],
+        h1: ["clamp(2rem, 4.2vw, 6rem)", { lineHeight: "1.1", letterSpacing: "-0.015em", fontWeight: "700" }],
+        h2: ["clamp(1.6rem, 3.2vw, 4.2rem)", { lineHeight: "1.18", fontWeight: "600" }],
+        body: ["clamp(1.2rem, 2.4vw, 3rem)", { lineHeight: "1.4", fontWeight: "400" }],
+        label: ["clamp(1.1rem, 2.2vw, 2.7rem)", { lineHeight: "1.25", fontWeight: "600", letterSpacing: "0.02em" }],
+        caption: ["clamp(1rem, 1.9vw, 2.3rem)", { lineHeight: "1.35", fontWeight: "500", letterSpacing: "0.04em" }],
+        eyebrow: ["clamp(0.92rem, 1.6vw, 1.95rem)", { lineHeight: "1.2", fontWeight: "700", letterSpacing: "0.26em" }]
       },
       boxShadow: {
         glass: "0 8px 40px rgba(0, 16, 51, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12)",

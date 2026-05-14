@@ -12,9 +12,9 @@ interface LandingScreenProps {
 }
 
 const STEPS = [
-  { icon: "fa-mobile-screen-button", label: "Nhập số điện thoại" },
-  { icon: "fa-clone", label: "Lật tìm cặp hình" },
-  { icon: "fa-gift", label: "Quay vòng trúng quà" },
+  { icon: "fa-mobile-screen-button", label: "Nhập SĐT" },
+  { icon: "fa-clone", label: "Lật cặp hình" },
+  { icon: "fa-gift", label: "Quay trúng quà" },
 ];
 
 export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
@@ -58,8 +58,8 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
       {/* Centered content cluster */}
       <div className="screen-stack">
         {/* Hero */}
-        <div className={`zone gap-3 ${mounted ? "spring-in" : "opacity-0"}`}>
-          <div className="w-[min(42vw,520px)] brand-glow">
+        <div className={`zone gap-4 ${mounted ? "spring-in" : "opacity-0"}`}>
+          <div className="w-[min(38vw,460px)] brand-glow">
             <Image
               src="/asset/Artboard 1.png"
               alt="Vision Care + — Mắt Việt"
@@ -71,7 +71,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           </div>
           <h1
             className="font-black tracking-[0.05em] text-gold-light leading-none"
-            style={{ fontSize: "clamp(2.8rem, 8vw, 10rem)" }}
+            style={{ fontSize: "clamp(2.6rem, 6.6vw, 8.5rem)" }}
           >
             ELITE DAY
           </h1>
@@ -98,26 +98,26 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           className={`zone ${mounted ? "slide-up-in" : "opacity-0"}`}
           style={{ animationDelay: "0.32s" }}
         >
-          <div className="flex items-stretch gap-[1.5vw] w-full max-w-[1200px] justify-center">
+          <div className="flex items-stretch gap-[1.8vw] w-full max-w-[1100px] justify-center">
             {STEPS.map((s, i) => (
               <div
                 key={s.label}
-                className="glass-panel flex-1 flex items-center gap-[1.2vw] px-[1.8vw] py-[1.4vh]"
+                className="glass-panel flex-1 flex flex-col items-center text-center gap-[0.8vh] px-[1.4vw] py-[2vh]"
               >
                 <div
                   className="flex shrink-0 items-center justify-center rounded-full bg-gold text-navy-deep font-black"
                   style={{
-                    width: "clamp(40px,4vw,80px)",
-                    height: "clamp(40px,4vw,80px)",
-                    fontSize: "clamp(1.1rem,2vw,2.4rem)",
+                    width: "clamp(42px,3.6vw,76px)",
+                    height: "clamp(42px,3.6vw,76px)",
+                    fontSize: "clamp(1.15rem,1.9vw,2.4rem)",
                   }}
                 >
                   {i + 1}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <i className={`fa-solid ${s.icon} text-gold-light text-h2`} />
-                  <span className="text-label text-white/90 leading-tight">{s.label}</span>
-                </div>
+                <i className={`fa-solid ${s.icon} text-gold-light text-h2`} />
+                <span className="text-label text-white/90 leading-tight whitespace-nowrap">
+                  {s.label}
+                </span>
               </div>
             ))}
           </div>

@@ -160,6 +160,40 @@ export function playPop(): void {
   tone(1280, 0.06, { type: "sine", gain: 0.07, attack: 0.004, release: 0.06, delay: 0.04 });
 }
 
+/** Whoosh — filtered noise sweep for the wheel launch. */
+export function playWhoosh(): void {
+  if (!soundEnabled) return;
+  const c = ensureCtx();
+  if (!c || !masterGain) return;
+  const dur = 0.5;
+  const now = c.currentTime;
+
+  const buffer = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+  const noise = c.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = c.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.Q.value = 1.1;
+  filter.frequency.setValueAtTime(280, now);
+  filter.frequency.exponentialRampToValueAtTime(2600, now + dur * 0.45);
+  filter.frequency.exponentialRampToValueAtTime(420, now + dur);
+
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, now);
+  g.gain.linearRampToValueAtTime(0.16, now + 0.07);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  noise.connect(filter);
+  filter.connect(g);
+  g.connect(masterGain);
+  noise.start(now);
+  noise.stop(now + dur + 0.02);
+}
+
 export function startAmbientPad(): void {
   if (!soundEnabled) return;
   const c = ensureCtx();

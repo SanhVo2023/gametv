@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { spinWheel } from "../../lib/gas";
-import { playWheelTick, playWinSting } from "../../lib/audio";
+import { playWheelTick, playWhoosh, playWinSting } from "../../lib/audio";
 import { isVoucher, prizeImage } from "../../lib/prizeImages";
 import type { Prize, SpinResult } from "../../lib/types";
 import Ambient from "../Ambient";
@@ -24,9 +24,16 @@ const WHEEL_PALETTE = [
   ["#001033", "#0d2680"],
 ] as const;
 
-const SPIN_DURATION_MS = 4400;
-const PRE_SPIN_DELAY_MS = 700;
 const VIEWBOX = 1000;
+
+// Spin physics — realistic friction: anticipation wind-up, punchy launch into a
+// long power-decel, then a single damped settle-rock.
+const WINDUP_MS = 300;
+const SPIN_MS = 4000;
+const SETTLE_MS = 480;
+const WINDUP_DEG = 14;
+const OVERSHOOT_DEG = 3.5;
+const IDLE_AUTOSPIN_MS = 20_000;
 
 type Phase = "loading" | "ready" | "spinning" | "settling" | "error";
 
@@ -80,10 +87,15 @@ export default function WheelOfFortune({
   const [phase, setPhase] = useState<Phase>("loading");
   const [result, setResult] = useState<SpinResult | null>(null);
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
-  const [targetRotation, setTargetRotation] = useState<number>(0);
-  const rotationRef = useRef<number>(0);
+  const [restRotation, setRestRotation] = useState<number>(0);
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const idleTimerRef = useRef<number | null>(null);
+  const restRotationRef = useRef<number>(0);
   const lastTickWedgeRef = useRef<number>(-1);
   const attemptRef = useRef<number>(0);
+  const startedRef = useRef<boolean>(false);
 
   const prizes: Prize[] = result?.prizes ?? [];
   const wedgeAngle = useMemo(
@@ -93,6 +105,7 @@ export default function WheelOfFortune({
 
   const resolveSpin = useCallback((promise: Promise<SpinResult>) => {
     const attempt = ++attemptRef.current;
+    startedRef.current = false;
     setPhase("loading");
     setErrorInfo(null);
     promise
@@ -119,48 +132,87 @@ export default function WheelOfFortune({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Cleanup on unmount.
   useEffect(() => {
-    if (phase !== "ready" || !result) return;
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    };
+  }, []);
+
+  // ---- The spin ----
+  const startSpin = useCallback(() => {
+    if (startedRef.current || !result) return;
+    startedRef.current = true;
+    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    setPhase("spinning");
+
     const wedgeCenter = result.wedgeIndex * wedgeAngle + wedgeAngle / 2;
     const base = (360 - wedgeCenter) % 360;
-    const finalRotation = rotationRef.current + 6 * 360 + base;
-    rotationRef.current = finalRotation;
-    const t = window.setTimeout(() => {
-      setTargetRotation(finalRotation);
-      setPhase("spinning");
-    }, PRE_SPIN_DELAY_MS);
-    return () => window.clearTimeout(t);
-  }, [phase, result, wedgeAngle]);
+    const startRot = restRotationRef.current;
+    const windupTarget = startRot - WINDUP_DEG;
+    const finalRotation = startRot + 6 * 360 + base;
+    const total = WINDUP_MS + SPIN_MS + SETTLE_MS;
+    const t0 = performance.now();
+    let whooshed = false;
 
-  useEffect(() => {
-    if (phase !== "spinning" || !soundEnabled) return;
-    const startTime = performance.now();
-    const endRotation = targetRotation;
-    const ease = (x: number) => 1 - Math.pow(1 - x, 3.4);
-    let raf = 0;
-    const loop = () => {
-      const elapsed = performance.now() - startTime;
-      const x = Math.min(1, elapsed / SPIN_DURATION_MS);
-      const rot = endRotation * ease(x);
-      const wedge = Math.floor((rot % 360) / wedgeAngle);
-      if (wedge !== lastTickWedgeRef.current) {
-        lastTickWedgeRef.current = wedge;
-        playWheelTick();
+    const frame = (now: number) => {
+      const t = now - t0;
+      let rot: number;
+      if (t < WINDUP_MS) {
+        // ease back — anticipation
+        const p = t / WINDUP_MS;
+        rot = startRot + (windupTarget - startRot) * (1 - Math.pow(1 - p, 2));
+      } else if (t < WINDUP_MS + SPIN_MS) {
+        if (!whooshed) {
+          whooshed = true;
+          if (soundEnabled) playWhoosh();
+        }
+        // punchy launch -> long friction tail
+        const p = (t - WINDUP_MS) / SPIN_MS;
+        rot = windupTarget + (finalRotation - windupTarget) * (1 - Math.pow(1 - p, 3.6));
+      } else if (t < total) {
+        // single damped settle-rock
+        const p = (t - WINDUP_MS - SPIN_MS) / SETTLE_MS;
+        rot = finalRotation + Math.sin(p * Math.PI) * Math.exp(-3 * p) * OVERSHOOT_DEG;
+      } else {
+        rot = finalRotation;
       }
-      if (x < 1) raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [phase, targetRotation, wedgeAngle, soundEnabled]);
 
-  const handleTransitionEnd = useCallback(() => {
-    if (phase !== "spinning") return;
-    setPhase("settling");
-    if (soundEnabled) playWinSting();
-    window.setTimeout(() => {
-      if (result) onComplete(result);
-    }, 650);
-  }, [phase, result, soundEnabled, onComplete]);
+      if (svgRef.current) svgRef.current.style.transform = `rotate(${rot}deg)`;
+
+      // Tick on each forward wedge crossing (after the wind-up).
+      if (t >= WINDUP_MS) {
+        const wedge = Math.floor((((rot % 360) + 360) % 360) / wedgeAngle);
+        if (wedge !== lastTickWedgeRef.current) {
+          lastTickWedgeRef.current = wedge;
+          if (soundEnabled) playWheelTick();
+        }
+      }
+
+      if (t < total) {
+        rafRef.current = requestAnimationFrame(frame);
+      } else {
+        restRotationRef.current = finalRotation;
+        setRestRotation(finalRotation);
+        setPhase("settling");
+        if (soundEnabled) playWinSting();
+        window.setTimeout(() => {
+          if (result) onComplete(result);
+        }, 600);
+      }
+    };
+    rafRef.current = requestAnimationFrame(frame);
+  }, [result, wedgeAngle, soundEnabled, onComplete]);
+
+  // Idle fallback — auto-spin if the SPIN button is left untouched.
+  useEffect(() => {
+    if (phase !== "ready") return;
+    idleTimerRef.current = window.setTimeout(() => startSpin(), IDLE_AUTOSPIN_MS);
+    return () => {
+      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    };
+  }, [phase, startSpin]);
 
   const handleRetry = useCallback(() => {
     resolveSpin(spinWheel(phone));
@@ -170,8 +222,8 @@ export default function WheelOfFortune({
   const center = VIEWBOX / 2;
   const radius = VIEWBOX / 2 - 18;
   const hubRadius = radius * 0.19;
-  const badgeRadius = radius * 0.6; // distance from centre to each prize badge
-  const badgeR = radius * 0.205; // prize badge circle radius
+  const badgeRadius = radius * 0.6;
+  const badgeR = radius * 0.205;
 
   const showWheel = phase === "ready" || phase === "spinning" || phase === "settling";
 
@@ -192,7 +244,7 @@ export default function WheelOfFortune({
         <div className="zone flex-1 justify-center min-h-0">
           <div
             className="relative aspect-square"
-            style={{ width: "min(94vw, 72vh)", height: "min(94vw, 72vh)" }}
+            style={{ width: "min(94vw, 70vh)", height: "min(94vw, 70vh)" }}
           >
             <div className="absolute inset-0 -m-10 rounded-full bg-brand-glow/35 blur-[90px]" />
             <div className="absolute inset-0 rounded-full ring-[16px] ring-gold/70 shadow-gold-glow-lg" />
@@ -212,17 +264,10 @@ export default function WheelOfFortune({
 
             {showWheel && result && (
               <svg
+                ref={svgRef}
                 viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
                 className="absolute inset-0 w-full h-full fade-in"
-                style={{
-                  transform: `rotate(${targetRotation}deg)`,
-                  transition:
-                    phase === "spinning"
-                      ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.12, 0.99)`
-                      : "none",
-                  willChange: "transform",
-                }}
-                onTransitionEnd={handleTransitionEnd}
+                style={{ transform: `rotate(${restRotation}deg)`, willChange: "transform" }}
               >
                 <defs>
                   {prizes.map((_, i) => {
@@ -255,17 +300,10 @@ export default function WheelOfFortune({
                         stroke="rgba(245, 200, 66, 0.85)"
                         strokeWidth={3}
                       />
-                      {/* Prize badge — rotated by midAngle so the winning wedge
-                          (which the wheel always parks at the top) ends upright. */}
                       <g transform={`translate(${badgePos.x} ${badgePos.y}) rotate(${midAngle})`}>
                         {voucher ? (
                           <>
-                            <circle
-                              r={badgeR}
-                              fill="#f5c842"
-                              stroke="#ffffff"
-                              strokeWidth={6}
-                            />
+                            <circle r={badgeR} fill="#f5c842" stroke="#ffffff" strokeWidth={6} />
                             <text
                               textAnchor="middle"
                               dominantBaseline="central"
@@ -291,12 +329,7 @@ export default function WheelOfFortune({
                           </>
                         ) : (
                           <>
-                            <circle
-                              r={badgeR}
-                              fill="#ffffff"
-                              stroke="#f5c842"
-                              strokeWidth={6}
-                            />
+                            <circle r={badgeR} fill="#ffffff" stroke="#f5c842" strokeWidth={6} />
                             <image
                               href={img!}
                               x={-(badgeR - 6)}
@@ -379,14 +412,30 @@ export default function WheelOfFortune({
           </div>
         </div>
 
-        {/* Status */}
-        <div className="zone flex-shrink-0 h-[clamp(56px,8vh,140px)] justify-center">
+        {/* Action / status zone */}
+        <div className="zone flex-shrink-0 min-h-[clamp(110px,15vh,260px)] justify-center gap-3">
           {phase === "loading" && (
             <p className="text-h2 text-white/85 flex items-center gap-3">
-              <span className="dot-pulse" /> Đang quay số trúng thưởng…
+              <span className="dot-pulse" /> Đang chuẩn bị vòng quay…
             </p>
           )}
-          {(phase === "ready" || phase === "spinning") && (
+          {phase === "ready" && (
+            <>
+              <button
+                type="button"
+                onClick={startSpin}
+                className="cta-gold animate-pulse-glow"
+                style={{ fontSize: "clamp(1.9rem, 4.2vw, 4.2rem)" }}
+              >
+                <i className="fa-solid fa-arrows-spin" />
+                <span>Quay Ngay</span>
+              </button>
+              <p className="text-caption uppercase tracking-[0.3em] text-white/55">
+                Chạm nút để quay vòng may mắn
+              </p>
+            </>
+          )}
+          {phase === "spinning" && (
             <p className="text-h2 text-gold-light animate-pulse-soft">
               Hồi hộp chưa, chờ kim dừng lại nhé!
             </p>

@@ -23,11 +23,16 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
 
   useEffect(() => {
     const burst = (ratio: number, opts: confetti.Options) =>
-      confetti({ particleCount: Math.floor(200 * ratio), ...opts });
-    burst(0.25, { spread: 28, startVelocity: 58, origin: { x: 0.5, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
-    burst(0.22, { spread: 70, startVelocity: 48, origin: { x: 0.25, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
-    burst(0.22, { spread: 70, startVelocity: 48, origin: { x: 0.75, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
-    burst(0.4, { spread: 110, decay: 0.92, scalar: 1.2, origin: { x: 0.5, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff", "#2156e8"] });
+      confetti({ particleCount: Math.floor(240 * ratio), ...opts });
+    burst(0.28, { spread: 30, startVelocity: 62, origin: { x: 0.5, y: 0.46 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
+    burst(0.24, { spread: 75, startVelocity: 50, origin: { x: 0.2, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
+    burst(0.24, { spread: 75, startVelocity: 50, origin: { x: 0.8, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
+    burst(0.46, { spread: 120, decay: 0.92, scalar: 1.25, origin: { x: 0.5, y: 0.48 }, colors: ["#f5c842", "#fde98a", "#ffffff", "#2156e8"] });
+    // a second pop a beat later
+    window.setTimeout(
+      () => burst(0.3, { spread: 100, startVelocity: 45, origin: { x: 0.5, y: 0.42 }, colors: ["#f5c842", "#fde98a", "#ffffff"] }),
+      550,
+    );
   }, []);
 
   useEffect(() => {
@@ -44,76 +49,76 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
     return () => window.clearInterval(tick);
   }, [autoResetMs, onReset]);
 
-  const ringSize = 132;
-  const ringRadius = (ringSize - 14) / 2;
+  const ringSize = 116;
+  const ringRadius = (ringSize - 12) / 2;
   const circumference = 2 * Math.PI * ringRadius;
   const progress = remaining / Math.ceil(autoResetMs / 1000);
 
   return (
     <div className="fullscreen-portrait relative">
-      <Ambient rays particles={20} />
+      <Ambient rays particles={24} />
 
-      <div className="screen-stack justify-between">
-        {/* Heading */}
-        <div className="zone flex-shrink-0 gap-3 spring-in">
-          <p className="text-eyebrow text-gold-light">Chúc mừng bạn đã trúng</p>
-          <h2 className="text-display font-black tracking-tight text-center text-gold-light leading-none">
-            {spin.prize.name}
-          </h2>
-        </div>
+      {/* Centered celebratory cluster */}
+      <div className="screen-stack !gap-[clamp(16px,2.8vh,52px)]">
+        <p className="text-eyebrow text-gold-light spring-in">Chúc mừng bạn đã trúng</p>
 
-        {/* Prize hero */}
-        <div className="zone flex-1 justify-center min-h-0">
-          <div className="relative spring-in" style={{ animationDelay: "0.15s" }}>
-            <div className="absolute inset-0 -m-12 rounded-[40px] bg-gold/30 blur-[80px]" />
-            {voucher ? (
-              <div
-                className="prize-chip-voucher relative"
-                style={{ width: "min(62vw, 560px)", height: "min(46vw, 420px)" }}
+        <h2
+          className="font-black tracking-tight text-center text-gold-light leading-none spring-in"
+          style={{ fontSize: "clamp(2.6rem, 6.4vw, 8rem)", animationDelay: "0.08s" }}
+        >
+          {spin.prize.name}
+        </h2>
+
+        {/* Hero prize */}
+        <div className="relative spring-in" style={{ animationDelay: "0.18s" }}>
+          <div className="absolute inset-0 -m-14 rounded-[44px] bg-gold/35 blur-[90px] animate-pulse-soft" />
+          {voucher ? (
+            <div
+              className="prize-chip-voucher shine-sweep relative"
+              style={{ width: "min(70vw, 600px)", height: "min(50vw, 440px)" }}
+            >
+              <span className="text-h2 font-bold opacity-75 tracking-[0.2em]">VOUCHER</span>
+              <span
+                className="font-black leading-none my-2"
+                style={{ fontSize: "clamp(3.6rem, 9vw, 8.5rem)" }}
               >
-                <span className="text-h2 font-bold opacity-75 tracking-[0.2em]">VOUCHER</span>
-                <span
-                  className="font-black leading-none my-2"
-                  style={{ fontSize: "clamp(4rem, 9vw, 8rem)" }}
-                >
-                  {voucherAmount(spin.prize.name)}
-                </span>
-                <span className="text-h2 font-bold opacity-75">VNĐ</span>
-                <span className="text-label font-extrabold mt-5 tracking-wide">Mắt Việt</span>
-              </div>
-            ) : (
-              <div
-                className="prize-chip relative p-8"
-                style={{ width: "min(64vw, 600px)", height: "min(64vw, 600px)" }}
-              >
-                <Image
-                  src={img!}
-                  alt={spin.prize.name}
-                  fill
-                  sizes="600px"
-                  style={{ objectFit: "contain", padding: "8%" }}
-                  priority
-                />
-              </div>
-            )}
-          </div>
+                {voucherAmount(spin.prize.name)}
+              </span>
+              <span className="text-h2 font-bold opacity-75">VNĐ</span>
+              <span className="text-label font-extrabold mt-5 tracking-wide">Mắt Việt</span>
+            </div>
+          ) : (
+            <div
+              className="prize-chip shine-sweep relative p-8"
+              style={{ width: "min(72vw, 660px)", height: "min(72vw, 660px)" }}
+            >
+              <Image
+                src={img!}
+                alt={spin.prize.name}
+                fill
+                sizes="660px"
+                style={{ objectFit: "contain", padding: "7%" }}
+                priority
+              />
+            </div>
+          )}
         </div>
 
         {/* Detail + code */}
-        <div className="zone flex-shrink-0 gap-6 slide-up-in" style={{ animationDelay: "0.3s" }}>
+        <div className="zone gap-5 slide-up-in" style={{ animationDelay: "0.34s" }}>
           {spin.prize.description && (
-            <p className="text-h2 text-white/85 max-w-[860px] text-balance text-center">
+            <p className="text-h2 text-white/85 max-w-[880px] text-balance text-center">
               {spin.prize.description}
             </p>
           )}
           {spin.prize.code && (
-            <div className="px-12 py-6 rounded-3xl bg-navy-deep border-2 border-gold/60 shadow-gold-glow flex flex-col items-center">
-              <p className="text-caption uppercase tracking-[0.32em] text-white/55 mb-2">
+            <div className="px-12 py-5 rounded-3xl bg-navy-deep border-2 border-gold/60 shadow-gold-glow flex flex-col items-center">
+              <p className="text-caption uppercase tracking-[0.32em] text-white/55 mb-1">
                 Mã ưu đãi
               </p>
               <p
                 className="numeric-display font-black text-gold-light tracking-[0.14em]"
-                style={{ fontSize: "clamp(2.2rem, 4vw, 3.8rem)" }}
+                style={{ fontSize: "clamp(2rem, 3.8vw, 3.6rem)" }}
               >
                 {spin.prize.code}
               </p>
@@ -129,40 +134,40 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
             </p>
           )}
         </div>
+      </div>
 
-        {/* Auto-reset countdown */}
-        <div className="zone flex-shrink-0 gap-3">
-          <div className="relative" style={{ width: ringSize, height: ringSize }}>
-            <svg viewBox={`0 0 ${ringSize} ${ringSize}`} className="absolute inset-0 -rotate-90">
-              <circle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={ringRadius}
-                fill="none"
-                stroke="rgba(255,255,255,0.12)"
-                strokeWidth={9}
-              />
-              <circle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={ringRadius}
-                fill="none"
-                stroke="#f5c842"
-                strokeWidth={9}
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - progress)}
-                style={{ transition: "stroke-dashoffset 250ms linear" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-h1 font-black text-gold-light numeric-display">
-              {remaining}
-            </div>
+      {/* Auto-reset countdown — anchored at the bottom */}
+      <div className="absolute left-0 right-0 z-20 flex flex-col items-center gap-2 bottom-[clamp(16px,2.6vh,56px)]">
+        <div className="relative" style={{ width: ringSize, height: ringSize }}>
+          <svg viewBox={`0 0 ${ringSize} ${ringSize}`} className="absolute inset-0 -rotate-90">
+            <circle
+              cx={ringSize / 2}
+              cy={ringSize / 2}
+              r={ringRadius}
+              fill="none"
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth={8}
+            />
+            <circle
+              cx={ringSize / 2}
+              cy={ringSize / 2}
+              r={ringRadius}
+              fill="none"
+              stroke="#f5c842"
+              strokeWidth={8}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - progress)}
+              style={{ transition: "stroke-dashoffset 250ms linear" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-h1 font-black text-gold-light numeric-display">
+            {remaining}
           </div>
-          <p className="text-caption uppercase tracking-[0.3em] text-white/55">
-            Tự động trở về trang chủ
-          </p>
         </div>
+        <p className="text-caption uppercase tracking-[0.3em] text-white/55">
+          Tự động trở về trang chủ
+        </p>
       </div>
     </div>
   );
