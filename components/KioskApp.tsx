@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppState, Difficulty, Prize, SpinResult } from "../lib/types";
 import {
   loadSoundPreference,
+  playStart,
   setSoundEnabled as setSoundEnabledStorage,
   startAmbientPad,
   stopAmbientPad,
@@ -104,7 +105,8 @@ export default function KioskApp() {
   const handleStart = useCallback(async () => {
     await unlockAudio();
     audioUnlockedRef.current = true;
-    if (soundOn) startAmbientPad();
+    // grand "let's go!" stinger on the very first interaction
+    if (soundOn) playStart();
     setAppState("phone");
   }, [soundOn]);
 

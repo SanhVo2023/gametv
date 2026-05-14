@@ -271,9 +271,12 @@ function doSpinWheel(phone) {
     }
     var code = _generateCode(picked.code_prefix, normalized);
     if (playsSheet) {
-      playsSheet.appendRow([
+      var pr = playsSheet.getLastRow() + 1;
+      // phone column as plain text — keep the leading 0
+      playsSheet.getRange(pr, 2).setNumberFormat('@');
+      playsSheet.getRange(pr, 1, 1, PLAYS_HEADERS.length).setValues([[
         new Date(), normalized, picked.id, picked.name, code, true, isTester, Utilities.getUuid()
-      ]);
+      ]]);
     }
 
     return {
@@ -338,6 +341,13 @@ function _normalizePhone(p) {
   // Allow +84-style prefix by normalizing to 0xxxxxxxxx
   if (s.length === 11 && s.indexOf('84') === 0) {
     s = '0' + s.substring(2);
+  }
+  // Google Sheets stores a bare number and drops the leading 0, so a saved
+  // "777863808" (9 digits) must still match an entered "0777863808" —
+  // re-add the leading 0. This makes the uniqueness check work even on rows
+  // that were written before the text-format fix below.
+  if (s.length === 9) {
+    s = '0' + s;
   }
   return s;
 }
@@ -448,7 +458,11 @@ function _phoneHasWin(normalized) {
 function _appendPlay(row) {
   var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PLAYS);
   if (!sh) return;
-  sh.appendRow([
+  var r = sh.getLastRow() + 1;
+  // Force the phone column to plain text BEFORE writing so Sheets keeps the
+  // leading 0 instead of coercing it to a number.
+  sh.getRange(r, 2).setNumberFormat('@');
+  sh.getRange(r, 1, 1, PLAYS_HEADERS.length).setValues([[
     row.timestamp,
     row.phone,
     row.prize_id,
@@ -457,7 +471,7 @@ function _appendPlay(row) {
     row.is_win,
     row.is_tester,
     row.session_id
-  ]);
+  ]]);
 }
 
 function _generateCode(prefix, phone) {
