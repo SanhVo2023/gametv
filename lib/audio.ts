@@ -148,6 +148,18 @@ export function playKeyTap(): void {
   tone(720, 0.04, { type: "sine", gain: 0.08, attack: 0.003, release: 0.03 });
 }
 
+/** Springy "boing" — for a wrong-match shake. */
+export function playBoing(): void {
+  tone(440, 0.13, { type: "sine", glideTo: 170, gain: 0.13, attack: 0.004, release: 0.05 });
+  tone(170, 0.17, { type: "sine", glideTo: 300, gain: 0.08, attack: 0.02, release: 0.09, delay: 0.1 });
+}
+
+/** Happy pop — for a matched pair bounce. */
+export function playPop(): void {
+  tone(640, 0.05, { type: "triangle", glideTo: 1120, gain: 0.13, attack: 0.003, release: 0.05 });
+  tone(1280, 0.06, { type: "sine", gain: 0.07, attack: 0.004, release: 0.06, delay: 0.04 });
+}
+
 export function startAmbientPad(): void {
   if (!soundEnabled) return;
   const c = ensureCtx();

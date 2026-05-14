@@ -20,15 +20,18 @@ module.exports = {
       fontFamily: {
         sans: ["Montserrat", "system-ui", "-apple-system", "Segoe UI", "sans-serif"]
       },
+      /* Bounds are wide so the vw-preferred value governs across the whole
+         target range (≈550px preview → 2160px 4K TV) — text scales as a unit
+         with the canvas instead of snapping to a small min on the preview. */
       fontSize: {
-        display: ["clamp(3rem, 8.15vw, 5.5rem)", { lineHeight: "1.02", letterSpacing: "-0.02em", fontWeight: "900" }],
-        "display-xl": ["clamp(4rem, 11vw, 7.5rem)", { lineHeight: "1", letterSpacing: "-0.025em", fontWeight: "900" }],
-        h1: ["clamp(2.5rem, 5.9vw, 4rem)", { lineHeight: "1.1", letterSpacing: "-0.015em", fontWeight: "700" }],
-        h2: ["clamp(1.75rem, 4.1vw, 2.75rem)", { lineHeight: "1.15", fontWeight: "600" }],
-        body: ["clamp(1.25rem, 2.95vw, 2rem)", { lineHeight: "1.35", fontWeight: "400" }],
-        label: ["clamp(1.125rem, 2.6vw, 1.75rem)", { lineHeight: "1.2", fontWeight: "600", letterSpacing: "0.02em" }],
-        caption: ["clamp(0.875rem, 2vw, 1.375rem)", { lineHeight: "1.3", fontWeight: "500", letterSpacing: "0.04em" }],
-        eyebrow: ["clamp(0.75rem, 1.6vw, 1.125rem)", { lineHeight: "1", fontWeight: "700", letterSpacing: "0.32em" }]
+        display: ["clamp(2.4rem, 7.2vw, 9rem)", { lineHeight: "1.04", letterSpacing: "-0.02em", fontWeight: "900" }],
+        "display-xl": ["clamp(3rem, 9.4vw, 12rem)", { lineHeight: "1", letterSpacing: "-0.025em", fontWeight: "900" }],
+        h1: ["clamp(1.9rem, 5.2vw, 6.5rem)", { lineHeight: "1.08", letterSpacing: "-0.015em", fontWeight: "700" }],
+        h2: ["clamp(1.4rem, 3.7vw, 4.6rem)", { lineHeight: "1.16", fontWeight: "600" }],
+        body: ["clamp(1.05rem, 2.7vw, 3.4rem)", { lineHeight: "1.35", fontWeight: "400" }],
+        label: ["clamp(1rem, 2.4vw, 3rem)", { lineHeight: "1.2", fontWeight: "600", letterSpacing: "0.02em" }],
+        caption: ["clamp(0.85rem, 1.9vw, 2.4rem)", { lineHeight: "1.3", fontWeight: "500", letterSpacing: "0.04em" }],
+        eyebrow: ["clamp(0.8rem, 1.5vw, 1.9rem)", { lineHeight: "1.1", fontWeight: "700", letterSpacing: "0.28em" }]
       },
       boxShadow: {
         glass: "0 8px 40px rgba(0, 16, 51, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12)",
@@ -40,6 +43,11 @@ module.exports = {
         xs: "4px",
         glass: "24px"
       },
+      transitionTimingFunction: {
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "spring-strong": "cubic-bezier(0.68, -0.4, 0.27, 1.45)",
+        "out-soft": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
       animation: {
         shimmer: "shimmer 5s ease-in-out infinite",
         "logo-shimmer": "logoShimmer 6s ease-in-out infinite",
@@ -49,9 +57,21 @@ module.exports = {
         "pulse-glow": "pulseGlow 2.8s ease-in-out infinite",
         breathe: "breathe 8s ease-in-out infinite",
         float: "float 6s ease-in-out infinite",
-        shake: "shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both"
+        shake: "shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both",
+        "bounce-pop": "bouncePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "spin-slow": "spinSlow 14s linear infinite"
       },
       keyframes: {
+        bouncePop: {
+          "0%": { transform: "scale(1)" },
+          "30%": { transform: "scale(1.2)" },
+          "55%": { transform: "scale(0.9)" },
+          "78%": { transform: "scale(1.07)" },
+          "100%": { transform: "scale(1)" }
+        },
+        spinSlow: {
+          to: { transform: "rotate(360deg)" }
+        },
         shimmer: {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" }

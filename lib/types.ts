@@ -5,8 +5,7 @@ export type AppState =
   | "win_transition"
   | "wheel"
   | "prize_reveal"
-  | "lose_modal"
-  | "no_prizes";
+  | "lose_modal";
 
 export interface Prize {
   id: string;
@@ -39,6 +38,8 @@ export interface SpinResult {
   totalWedges: number;
   isTester: boolean;
   prize: SpinResultPrize;
+  /** The authoritative ordered prize list the wheel should be built from. */
+  prizes: Prize[];
 }
 
 export interface GasError {

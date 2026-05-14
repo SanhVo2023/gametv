@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 /* ============================================================
+   Tokens
+   ============================================================ */
+:root {
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-strong: cubic-bezier(0.68, -0.4, 0.27, 1.45);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
    Base
    ============================================================ */
 html,
@@ -42,7 +51,45 @@ body {
 }
 
 /* ============================================================
-   Ambient layers (kept theme-neutral, retuned for navy palette)
+   Screen scaffold — zoned full-canvas layout
+   ============================================================ */
+.fullscreen-portrait {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* A vertical stack that clusters content in the centre of the canvas.
+   Use justify-center (default) so content groups together instead of being
+   spread into voids; the gradient background fills the surrounding margin. */
+.screen-stack {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: clamp(24px, 3.5vh, 88px) clamp(24px, 3.5vw, 110px);
+  gap: clamp(18px, 2.6vh, 60px);
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* ============================================================
+   Ambient layers
    ============================================================ */
 .aurora-layer {
   position: absolute;
@@ -86,6 +133,47 @@ body {
   animation: breathe 9s infinite ease-in-out;
 }
 
+/* Slow rotating light rays — behind hero content */
+.light-rays {
+  position: absolute;
+  width: 180vmax;
+  height: 180vmax;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(58, 123, 255, 0.10) 0deg 7deg,
+    transparent 7deg 24deg
+  );
+  border-radius: 50%;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+  animation: raysSpin 80s linear infinite;
+}
+
+.particle-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(245, 200, 66, 0.95), rgba(245, 200, 66, 0));
+  pointer-events: none;
+  animation: floatParticle linear infinite;
+}
+
+.particle.blue {
+  background: radial-gradient(circle, rgba(110, 170, 255, 0.95), rgba(110, 170, 255, 0));
+}
+
 @keyframes swirl {
   from { transform: rotate(0deg) scale(1); }
   to   { transform: rotate(360deg) scale(1.05); }
@@ -99,6 +187,17 @@ body {
 @keyframes breathe {
   0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
   50%      { opacity: 0.85; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes raysSpin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes floatParticle {
+  0%   { transform: translateY(40px) translateX(0) scale(0.6); opacity: 0; }
+  12%  { opacity: 0.85; }
+  88%  { opacity: 0.55; }
+  100% { transform: translateY(-160px) translateX(var(--drift, 14px)) scale(1); opacity: 0; }
 }
 
 /* ============================================================
@@ -127,7 +226,7 @@ body {
 }
 
 /* ============================================================
-   Logo + brand shimmer
+   Logo + brand
    ============================================================ */
 .logo-shimmer {
   position: relative;
@@ -164,16 +263,16 @@ body {
 }
 
 /* ============================================================
-   Memory cards (4×4 grid, TV portrait sized)
+   Memory cards — 4×4 grid, 4K portrait sized
    ============================================================ */
 .game-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(10px, 1.8vw, 22px);
+  gap: clamp(14px, 2vw, 38px);
   width: 100%;
-  max-width: min(92vw, 860px);
+  max-width: min(88vw, 1680px);
   margin: 0 auto;
-  perspective: 1400px;
+  perspective: 1800px;
   padding: 0 8px;
 }
 
@@ -182,12 +281,16 @@ body {
   width: 100%;
   aspect-ratio: 3/4;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  min-height: 110px;
+  transition: transform 0.28s var(--ease-spring);
+  min-height: 140px;
 }
 
 .card-container:active:not(.vanished) {
-  transform: scale(0.97);
+  transform: scale(0.96);
+}
+
+.card-container.shake {
+  animation: headShake 0.55s var(--ease-out-soft);
 }
 
 .card {
@@ -196,10 +299,11 @@ body {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border-radius: 18px;
+  /* Springy flip — slight anticipation + overshoot */
+  transition: transform 0.58s var(--ease-spring-strong);
+  border-radius: 22px;
   box-shadow:
-    0 10px 28px -8px rgba(0, 0, 0, 0.6),
+    0 14px 36px -10px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.04);
   will-change: transform;
 }
@@ -207,7 +311,7 @@ body {
 .card.flipped {
   transform: rotateY(180deg);
   box-shadow:
-    0 18px 40px -10px rgba(245, 200, 66, 0.4),
+    0 22px 50px -12px rgba(245, 200, 66, 0.4),
     0 0 0 1px rgba(245, 200, 66, 0.5);
 }
 
@@ -218,7 +322,7 @@ body {
   inset: 0;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  border-radius: 18px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,66 +344,88 @@ body {
   background-image:
     radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
     radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 22px 22px, 22px 22px;
-  background-position: 0 0, 11px 11px;
-  opacity: 0.45;
+  background-size: 26px 26px, 26px 26px;
+  background-position: 0 0, 13px 13px;
+  opacity: 0.4;
 }
 
 .face-back-icon {
   position: relative;
-  width: 56%;
-  height: 56%;
+  width: 36%;
+  height: 36%;
   object-fit: contain;
   filter:
-    drop-shadow(0 0 18px rgba(58, 123, 255, 0.6))
+    drop-shadow(0 0 14px rgba(58, 123, 255, 0.55))
     drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
-  animation: cardIconBreathe 3s ease-in-out infinite;
+  animation: cardIconBreathe 3.2s ease-in-out infinite;
 }
 
 @keyframes cardIconBreathe {
-  0%, 100% { transform: scale(1); opacity: 0.9; }
-  50%      { transform: scale(1.06); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.88; }
+  50%      { transform: scale(1.07); opacity: 1; }
 }
 
 .face-front {
   background:
-    radial-gradient(circle at center, #ffffff 0%, #f5f7ff 100%);
+    radial-gradient(circle at 50% 40%, #ffffff 0%, #eef2ff 100%);
   transform: rotateY(180deg);
-  border: 2.5px solid #f5c842;
+  border: 3px solid #f5c842;
   box-shadow:
-    inset 0 0 18px rgba(245, 200, 66, 0.22),
+    inset 0 0 22px rgba(245, 200, 66, 0.22),
     0 0 0 1px rgba(245, 200, 66, 0.3);
 }
 
-.face-front i {
-  font-size: clamp(2.2rem, 6vw, 4rem);
-  line-height: 1;
-  color: #1138c4;
-  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.12));
+.face-front-icon {
+  width: 64%;
+  height: 64%;
 }
 
 /* ============================================================
-   Card animations
+   Card animations — playful / springy
    ============================================================ */
 .pop-in {
-  animation: popIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation: popIn 0.6s var(--ease-spring) backwards;
 }
 
 @keyframes popIn {
-  0%   { transform: scale(0) translateY(40px); opacity: 0; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0%   { transform: scale(0) translateY(50px) rotate(-8deg); opacity: 0; }
+  70%  { transform: scale(1.08) translateY(-6px) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+}
+
+.match-pop {
+  animation: bouncePop 0.5s var(--ease-spring);
+  z-index: 20;
+}
+
+@keyframes bouncePop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.2); }
+  55%  { transform: scale(0.9); }
+  78%  { transform: scale(1.07); }
+  100% { transform: scale(1); }
 }
 
 .vanish-anim {
-  animation: matchDissolve 0.85s forwards ease-in-out;
+  animation: matchDissolve 0.95s forwards var(--ease-spring);
   pointer-events: none;
   z-index: 50;
 }
 
 @keyframes matchDissolve {
   0%   { transform: scale(1) rotateY(180deg); opacity: 1; filter: brightness(1); }
-  40%  { transform: scale(1.12) rotateY(180deg) translateY(-10px); opacity: 1; filter: brightness(1.8) drop-shadow(0 0 24px #f5c842); }
-  100% { transform: scale(0) rotateY(180deg) rotate(18deg); opacity: 0; filter: brightness(3); }
+  28%  { transform: scale(1.22) rotateY(180deg) translateY(-14px); opacity: 1; filter: brightness(1.9) drop-shadow(0 0 28px #f5c842); }
+  55%  { transform: scale(1.05) rotateY(180deg) translateY(-4px); opacity: 1; filter: brightness(1.4); }
+  100% { transform: scale(0) rotateY(180deg) rotate(22deg); opacity: 0; filter: brightness(3); }
+}
+
+@keyframes headShake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15% { transform: translateX(-10px) rotate(-3deg); }
+  30% { transform: translateX(9px) rotate(2.6deg); }
+  45% { transform: translateX(-7px) rotate(-2deg); }
+  60% { transform: translateX(5px) rotate(1.4deg); }
+  78% { transform: translateX(-3px) rotate(-0.8deg); }
 }
 
 /* ============================================================
@@ -307,7 +433,7 @@ body {
    ============================================================ */
 .timer-bar {
   width: 100%;
-  height: 14px;
+  height: clamp(14px, 1.4vh, 26px);
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   overflow: hidden;
@@ -338,6 +464,16 @@ body {
   font-feature-settings: "tnum" 1;
 }
 
+/* One-line phone number — never wraps */
+.phone-display {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  font-weight: 900;
+}
+
 /* ============================================================
    Numpad
    ============================================================ */
@@ -346,31 +482,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 112px;
-  border-radius: 22px;
+  min-height: clamp(110px, 11vh, 200px);
+  border-radius: 26px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-size: clamp(2.2rem, 4.4vw, 4rem);
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.02em;
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.22s var(--ease-spring), background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .numpad-key:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
   background: rgba(58, 123, 255, 0.32);
   border-color: rgba(58, 123, 255, 0.55);
-  box-shadow: 0 0 0 4px rgba(58, 123, 255, 0.18);
+  box-shadow: 0 0 0 5px rgba(58, 123, 255, 0.18);
 }
 
 .numpad-key.action {
-  font-size: clamp(1.25rem, 2.8vw, 1.875rem);
+  font-size: clamp(1.4rem, 2.6vw, 2.2rem);
   letter-spacing: 0.04em;
   background: rgba(255, 255, 255, 0.04);
 }
@@ -381,7 +517,7 @@ body {
   color: #001033;
   font-weight: 800;
   box-shadow:
-    0 12px 32px rgba(245, 200, 66, 0.35),
+    0 14px 36px rgba(245, 200, 66, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -405,9 +541,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 28px 56px;
-  min-height: 120px;
-  border-radius: 28px;
+  padding: clamp(24px, 2.6vh, 40px) clamp(44px, 5vw, 88px);
+  min-height: clamp(110px, 12vh, 168px);
+  border-radius: 32px;
   background: linear-gradient(135deg, #f5c842 0%, #fde98a 50%, #f5c842 100%);
   background-size: 200% 200%;
   color: #001033;
@@ -420,16 +556,12 @@ body {
     0 16px 48px rgba(245, 200, 66, 0.4),
     0 0 0 1px rgba(245, 200, 66, 0.5),
     inset 0 2px 0 rgba(255, 255, 255, 0.5);
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, background-position 0.5s ease;
+  transition: transform 0.28s var(--ease-spring-strong), box-shadow 0.25s ease, background-position 0.5s ease;
   animation: ctaShimmer 5s ease-in-out infinite;
 }
 
 .cta-gold:active {
-  transform: scale(0.97);
-  box-shadow:
-    0 8px 24px rgba(245, 200, 66, 0.35),
-    0 0 0 1px rgba(245, 200, 66, 0.55),
-    inset 0 2px 0 rgba(255, 255, 255, 0.5);
+  transform: scale(0.94);
 }
 
 .cta-gold:disabled {
@@ -447,20 +579,20 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 22px 44px;
-  min-height: 96px;
-  border-radius: 24px;
+  padding: clamp(18px, 2vh, 30px) clamp(36px, 4vw, 64px);
+  min-height: clamp(88px, 9vh, 132px);
+  border-radius: 26px;
   background: rgba(255, 255, 255, 0.04);
   color: #ffffff;
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   font-weight: 600;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.26s var(--ease-spring-strong), background 0.2s ease;
 }
 
 .cta-ghost:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -471,14 +603,14 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 18px;
+  padding: clamp(8px, 1vh, 16px) clamp(16px, 1.6vw, 28px);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  font-size: clamp(0.75rem, 1.4vw, 1rem);
+  font-size: clamp(0.75rem, 1.3vw, 1.25rem);
 }
 
 .pill-gold {
@@ -488,8 +620,8 @@ body {
 }
 
 .dot-pulse {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: #f5c842;
   box-shadow: 0 0 0 rgba(245, 200, 66, 0.7);
@@ -498,12 +630,66 @@ body {
 
 @keyframes dotPulse {
   0%   { box-shadow: 0 0 0 0 rgba(245, 200, 66, 0.7); }
-  70%  { box-shadow: 0 0 0 14px rgba(245, 200, 66, 0); }
+  70%  { box-shadow: 0 0 0 16px rgba(245, 200, 66, 0); }
   100% { box-shadow: 0 0 0 0 rgba(245, 200, 66, 0); }
 }
 
 /* ============================================================
-   Win transition / sting
+   Prize chip — holds a product photo (white or transparent bg)
+   ============================================================ */
+.prize-chip {
+  background: linear-gradient(160deg, #ffffff 0%, #eef2ff 100%);
+  border-radius: 24px;
+  border: 2px solid rgba(245, 200, 66, 0.55);
+  box-shadow:
+    0 16px 40px rgba(0, 16, 51, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.prize-chip-voucher {
+  background: linear-gradient(150deg, #f5c842 0%, #fde98a 45%, #c9962a 100%);
+  border-radius: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 16px 40px rgba(245, 200, 66, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+  color: #001033;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================================
+   Marquee — landing prize showcase
+   ============================================================ */
+.marquee {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  gap: clamp(20px, 2vw, 44px);
+  animation: marquee 34s linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ============================================================
+   Win transition / overlays
    ============================================================ */
 .win-flash {
   position: fixed;
@@ -513,29 +699,28 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  animation: winFlashIn 0.4s ease-out, winFlashOut 0.4s ease-in 0.8s forwards;
-}
-
-@keyframes winFlashIn {
-  from { opacity: 0; backdrop-filter: blur(0px); }
-  to   { opacity: 1; backdrop-filter: blur(8px); }
-}
-
-@keyframes winFlashOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
 }
 
 /* ============================================================
-   Slide / fade transitions
+   Entrances
    ============================================================ */
 .slide-up-in {
-  animation: slideUpIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: slideUpIn 0.7s var(--ease-out-soft) both;
 }
 
 @keyframes slideUpIn {
   from { opacity: 0; transform: translateY(40px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.spring-in {
+  animation: springIn 0.7s var(--ease-spring) both;
+}
+
+@keyframes springIn {
+  0%   { opacity: 0; transform: translateY(60px) scale(0.85); }
+  60%  { opacity: 1; transform: translateY(-10px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .fade-in {
@@ -545,6 +730,24 @@ body {
 
 @keyframes fadeIn {
   to { opacity: 1; }
+}
+
+.float-soft {
+  animation: floatSoft 5s ease-in-out infinite;
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-16px); }
+}
+
+.wiggle-soft {
+  animation: wiggleSoft 3.4s ease-in-out infinite;
+}
+
+@keyframes wiggleSoft {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
 }
 
 /* ============================================================
@@ -572,13 +775,4 @@ body {
   -webkit-user-select: none;
 }
 
-.fullscreen-portrait {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+.nowrap { white-space: nowrap; }

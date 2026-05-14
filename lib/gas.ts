@@ -8,8 +8,9 @@ import type {
 
 const GAS_URL = (process.env.NEXT_PUBLIC_GAS_URL ?? "").trim();
 
-const NETWORK_RETRY = 3;
-const RETRY_BACKOFF_MS = 800;
+const NETWORK_RETRY = 2;
+const RETRY_BACKOFF_MS = 700;
+const PER_ATTEMPT_TIMEOUT_MS = 10_000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,17 +26,25 @@ async function rawPost<T extends WithOk>(
     return { ok: false, error: "GAS_URL_NOT_CONFIGURED" };
   }
 
-  // No `Content-Type` header → browser sends text/plain → avoids CORS preflight on Apps Script Web App.
-  const res = await fetch(GAS_URL, {
-    method: "POST",
-    body: JSON.stringify({ action, ...params }),
-    redirect: "follow",
-  });
-  if (!res.ok) {
-    return { ok: false, error: `HTTP_${res.status}` };
+  // Per-attempt timeout so a hung GAS request can't freeze the wheel.
+  const ctrl = new AbortController();
+  const timer = window.setTimeout(() => ctrl.abort(), PER_ATTEMPT_TIMEOUT_MS);
+  try {
+    // No `Content-Type` header → browser sends text/plain → avoids CORS preflight on Apps Script Web App.
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({ action, ...params }),
+      redirect: "follow",
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      return { ok: false, error: `HTTP_${res.status}` };
+    }
+    const data = (await res.json()) as T | GasError;
+    return data;
+  } finally {
+    window.clearTimeout(timer);
   }
-  const data = (await res.json()) as T | GasError;
-  return data;
 }
 
 async function post<T extends WithOk>(

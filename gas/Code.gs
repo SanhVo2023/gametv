@@ -190,66 +190,119 @@ function doCheckPhone(phone) {
 //   Spin wheel
 // ============================================================
 
+/**
+ * Picks a stock-weighted prize, decrements stock (unless tester), logs the play,
+ * and returns BOTH the chosen wedge AND the full ordered prize list it used —
+ * so the frontend builds the wheel from the authoritative response (no
+ * getPrizes/spinWheel ordering mismatch). Minimal spreadsheet round-trips
+ * (1 config + 1 plays read + 1 prizes read + 1 stock write + 1 append) and a
+ * script lock to prevent double-spend.
+ */
 function doSpinWheel(phone) {
   var normalized = _normalizePhone(phone);
   if (!normalized) throw new Error('invalid_phone');
 
-  var tester = _readConfig('tester_phone');
-  var isTester = !!(tester && normalized === _normalizePhone(tester));
-
-  if (!isTester && _phoneHasWin(normalized)) {
-    return { ok: false, error: 'already_won' };
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(8000);
+  } catch (e) {
+    return { ok: false, error: 'busy_try_again' };
   }
 
-  var available = _readPrizes().filter(function (p) { return p.stock > 0; });
-  if (available.length === 0) {
-    return { ok: false, error: 'no_prizes_available' };
-  }
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var tester = _readConfig('tester_phone');
+    var isTester = !!(tester && normalized === _normalizePhone(tester));
 
-  var totalWeight = available.reduce(function (s, p) { return s + Math.max(0.0001, p.weight); }, 0);
-  var roll = Math.random() * totalWeight;
-  var cursor = 0;
-  var pickedIndex = 0;
-  for (var i = 0; i < available.length; i++) {
-    cursor += Math.max(0.0001, available[i].weight);
-    if (roll <= cursor) {
-      pickedIndex = i;
-      break;
+    // Uniqueness check — single Plays read
+    var playsSheet = ss.getSheetByName(SHEET_PLAYS);
+    if (!isTester && playsSheet) {
+      var playValues = playsSheet.getDataRange().getValues();
+      if (_hasWinInValues(playValues, normalized)) {
+        return { ok: false, error: 'already_won' };
+      }
     }
-  }
-  var picked = available[pickedIndex];
 
-  // Decrement stock unless tester
-  if (!isTester) {
-    _decrementPrizeStock(picked.id);
-  }
+    // Prizes — single read, reused for pick + write-back
+    var prizesSheet = ss.getSheetByName(SHEET_PRIZES);
+    if (!prizesSheet) return { ok: false, error: 'no_prizes_sheet' };
+    var prizeValues = prizesSheet.getDataRange().getValues();
+    if (prizeValues.length <= 1) return { ok: false, error: 'no_prizes_available' };
+    var ph = prizeValues[0];
+    var pidx = {};
+    for (var i = 0; i < ph.length; i++) pidx[ph[i]] = i;
 
-  var code = _generateCode(picked.code_prefix, normalized);
-  _appendPlay({
-    timestamp: new Date(),
-    phone: normalized,
-    prize_id: picked.id,
-    prize_name: picked.name,
-    prize_code: code,
-    is_win: true,
-    is_tester: isTester,
-    session_id: Utilities.getUuid()
-  });
-
-  return {
-    ok: true,
-    wedgeIndex: pickedIndex,
-    totalWedges: available.length,
-    isTester: isTester,
-    prize: {
-      id: picked.id,
-      name: picked.name,
-      description: picked.description,
-      code: code,
-      imageUrl: picked.image_url,
-      colorHex: picked.color_hex
+    var available = [];
+    for (var r = 1; r < prizeValues.length; r++) {
+      var row = prizeValues[r];
+      var id = String(row[pidx.id] || '').trim();
+      if (!id) continue;
+      var stock = Number(row[pidx.stock] || 0);
+      if (stock <= 0) continue;
+      available.push({
+        id: id,
+        name: String(row[pidx.name] || '').trim(),
+        stock: stock,
+        weight: Number(row[pidx.weight] || 0),
+        code_prefix: String(row[pidx.code_prefix] || '').trim(),
+        image_url: String(row[pidx.image_url] || '').trim(),
+        description: String(row[pidx.description] || '').trim(),
+        color_hex: String(row[pidx.color_hex] || '').trim(),
+        sheetRow: r + 1
+      });
     }
-  };
+    if (available.length === 0) return { ok: false, error: 'no_prizes_available' };
+
+    // Stock-weighted pick
+    var totalWeight = 0;
+    for (var w = 0; w < available.length; w++) totalWeight += Math.max(0.0001, available[w].weight);
+    var roll = Math.random() * totalWeight;
+    var cursor = 0;
+    var pickedIndex = 0;
+    for (var k = 0; k < available.length; k++) {
+      cursor += Math.max(0.0001, available[k].weight);
+      if (roll <= cursor) { pickedIndex = k; break; }
+    }
+    var picked = available[pickedIndex];
+
+    // Write-back: decrement stock (unless tester) + append the play row
+    if (!isTester) {
+      prizesSheet.getRange(picked.sheetRow, pidx.stock + 1).setValue(Math.max(0, picked.stock - 1));
+    }
+    var code = _generateCode(picked.code_prefix, normalized);
+    if (playsSheet) {
+      playsSheet.appendRow([
+        new Date(), normalized, picked.id, picked.name, code, true, isTester, Utilities.getUuid()
+      ]);
+    }
+
+    return {
+      ok: true,
+      wedgeIndex: pickedIndex,
+      totalWedges: available.length,
+      isTester: isTester,
+      prize: {
+        id: picked.id,
+        name: picked.name,
+        description: picked.description,
+        code: code,
+        imageUrl: picked.image_url,
+        colorHex: picked.color_hex
+      },
+      prizes: available.map(function (p) {
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          imageUrl: p.image_url,
+          colorHex: p.color_hex,
+          weight: p.weight
+        };
+      })
+    };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ============================================================
@@ -343,6 +396,27 @@ function _decrementPrizeStock(id) {
       return;
     }
   }
+}
+
+/** Uniqueness check against an already-read Plays value matrix (no extra read). */
+function _hasWinInValues(values, normalized) {
+  if (!values || values.length <= 1) return false;
+  var headers = values[0];
+  var phoneCol = headers.indexOf('phone');
+  var winCol = headers.indexOf('is_win');
+  var testerCol = headers.indexOf('is_tester');
+  if (phoneCol < 0 || winCol < 0) return false;
+  for (var r = 1; r < values.length; r++) {
+    if (_normalizePhone(values[r][phoneCol]) !== normalized) continue;
+    var win = values[r][winCol];
+    if (!(win === true || String(win).toLowerCase() === 'true')) continue;
+    if (testerCol >= 0) {
+      var t = values[r][testerCol];
+      if (t === true || String(t).toLowerCase() === 'true') continue;
+    }
+    return true;
+  }
+  return false;
 }
 
 function _phoneHasWin(normalized) {

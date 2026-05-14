@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { checkPhone } from "../../lib/gas";
 import { formatPhoneDisplay, isValidVietnamesePhone, normalizePhone } from "../../lib/phone";
 import { playErrorSound, playKeyTap, playMatchSound } from "../../lib/audio";
+import Ambient from "../Ambient";
 
 interface PhonePadProps {
   onAllowed: (phone: string, isTester: boolean) => void;
@@ -11,7 +13,6 @@ interface PhonePadProps {
 }
 
 const MAX_DIGITS = 11;
-
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "back", "0", "ok"] as const;
 
 type ErrorKind = "invalid" | "already_won" | "network" | null;
@@ -75,7 +76,7 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
     }
   }, [digits, onAllowed, submitting, triggerError]);
 
-  // Physical keyboard support for QA (DevTools, debugging).
+  // Physical keyboard support (DevTools / QA).
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Backspace") onKey("back");
@@ -87,105 +88,125 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [onKey, submit, onCancel]);
 
-  const display = digits.length === 0 ? "0••• ••• •••" : formatPhoneDisplay(digits);
+  const display = digits.length === 0 ? "0••• ••• ••••" : formatPhoneDisplay(digits);
   const canSubmit = isValidVietnamesePhone(normalizePhone(digits)) && !submitting;
 
   return (
     <div className="fullscreen-portrait relative">
-      <div className="aurora-layer" />
-      <div className="ambient-light" />
+      <Ambient particles={12} />
 
-      <div className="absolute top-12 left-12 right-12 flex items-center justify-between z-20">
+      {/* Faint brand watermark */}
+      <div
+        className="absolute -top-[6vh] left-1/2 -translate-x-1/2 z-[1] pointer-events-none"
+        style={{ width: "min(48vw, 760px)", opacity: 0.06 }}
+      >
+        <Image src="/asset/Artboard 9.png" alt="" width={600} height={460} className="w-full h-auto" />
+      </div>
+
+      {/* Top chrome — anchored */}
+      <div className="absolute z-20 flex items-center justify-between top-[clamp(18px,3vh,60px)] left-[clamp(24px,3.5vw,110px)] right-[clamp(24px,3.5vw,110px)]">
         <button
           type="button"
           onClick={onCancel}
-          className="flex items-center gap-3 px-6 py-4 rounded-full border border-white/15 bg-white/5 text-label text-white/80 active:scale-95 transition-all"
+          className="cta-ghost !min-h-0 !py-[1.4vh] !px-[2vw] text-label"
         >
-          <i className="fa-solid fa-arrow-left" />
+          <i className="fa-solid fa-arrow-left mr-3" />
           <span>Trở về</span>
         </button>
         <div className="pill pill-gold">
           <i className="fa-solid fa-shield-halved" />
-          <span>Mỗi SĐT tham gia 1 lần duy nhất</span>
+          <span>Mỗi SĐT chơi 1 lần duy nhất</span>
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-12 pt-32 pb-12">
-        <div className="w-full max-w-[820px] flex flex-col items-center gap-12 slide-up-in">
-          <div className="text-center flex flex-col items-center gap-6">
-            <p className="text-eyebrow text-gold-light">VISION CARE + ELITE DAY</p>
-            <h2 className="text-display font-black tracking-tight text-balance">
-              Nhập <span className="text-gold-light">số điện thoại</span><br />để bắt đầu
-            </h2>
-          </div>
+      {/* Bottom teaser — anchored */}
+      <div className="absolute left-0 right-0 z-20 flex justify-center bottom-[clamp(18px,3vh,60px)]">
+        <div className="pill">
+          <i className="fa-solid fa-gift text-gold-light" />
+          <span>Chơi để nhận 1 trong 8 phần quà hấp dẫn từ Mắt Việt</span>
+        </div>
+      </div>
 
+      {/* Centered content cluster */}
+      <div className="screen-stack">
+        <div className="zone gap-3 slide-up-in">
+          <p className="text-eyebrow text-gold-light">Vision Care + Elite Day</p>
+          <h2 className="text-display font-black tracking-tight text-center text-balance">
+            Nhập <span className="text-gold-light">số điện thoại</span> để chơi
+          </h2>
+        </div>
+
+        {/* Phone display */}
+        <div
+          className={`w-full max-w-[1100px] glass-panel-strong px-12 py-[2.4vh] flex flex-col items-center gap-2 overflow-hidden ${
+            shake ? "animate-shake" : ""
+          }`}
+        >
+          <p className="text-caption uppercase tracking-[0.32em] text-white/55">
+            Số điện thoại
+          </p>
           <div
-            className={`w-full glass-panel-strong px-10 py-8 flex flex-col items-center gap-2 ${
-              shake ? "animate-shake" : ""
+            className={`phone-display transition-colors ${
+              error ? "text-red-300" : "text-white"
             }`}
+            style={{ fontSize: "clamp(2.4rem, 5.4vw, 5.4rem)" }}
           >
-            <p className="text-caption uppercase tracking-[0.32em] text-white/55">Số điện thoại</p>
-            <div
-              className={`numeric-display text-[5.5rem] font-black tracking-[0.12em] leading-none transition-colors ${
-                error ? "text-red-300" : "text-white"
-              }`}
-            >
-              {display}
-            </div>
-            <div className="h-10 mt-2">
-              {error && (
-                <p className="text-body text-red-300 text-center fade-in">{ERROR_COPY[error]}</p>
-              )}
-              {submitting && !error && (
-                <p className="text-body text-white/70 text-center flex items-center gap-3 justify-center">
-                  <span className="dot-pulse" /> Đang kiểm tra…
-                </p>
-              )}
-            </div>
+            {display}
           </div>
+          <div className="h-[clamp(28px,4vh,60px)] flex items-center">
+            {error && (
+              <p className="text-body text-red-300 text-center fade-in">{ERROR_COPY[error]}</p>
+            )}
+            {submitting && !error && (
+              <p className="text-body text-white/70 flex items-center gap-3">
+                <span className="dot-pulse" /> Đang kiểm tra…
+              </p>
+            )}
+          </div>
+        </div>
 
-          <div className="w-full grid grid-cols-3 gap-5">
-            {KEYS.map((k) => {
-              if (k === "ok") {
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    className="numpad-key confirm"
-                    onClick={submit}
-                    aria-disabled={!canSubmit}
-                    disabled={!canSubmit}
-                  >
-                    {submitting ? <i className="fa-solid fa-spinner fa-spin" /> : "BẮT ĐẦU"}
-                  </button>
-                );
-              }
-              if (k === "back") {
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    className="numpad-key action"
-                    onClick={() => onKey("back")}
-                    aria-label="Xoá"
-                  >
-                    <i className="fa-solid fa-delete-left" />
-                  </button>
-                );
-              }
+        {/* Numpad */}
+        <div className="w-full max-w-[920px] grid grid-cols-3 gap-[1.6vw]">
+          {KEYS.map((k) => {
+            if (k === "ok") {
               return (
                 <button
                   key={k}
                   type="button"
-                  className="numpad-key"
-                  onClick={() => onKey(k)}
-                  disabled={digits.length >= MAX_DIGITS}
+                  className="numpad-key confirm"
+                  onClick={submit}
+                  aria-disabled={!canSubmit}
+                  disabled={!canSubmit}
                 >
-                  {k}
+                  {submitting ? <i className="fa-solid fa-spinner fa-spin" /> : "BẮT ĐẦU"}
                 </button>
               );
-            })}
-          </div>
+            }
+            if (k === "back") {
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  className="numpad-key action"
+                  onClick={() => onKey("back")}
+                  aria-label="Xoá"
+                >
+                  <i className="fa-solid fa-delete-left" />
+                </button>
+              );
+            }
+            return (
+              <button
+                key={k}
+                type="button"
+                className="numpad-key"
+                onClick={() => onKey(k)}
+                disabled={digits.length >= MAX_DIGITS}
+              >
+                {k}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

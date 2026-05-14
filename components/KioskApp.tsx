@@ -9,7 +9,7 @@ import {
   stopAmbientPad,
   unlockAudio,
 } from "../lib/audio";
-import { getPrizes } from "../lib/gas";
+import { getPrizes, spinWheel } from "../lib/gas";
 
 import LandingScreen from "./screens/LandingScreen";
 import PhonePad from "./screens/PhonePad";
@@ -19,7 +19,6 @@ import PrizeReveal from "./screens/PrizeReveal";
 import WinTransition from "./overlays/WinTransition";
 import LoseModal from "./overlays/LoseModal";
 import SoundToggle from "./ui/SoundToggle";
-import NoPrizesScreen from "./screens/NoPrizesScreen";
 
 const AUTO_RESET_MS = 15_000;
 
@@ -27,32 +26,31 @@ export default function KioskApp() {
   const [appState, setAppState] = useState<AppState>("idle");
   const [phone, setPhone] = useState<string>("");
   const [isTester, setIsTester] = useState<boolean>(false);
-  const [prizes, setPrizes] = useState<Prize[] | null>(null);
+  const [prizes, setPrizes] = useState<Prize[]>([]);
   const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
   const [soundOn, setSoundOn] = useState<boolean>(true);
   const audioUnlockedRef = useRef<boolean>(false);
+  // The spinWheel request is kicked off the instant the game is won, so its
+  // latency is hidden behind the WinTransition + the wheel's pre-spin delay.
+  const spinPromiseRef = useRef<Promise<SpinResult> | null>(null);
 
   // Load sound preference once.
   useEffect(() => {
-    const enabled = loadSoundPreference();
-    setSoundOn(enabled);
+    setSoundOn(loadSoundPreference());
   }, []);
 
-  // Lock portrait orientation when possible (kiosk install will already set physical orientation).
+  // Lock portrait orientation when possible.
   useEffect(() => {
     type OrientationLockType =
-      | "any"
-      | "natural"
-      | "landscape"
-      | "portrait"
-      | "portrait-primary"
-      | "portrait-secondary"
-      | "landscape-primary"
-      | "landscape-secondary";
-    const so = (window.screen?.orientation as { lock?: (type: OrientationLockType) => Promise<void> } | undefined);
+      | "any" | "natural" | "landscape" | "portrait"
+      | "portrait-primary" | "portrait-secondary"
+      | "landscape-primary" | "landscape-secondary";
+    const so = window.screen?.orientation as
+      | { lock?: (type: OrientationLockType) => Promise<void> }
+      | undefined;
     if (so && typeof so.lock === "function") {
       so.lock("portrait").catch(() => {
-        /* requires fullscreen / kiosk privilege; ignore */
+        /* requires kiosk privilege; ignore */
       });
     }
   }, []);
@@ -66,7 +64,7 @@ export default function KioskApp() {
     return () => document.removeEventListener("touchmove", prevent);
   }, []);
 
-  // Ambient pad lifecycle — only audible on idle state, and only after sound is unlocked.
+  // Ambient pad — only on idle, only after audio unlocked.
   useEffect(() => {
     if (appState === "idle" && soundOn && audioUnlockedRef.current) {
       startAmbientPad();
@@ -75,12 +73,14 @@ export default function KioskApp() {
     }
   }, [appState, soundOn]);
 
-  // Prefetch prize list on idle so the wheel is instant when we get there.
+  // Prefetch the prize list (for the landing showcase marquee).
   useEffect(() => {
-    if (appState === "idle" || appState === "phone") {
-      getPrizes().then(setPrizes).catch(() => {
-        /* will retry on entry to wheel state */
-      });
+    if (appState === "idle") {
+      getPrizes()
+        .then(setPrizes)
+        .catch(() => {
+          /* showcase is decorative — ignore failures */
+        });
     }
   }, [appState]);
 
@@ -88,12 +88,8 @@ export default function KioskApp() {
     (next: boolean) => {
       setSoundOn(next);
       setSoundEnabledStorage(next);
-      if (next && appState === "idle" && audioUnlockedRef.current) {
-        startAmbientPad();
-      }
-      if (!next) {
-        stopAmbientPad();
-      }
+      if (next && appState === "idle" && audioUnlockedRef.current) startAmbientPad();
+      if (!next) stopAmbientPad();
     },
     [appState],
   );
@@ -101,21 +97,17 @@ export default function KioskApp() {
   // ---------------- Transitions ----------------
 
   const handleStart = useCallback(async () => {
-    // First user gesture — unlock the audio context.
     await unlockAudio();
     audioUnlockedRef.current = true;
     if (soundOn) startAmbientPad();
     setAppState("phone");
   }, [soundOn]);
 
-  const handlePhoneAllowed = useCallback(
-    (confirmedPhone: string, tester: boolean) => {
-      setPhone(confirmedPhone);
-      setIsTester(tester);
-      setAppState("game");
-    },
-    [],
-  );
+  const handlePhoneAllowed = useCallback((confirmedPhone: string, tester: boolean) => {
+    setPhone(confirmedPhone);
+    setIsTester(tester);
+    setAppState("game");
+  }, []);
 
   const handlePhoneCancel = useCallback(() => {
     setPhone("");
@@ -124,43 +116,34 @@ export default function KioskApp() {
   }, []);
 
   const handleGameWin = useCallback(() => {
+    // Kick off the spin request immediately — it resolves while the
+    // WinTransition plays, so the wheel can spin almost instantly.
+    const p = spinWheel(phone);
+    p.catch(() => {
+      /* the wheel awaits this promise and surfaces the error itself */
+    });
+    spinPromiseRef.current = p;
     setAppState("win_transition");
-  }, []);
+  }, [phone]);
 
   const handleGameLose = useCallback(() => {
     setAppState("lose_modal");
   }, []);
 
-  const handleWinTransitionEnd = useCallback(async () => {
-    // Make sure we have prizes loaded before the wheel mounts.
-    if (!prizes) {
-      try {
-        const fresh = await getPrizes(true);
-        setPrizes(fresh);
-        if (fresh.length === 0) {
-          setAppState("no_prizes");
-          return;
-        }
-      } catch {
-        setAppState("no_prizes");
-        return;
-      }
-    } else if (prizes.length === 0) {
-      setAppState("no_prizes");
-      return;
-    }
+  const handleWinTransitionEnd = useCallback(() => {
     setAppState("wheel");
-  }, [prizes]);
+  }, []);
 
   const handleWheelComplete = useCallback((result: SpinResult) => {
     setSpinResult(result);
     setAppState("prize_reveal");
   }, []);
 
-  const handlePrizeAutoReset = useCallback(() => {
+  const resetToIdle = useCallback(() => {
     setPhone("");
     setIsTester(false);
     setSpinResult(null);
+    spinPromiseRef.current = null;
     setAppState("idle");
   }, []);
 
@@ -169,16 +152,10 @@ export default function KioskApp() {
     setAppState("phone");
   }, []);
 
-  const handleHomeFromLoss = useCallback(() => {
-    setPhone("");
-    setIsTester(false);
-    setAppState("idle");
-  }, []);
-
   // ---------------- Render ----------------
   return (
     <main className="relative w-screen h-screen overflow-hidden">
-      {appState === "idle" && <LandingScreen onStart={handleStart} />}
+      {appState === "idle" && <LandingScreen onStart={handleStart} prizes={prizes} />}
 
       {appState === "phone" && (
         <PhonePad onAllowed={handlePhoneAllowed} onCancel={handlePhoneCancel} />
@@ -195,13 +172,13 @@ export default function KioskApp() {
 
       {appState === "win_transition" && <WinTransition onDone={handleWinTransitionEnd} />}
 
-      {appState === "wheel" && prizes && prizes.length > 0 && (
+      {appState === "wheel" && (
         <WheelOfFortune
           phone={phone}
-          prizes={prizes}
           soundEnabled={soundOn}
+          spinPromise={spinPromiseRef.current}
           onComplete={handleWheelComplete}
-          onFail={() => setAppState("no_prizes")}
+          onGiveUp={resetToIdle}
         />
       )}
 
@@ -210,15 +187,13 @@ export default function KioskApp() {
           spin={spinResult}
           isTester={isTester}
           autoResetMs={AUTO_RESET_MS}
-          onReset={handlePrizeAutoReset}
+          onReset={resetToIdle}
         />
       )}
 
       {appState === "lose_modal" && (
-        <LoseModal phone={phone} onRetry={handleRetryAfterLoss} onHome={handleHomeFromLoss} />
+        <LoseModal phone={phone} onRetry={handleRetryAfterLoss} onHome={resetToIdle} />
       )}
-
-      {appState === "no_prizes" && <NoPrizesScreen onHome={handleHomeFromLoss} />}
 
       <SoundToggle enabled={soundOn} onToggle={handleSoundToggle} />
     </main>
