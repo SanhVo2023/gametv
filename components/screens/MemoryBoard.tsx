@@ -1,20 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import {
   playBoing,
+  playCountdownTick,
   playErrorSound,
   playFlipSound,
   playMatchSound,
+  playShuffle,
   playWinSting,
 } from "../../lib/audio";
 import { playfulCopy } from "../../lib/playfulCopy";
+import type { Difficulty } from "../../lib/types";
 import { VisionIcon, VISION_ICON_KEYS, type VisionIconKey } from "../icons/VisionIcons";
 import Ambient from "../Ambient";
 
 interface MemoryBoardProps {
   phone: string;
+  difficulty: Difficulty;
   soundEnabled: boolean;
   onWin: () => void;
   onLose: () => void;
@@ -28,11 +32,15 @@ interface Card {
 }
 
 const PAIR_COUNT = VISION_ICON_KEYS.length; // 8
-const GAME_DURATION = 75;
+const EASY_DURATION = 60;
+const HARD_DURATION = 50;
 const FLIP_BACK_DELAY_MS = 620;
-const MATCH_CELEBRATE_MS = 360; // flip has visually landed — celebrate
-const MATCH_VANISH_MS = 1150; // let the matched pair sit, THEN dissolve
-const CRITICAL_SECONDS = 20;
+const MATCH_CELEBRATE_MS = 360;
+const MATCH_VANISH_MS = 1150;
+const WARNING_SECONDS = 20;
+const INTENSE_SECONDS = 10;
+const SWAP_AFTER_MISSES = 3;
+const SWAP_LOCK_MS = 1250;
 
 function shuffle<T>(items: T[]): T[] {
   const arr = items.slice();
@@ -55,23 +63,44 @@ function buildBoard(): Card[] {
 
 interface Toast {
   text: string;
-  kind: "match" | "miss";
+  kind: "match" | "miss" | "swap";
   key: number;
 }
 
-export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoardProps) {
+export default function MemoryBoard({ difficulty, soundEnabled, onWin, onLose }: MemoryBoardProps) {
+  const gameDuration = difficulty === "hard" ? HARD_DURATION : EASY_DURATION;
+
+  // `cards` stays in a STABLE id-order for the component's whole life — it is
+  // never reordered. Grid position is tracked separately in `slots`
+  // (slots[cardId] = grid cell index) and applied via CSS `order`, so the DOM
+  // order never changes and React never moves a node (which would restart the
+  // moved nodes' CSS animations — the cause of the face-down-card flicker).
   const [cards, setCards] = useState<Card[]>(() => buildBoard());
+  const [slots, setSlots] = useState<number[]>(() =>
+    Array.from({ length: PAIR_COUNT * 2 }, (_, i) => i),
+  );
   const [flipped, setFlipped] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<number>(0);
-  const [secondsLeft, setSecondsLeft] = useState<number>(GAME_DURATION);
+  const [secondsLeft, setSecondsLeft] = useState<number>(gameDuration);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [vanishedIds, setVanishedIds] = useState<Set<number>>(new Set());
   const [shakingIds, setShakingIds] = useState<Set<number>>(new Set());
+  const [swappingIds, setSwappingIds] = useState<Set<number>>(new Set());
+  const [missCount, setMissCount] = useState<number>(0);
   const [toast, setToast] = useState<Toast | null>(null);
   const [encourage, setEncourage] = useState<string>(() => playfulCopy.encourage());
+
   const timerRef = useRef<number | null>(null);
   const completedRef = useRef<boolean>(false);
   const toastKeyRef = useRef<number>(0);
+  const missCountRef = useRef<number>(0);
+  const cardsRef = useRef<Card[]>(cards);
+  cardsRef.current = cards;
+  const cardElsRef = useRef<Map<number, HTMLDivElement>>(new Map());
+  const flipFromRef = useRef<Map<number, DOMRect> | null>(null);
+
+  const isWarning = secondsLeft <= WARNING_SECONDS && secondsLeft > INTENSE_SECONDS;
+  const isIntense = secondsLeft <= INTENSE_SECONDS && secondsLeft > 0;
 
   // ---- Timer ----
   useEffect(() => {
@@ -94,13 +123,26 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
     };
   }, [onLose, soundEnabled]);
 
-  // ---- Rotating encouragement ----
+  // ---- Final-10s heartbeat beep ----
+  useEffect(() => {
+    if (
+      soundEnabled &&
+      secondsLeft <= INTENSE_SECONDS &&
+      secondsLeft > 0 &&
+      !completedRef.current
+    ) {
+      playCountdownTick(secondsLeft);
+    }
+  }, [secondsLeft, soundEnabled]);
+
+  // ---- Rotating encouragement (panic copy in the danger zone) ----
   useEffect(() => {
     const id = window.setInterval(() => {
-      if (!completedRef.current) setEncourage(playfulCopy.encourage());
-    }, 7000);
+      if (completedRef.current) return;
+      setEncourage(isIntense ? playfulCopy.panic() : playfulCopy.encourage());
+    }, isIntense ? 2500 : 7000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [isIntense]);
 
   // ---- Toast auto-clear ----
   useEffect(() => {
@@ -126,6 +168,36 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
     }
   }, [matchedPairs, onWin, soundEnabled]);
 
+  // ---- FLIP animation for hard-mode card swaps ----
+  // Runs when `slots` changes (the only thing that moves cards). Cards whose
+  // grid cell didn't change have dx/dy ≈ 0 and are skipped — only the two
+  // swapped cards animate.
+  useLayoutEffect(() => {
+    const from = flipFromRef.current;
+    if (!from) return;
+    flipFromRef.current = null;
+    cardElsRef.current.forEach((el, id) => {
+      const oldR = from.get(id);
+      if (!oldR) return;
+      const newR = el.getBoundingClientRect();
+      const dx = oldR.left - newR.left;
+      const dy = oldR.top - newR.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      void el.offsetWidth; // force reflow (Invert -> Play)
+      // slow, smooth glide so the player can register where the cards moved
+      el.style.transition = "transform 0.95s cubic-bezier(0.33, 1, 0.45, 1)";
+      el.style.transform = "";
+      const cleanup = () => {
+        el.style.transition = "";
+        el.style.transform = "";
+        el.removeEventListener("transitionend", cleanup);
+      };
+      el.addEventListener("transitionend", cleanup);
+    });
+  }, [slots]);
+
   const pushToast = useCallback((kind: "match" | "miss") => {
     toastKeyRef.current += 1;
     setToast({
@@ -134,6 +206,36 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
       key: toastKeyRef.current,
     });
   }, []);
+
+  // ---- Hard mode: swap exactly ONE pair of face-down cards ----
+  const doHardSwap = useCallback(() => {
+    // Only the `slots` map changes — `cards` (and therefore the DOM order) is
+    // left untouched, so React never moves a node and nothing's animation
+    // gets restarted. The FLIP effect animates the two cards that moved.
+    const movableIds = cardsRef.current
+      .filter((c) => !c.isMatched)
+      .map((c) => c.id);
+    if (movableIds.length < 2) return;
+
+    // FLIP: capture current positions before the slot change
+    const from = new Map<number, DOMRect>();
+    cardElsRef.current.forEach((el, id) => from.set(id, el.getBoundingClientRect()));
+    flipFromRef.current = from;
+
+    const pool = shuffle(movableIds);
+    const idA = pool[0];
+    const idB = pool[1];
+    setSlots((prev) => {
+      const next = prev.slice();
+      [next[idA], next[idB]] = [next[idB], next[idA]];
+      return next;
+    });
+    setSwappingIds(new Set([idA, idB])); // gold highlight so the move is trackable
+    window.setTimeout(() => setSwappingIds(new Set()), 1150);
+    if (soundEnabled) playShuffle();
+    toastKeyRef.current += 1;
+    setToast({ text: playfulCopy.swap(), kind: "swap", key: toastKeyRef.current });
+  }, [soundEnabled]);
 
   // ---- Card interaction ----
   const handleCardClick = useCallback(
@@ -154,8 +256,7 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
         const bCard = cards.find((c) => c.id === b)!;
 
         if (aCard.icon === bCard.icon) {
-          // Match — let the cards flip fully OPEN first, celebrate, sit a beat,
-          // then dissolve. (Previously they vanished mid-flip.)
+          // Match — flip fully open, celebrate, sit a beat, then dissolve.
           setIsProcessing(true);
           window.setTimeout(() => {
             if (soundEnabled) playMatchSound();
@@ -179,7 +280,7 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
             setVanishedIds((prev) => new Set(prev).add(a).add(b));
           }, MATCH_VANISH_MS);
         } else {
-          // Miss — head-shake + boing
+          // Miss — head-shake + boing, flip back, and (hard mode) maybe swap.
           setIsProcessing(true);
           setShakingIds(new Set([a, b]));
           if (soundEnabled) playBoing();
@@ -190,24 +291,44 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
             );
             setShakingIds(new Set());
             setFlipped([]);
+
+            if (difficulty === "hard") {
+              const newMiss = missCountRef.current + 1;
+              setMissCount(newMiss); // show the full count briefly (incl. 3/3)
+              missCountRef.current = newMiss >= SWAP_AFTER_MISSES ? 0 : newMiss;
+              if (newMiss >= SWAP_AFTER_MISSES) {
+                // keep input locked through the slow swap glide
+                window.setTimeout(() => {
+                  doHardSwap();
+                  setMissCount(0);
+                  window.setTimeout(() => setIsProcessing(false), SWAP_LOCK_MS);
+                }, 320);
+                return;
+              }
+            }
             setIsProcessing(false);
           }, FLIP_BACK_DELAY_MS);
         }
       }
     },
-    [cards, flipped, isProcessing, soundEnabled, pushToast],
+    [cards, flipped, isProcessing, soundEnabled, pushToast, difficulty, doHardSwap],
   );
 
-  const timerPercent = useMemo(() => (secondsLeft / GAME_DURATION) * 100, [secondsLeft]);
-  const isCritical = secondsLeft <= CRITICAL_SECONDS;
+  const timerPercent = useMemo(
+    () => (secondsLeft / gameDuration) * 100,
+    [secondsLeft, gameDuration],
+  );
+  const timerStateClass = isIntense ? "critical" : isWarning ? "warning" : "";
+  const missWarn = difficulty === "hard" && missCount === SWAP_AFTER_MISSES - 1;
 
   return (
     <div className="fullscreen-portrait relative">
       <Ambient particles={14} />
+      {isIntense && <div className="danger-vignette" />}
 
       <div className="screen-stack !gap-0 justify-between">
         {/* HUD */}
-        <div className="zone gap-6 flex-shrink-0">
+        <div className="zone gap-5 flex-shrink-0">
           <div className="w-full max-w-[1500px] flex items-center justify-between gap-6">
             <div className="pill pill-gold text-label">
               <i className="fa-solid fa-trophy" />
@@ -217,49 +338,107 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
               </span>
             </div>
 
-            <div
-              className={`numeric-display font-black leading-none ${
-                isCritical ? "text-red-300" : "text-gold-light"
-              }`}
-              style={{ fontSize: "clamp(3.5rem, 8vw, 7rem)" }}
-            >
-              {secondsLeft}
-              <span className="text-h2 align-top ml-2 opacity-70">giây</span>
+            {/* Big animated countdown */}
+            <div className="relative flex items-center justify-center" style={{ minHeight: "clamp(5rem,13vw,13rem)" }}>
+              {isIntense && (
+                <span
+                  className="countdown-ring-danger absolute"
+                  style={{ width: "clamp(120px,13vw,260px)", height: "clamp(120px,13vw,260px)" }}
+                />
+              )}
+              <span
+                key={secondsLeft}
+                className={`numeric-display font-black leading-none ${
+                  isIntense ? "countdown-slam text-red-400" : "countdown-tick text-gold-light"
+                }`}
+                style={{
+                  fontSize: isIntense
+                    ? "clamp(5rem, 13vw, 13rem)"
+                    : "clamp(4.2rem, 10.5vw, 11rem)",
+                }}
+              >
+                {secondsLeft}
+              </span>
+              <span className="text-h2 opacity-70 self-end mb-[1.4vh] ml-2">giây</span>
             </div>
 
-            <div className="pill text-label">
-              <i className="fa-solid fa-eye text-gold-light" />
-              <span>Vision Care +</span>
-            </div>
+            {/* Difficulty badge — hard mode also shows the miss counter */}
+            {difficulty === "hard" ? (
+              <div
+                className={`flex flex-col items-center gap-1.5 rounded-2xl border px-5 py-3 ${
+                  missWarn ? "miss-warning" : ""
+                }`}
+                style={{
+                  background: missWarn ? "rgba(245,158,11,0.22)" : "rgba(220,38,38,0.18)",
+                  borderColor: missWarn ? "rgba(251,191,36,0.65)" : "rgba(248,113,113,0.4)",
+                }}
+              >
+                <div
+                  className="flex items-center gap-2 text-label font-bold"
+                  style={{ color: missWarn ? "#fde68a" : "#fecaca" }}
+                >
+                  <i className="fa-solid fa-fire-flame-curved flicker" />
+                  <span>KHÓ</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-caption uppercase tracking-wider opacity-65">Trượt</span>
+                  <div className="flex gap-1.5">
+                    {Array.from({ length: SWAP_AFTER_MISSES }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="rounded-full transition-all duration-300"
+                        style={{
+                          width: "clamp(11px,1.1vw,20px)",
+                          height: "clamp(11px,1.1vw,20px)",
+                          background:
+                            i < missCount
+                              ? missWarn
+                                ? "#fbbf24"
+                                : "#f87171"
+                              : "rgba(255,255,255,0.15)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="pill text-label">
+                <i className="fa-solid fa-face-smile-beam text-gold-light" />
+                <span>DỄ</span>
+              </div>
+            )}
           </div>
 
-          <div className={`w-full max-w-[1500px] timer-bar ${isCritical ? "critical" : ""}`}>
+          <div className={`w-full max-w-[1500px] timer-bar ${timerStateClass}`}>
             <div className="timer-bar-fill" style={{ width: `${timerPercent}%` }} />
           </div>
         </div>
 
         {/* Subtitle + toast */}
         <div className="zone flex-shrink-0 relative h-[clamp(64px,9vh,140px)] justify-center">
-          <p className="text-h2 font-semibold text-white/70 text-center transition-opacity">
+          <p
+            className={`text-h2 font-semibold text-center transition-colors ${
+              isIntense ? "text-red-300" : "text-white/70"
+            }`}
+          >
             {encourage}
           </p>
           {toast && (
             <div
               key={toast.key}
               className={`absolute spring-in ${
-                toast.kind === "match" ? "text-gold-light" : "text-white"
+                toast.kind === "miss" ? "text-white" : "text-gold-light"
               }`}
             >
               <div
                 className={`pill ${
-                  toast.kind === "match" ? "pill-gold" : ""
+                  toast.kind === "miss" ? "" : "pill-gold"
                 } text-h2 !tracking-normal !normal-case px-8 py-4`}
               >
-                {toast.kind === "match" ? (
-                  <i className="fa-solid fa-star" />
-                ) : (
-                  <i className="fa-solid fa-face-grin-beam-sweat" />
-                )}
+                {toast.kind === "match" && <i className="fa-solid fa-star" />}
+                {toast.kind === "miss" && <i className="fa-solid fa-face-grin-beam-sweat" />}
+                {toast.kind === "swap" && <i className="fa-solid fa-shuffle" />}
                 <span>{toast.text}</span>
               </div>
             </div>
@@ -269,33 +448,39 @@ export default function MemoryBoard({ soundEnabled, onWin, onLose }: MemoryBoard
         {/* Grid */}
         <div className="zone flex-1 justify-center min-h-0">
           <div className="game-grid">
-            {cards.map((card, idx) => {
+            {cards.map((card) => {
               const vanished = card.isMatched && vanishedIds.has(card.id);
               const shaking = shakingIds.has(card.id);
               return (
                 <div
                   key={card.id}
-                  className={`card-container pop-in ${vanished ? "vanished" : ""} ${
+                  ref={(el) => {
+                    if (el) cardElsRef.current.set(card.id, el);
+                    else cardElsRef.current.delete(card.id);
+                  }}
+                  className={`card-container ${vanished ? "vanished" : ""} ${
                     shaking ? "shake" : ""
-                  }`}
-                  style={{ animationDelay: `${idx * 34}ms` }}
+                  } ${swappingIds.has(card.id) ? "card-swapping" : ""}`}
+                  style={{ order: slots[card.id] }}
                   onClick={() => handleCardClick(card.id)}
                 >
-                  <div
-                    className={`card ${card.isFlipped || card.isMatched ? "flipped" : ""} ${
-                      card.isMatched ? "vanish-anim" : ""
-                    }`}
-                  >
-                    <div className="face face-back">
-                      <img
-                        src="/asset/Artboard 9.png"
-                        alt=""
-                        className="face-back-icon"
-                        draggable={false}
-                      />
-                    </div>
-                    <div className="face face-front">
-                      <VisionIcon name={card.icon} className="face-front-icon" />
+                  <div className="card-inner pop-in" style={{ animationDelay: `${card.id * 34}ms` }}>
+                    <div
+                      className={`card ${card.isFlipped || card.isMatched ? "flipped" : ""} ${
+                        card.isMatched ? "vanish-anim" : ""
+                      }`}
+                    >
+                      <div className="face face-back">
+                        <img
+                          src="/asset/Artboard 9.png"
+                          alt=""
+                          className="face-back-icon"
+                          draggable={false}
+                        />
+                      </div>
+                      <div className="face face-front">
+                        <VisionIcon name={card.icon} className="face-front-icon" />
+                      </div>
                     </div>
                   </div>
                 </div>

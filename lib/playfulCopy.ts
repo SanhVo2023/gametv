@@ -39,6 +39,19 @@ const ENCOURAGE: string[] = [
   "Lật nhanh tay nào!",
 ];
 
+const PANIC: string[] = [
+  "Nhanh lên, sắp hết giờ rồi!",
+  "Tăng tốc nào, cố lên!",
+  "Còn vài giây thôi — bình tĩnh!",
+  "Sắp rồi, đừng bỏ cuộc!",
+];
+
+const SWAP: string[] = [
+  "Thẻ bài tráo chỗ rồi nha! 🔄",
+  "Ơ kìa, thẻ chạy lung tung!",
+  "Cẩn thận — thẻ vừa đổi chỗ!",
+];
+
 function pick(pool: string[]): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -49,4 +62,6 @@ export const playfulCopy = {
   win: () => pick(WIN),
   lose: () => pick(LOSE),
   encourage: () => pick(ENCOURAGE),
+  panic: () => pick(PANIC),
+  swap: () => pick(SWAP),
 };

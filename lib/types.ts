@@ -1,11 +1,14 @@
 export type AppState =
   | "idle"
   | "phone"
+  | "difficulty"
   | "game"
   | "win_transition"
   | "wheel"
   | "prize_reveal"
   | "lose_modal";
+
+export type Difficulty = "easy" | "hard";
 
 export interface Prize {
   id: string;

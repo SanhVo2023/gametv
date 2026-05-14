@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AppState, Prize, SpinResult } from "../lib/types";
+import type { AppState, Difficulty, Prize, SpinResult } from "../lib/types";
 import {
   loadSoundPreference,
   setSoundEnabled as setSoundEnabledStorage,
@@ -14,6 +14,7 @@ import { preloadPrizeImages } from "../lib/prizeImages";
 
 import LandingScreen from "./screens/LandingScreen";
 import PhonePad from "./screens/PhonePad";
+import DifficultyScreen from "./screens/DifficultyScreen";
 import MemoryBoard from "./screens/MemoryBoard";
 import WheelOfFortune from "./screens/WheelOfFortune";
 import PrizeReveal from "./screens/PrizeReveal";
@@ -27,6 +28,7 @@ export default function KioskApp() {
   const [appState, setAppState] = useState<AppState>("idle");
   const [phone, setPhone] = useState<string>("");
   const [isTester, setIsTester] = useState<boolean>(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
   const [soundOn, setSoundOn] = useState<boolean>(true);
@@ -75,13 +77,14 @@ export default function KioskApp() {
     }
   }, [appState, soundOn]);
 
-  // Prefetch the prize list (for the landing showcase marquee).
+  // Prefetch the prize list — on idle (landing marquee) and again at game start,
+  // so the wheel can render instantly from it instead of waiting on spinWheel.
   useEffect(() => {
-    if (appState === "idle") {
+    if (appState === "idle" || appState === "game") {
       getPrizes()
         .then(setPrizes)
         .catch(() => {
-          /* showcase is decorative — ignore failures */
+          /* decorative / non-blocking — ignore failures */
         });
     }
   }, [appState]);
@@ -108,13 +111,24 @@ export default function KioskApp() {
   const handlePhoneAllowed = useCallback((confirmedPhone: string, tester: boolean) => {
     setPhone(confirmedPhone);
     setIsTester(tester);
-    setAppState("game");
+    setAppState("difficulty");
   }, []);
 
   const handlePhoneCancel = useCallback(() => {
     setPhone("");
     setIsTester(false);
     setAppState("idle");
+  }, []);
+
+  const handleDifficultyChosen = useCallback((d: Difficulty) => {
+    setDifficulty(d);
+    setAppState("game");
+  }, []);
+
+  const handleDifficultyCancel = useCallback(() => {
+    setPhone("");
+    setIsTester(false);
+    setAppState("phone");
   }, []);
 
   const handleGameWin = useCallback(() => {
@@ -150,8 +164,8 @@ export default function KioskApp() {
   }, []);
 
   const handleRetryAfterLoss = useCallback(() => {
-    setPhone("");
-    setAppState("phone");
+    // Phone isn't consumed on a loss — keep it and let the player re-pick a mode.
+    setAppState("difficulty");
   }, []);
 
   // ---------------- Render ----------------
@@ -163,9 +177,14 @@ export default function KioskApp() {
         <PhonePad onAllowed={handlePhoneAllowed} onCancel={handlePhoneCancel} />
       )}
 
+      {appState === "difficulty" && (
+        <DifficultyScreen onChosen={handleDifficultyChosen} onCancel={handleDifficultyCancel} />
+      )}
+
       {appState === "game" && (
         <MemoryBoard
           phone={phone}
+          difficulty={difficulty}
           soundEnabled={soundOn}
           onWin={handleGameWin}
           onLose={handleGameLose}
@@ -178,6 +197,7 @@ export default function KioskApp() {
         <WheelOfFortune
           phone={phone}
           soundEnabled={soundOn}
+          prizes={prizes}
           spinPromise={spinPromiseRef.current}
           onComplete={handleWheelComplete}
           onGiveUp={resetToIdle}

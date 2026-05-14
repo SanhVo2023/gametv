@@ -160,6 +160,29 @@ export function playPop(): void {
   tone(1280, 0.06, { type: "sine", gain: 0.07, attack: 0.004, release: 0.06, delay: 0.04 });
 }
 
+/** Shuffle swoosh — for the hard-mode card swap. */
+export function playShuffle(): void {
+  tone(300, 0.16, { type: "triangle", glideTo: 620, gain: 0.1, attack: 0.01, release: 0.07 });
+  tone(520, 0.14, { type: "sine", glideTo: 360, gain: 0.07, attack: 0.01, release: 0.07, delay: 0.07 });
+}
+
+/**
+ * Countdown beep for the intense final seconds — pitch rises as `secondsLeft`
+ * falls, so the tension escalates. Pass the current second (1–10).
+ */
+export function playCountdownTick(secondsLeft: number): void {
+  const clamped = Math.max(1, Math.min(10, secondsLeft));
+  // 10s -> ~620Hz, 1s -> ~1180Hz
+  const freq = 1240 - clamped * 62;
+  const urgent = clamped <= 3;
+  tone(freq, urgent ? 0.12 : 0.08, {
+    type: "square",
+    gain: urgent ? 0.13 : 0.09,
+    attack: 0.003,
+    release: urgent ? 0.09 : 0.05,
+  });
+}
+
 /** Whoosh — filtered noise sweep for the wheel launch. */
 export function playWhoosh(): void {
   if (!soundEnabled) return;

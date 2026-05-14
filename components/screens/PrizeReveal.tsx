@@ -71,34 +71,75 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
 
         {/* Hero prize */}
         <div className="relative spring-in" style={{ animationDelay: "0.18s" }}>
-          <div className="absolute inset-0 -m-14 rounded-[44px] bg-gold/35 blur-[90px] animate-pulse-soft" />
           {voucher ? (
-            <div
-              className="prize-chip-voucher shine-sweep relative"
-              style={{ width: "min(70vw, 600px)", height: "min(50vw, 440px)" }}
-            >
-              <span className="text-h2 font-bold opacity-75 tracking-[0.2em]">VOUCHER</span>
-              <span
-                className="font-black leading-none my-2"
-                style={{ fontSize: "clamp(3.6rem, 9vw, 8.5rem)" }}
+            <>
+              <div className="absolute inset-0 -m-14 rounded-[44px] bg-gold/35 blur-[90px] animate-pulse-soft" />
+              <div
+                className="prize-chip-voucher shine-sweep relative"
+                style={{ width: "min(70vw, 600px)", height: "min(50vw, 440px)" }}
               >
-                {voucherAmount(spin.prize.name)}
-              </span>
-              <span className="text-h2 font-bold opacity-75">VNĐ</span>
-              <span className="text-label font-extrabold mt-5 tracking-wide">Mắt Việt</span>
-            </div>
+                <span className="text-h2 font-bold opacity-75 tracking-[0.2em]">VOUCHER</span>
+                <span
+                  className="font-black leading-none my-2"
+                  style={{ fontSize: "clamp(3.6rem, 9vw, 8.5rem)" }}
+                >
+                  {voucherAmount(spin.prize.name)}
+                </span>
+                <span className="text-h2 font-bold opacity-75">VNĐ</span>
+                <span className="text-label font-extrabold mt-5 tracking-wide">Mắt Việt</span>
+              </div>
+            </>
           ) : (
+            /* Transparent product photo — floats in a spotlight, no box */
             <div
-              className="prize-chip shine-sweep relative p-8"
-              style={{ width: "min(72vw, 660px)", height: "min(72vw, 660px)" }}
+              className="relative flex items-center justify-center"
+              style={{ width: "min(82vw, 720px)", height: "min(82vw, 720px)" }}
             >
-              <Image
-                src={img!}
-                alt={spin.prize.name}
-                fill
-                sizes="660px"
-                style={{ objectFit: "contain", padding: "7%" }}
-                priority
+              {/* radiating spotlight glow */}
+              <div
+                className="absolute inset-0 animate-pulse-soft"
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 46%, rgba(245,200,66,0.55) 0%, rgba(58,123,255,0.28) 38%, transparent 68%)",
+                  filter: "blur(20px)",
+                }}
+              />
+              {/* light rays behind the product */}
+              <div
+                className="absolute inset-[-6%] animate-spin-slow"
+                style={{
+                  background:
+                    "repeating-conic-gradient(from 0deg, rgba(245,200,66,0.16) 0deg 6deg, transparent 6deg 20deg)",
+                  borderRadius: "50%",
+                  maskImage: "radial-gradient(circle, #000 30%, transparent 70%)",
+                  WebkitMaskImage: "radial-gradient(circle, #000 30%, transparent 70%)",
+                }}
+              />
+              {/* the product, floating */}
+              <div className="absolute inset-[8%] float-soft">
+                <Image
+                  src={img!}
+                  alt={spin.prize.name}
+                  fill
+                  sizes="720px"
+                  priority
+                  style={{
+                    objectFit: "contain",
+                    filter: "drop-shadow(0 30px 38px rgba(0,0,0,0.6))",
+                  }}
+                />
+              </div>
+              {/* soft ground shadow */}
+              <div
+                className="absolute left-1/2 -translate-x-1/2"
+                style={{
+                  bottom: "6%",
+                  width: "56%",
+                  height: "8%",
+                  background:
+                    "radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 72%)",
+                  filter: "blur(10px)",
+                }}
               />
             </div>
           )}

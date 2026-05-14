@@ -53,6 +53,13 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
     window.setTimeout(() => setShake(false), 520);
   }, []);
 
+  const clearAll = useCallback(() => {
+    if (submitting) return;
+    setDigits("");
+    setError(null);
+    playKeyTap();
+  }, [submitting]);
+
   const submit = useCallback(async () => {
     if (submitting) return;
     const normalized = normalizePhone(digits);
@@ -80,13 +87,14 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Backspace") onKey("back");
+      else if (e.key === "Delete") clearAll();
       else if (e.key === "Enter") submit();
       else if (e.key === "Escape") onCancel();
       else if (/^\d$/.test(e.key)) onKey(e.key);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onKey, submit, onCancel]);
+  }, [onKey, submit, onCancel, clearAll]);
 
   const display = digits.length === 0 ? "0••• ••• ••••" : formatPhoneDisplay(digits);
   const canSubmit = isValidVietnamesePhone(normalizePhone(digits)) && !submitting;
@@ -146,12 +154,27 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
             Số điện thoại
           </p>
           <div
-            className={`phone-display transition-colors ${
-              error ? "text-red-300" : "text-white"
-            }`}
+            className="flex items-center justify-center gap-[0.35em]"
             style={{ fontSize: "clamp(2.4rem, 5.4vw, 5.4rem)" }}
           >
-            {display}
+            <span
+              className={`phone-display transition-colors ${
+                error ? "text-red-300" : "text-white"
+              }`}
+            >
+              {display}
+            </span>
+            {digits.length > 0 && (
+              <button
+                type="button"
+                onClick={clearAll}
+                aria-label="Xóa hết"
+                className="flex items-center justify-center text-white/35 transition-all active:scale-90 hover:text-white/70 fade-in"
+                style={{ fontSize: "0.58em" }}
+              >
+                <i className="fa-solid fa-circle-xmark" />
+              </button>
+            )}
           </div>
           <div className="h-[clamp(28px,4vh,60px)] flex items-center">
             {error && (

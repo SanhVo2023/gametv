@@ -11,6 +11,8 @@ import Ambient from "../Ambient";
 interface WheelOfFortuneProps {
   phone: string;
   soundEnabled: boolean;
+  /** Pre-fetched prize list (from idle) — lets the wheel render instantly. */
+  prizes: Prize[];
   /** In-flight spin request pre-fetched at win-time (may already be resolved). */
   spinPromise: Promise<SpinResult> | null;
   onComplete: (result: SpinResult) => void;
@@ -35,7 +37,7 @@ const WINDUP_DEG = 14;
 const OVERSHOOT_DEG = 3.5;
 const IDLE_AUTOSPIN_MS = 20_000;
 
-type Phase = "loading" | "ready" | "spinning" | "settling" | "error";
+type Phase = "ready" | "spinning" | "settling";
 
 interface ErrorInfo {
   kind: "retry" | "noPrizes";
@@ -80,13 +82,15 @@ function voucherShort(name: string): string {
 export default function WheelOfFortune({
   phone,
   soundEnabled,
+  prizes,
   spinPromise,
   onComplete,
   onGiveUp,
 }: WheelOfFortuneProps) {
-  const [phase, setPhase] = useState<Phase>("loading");
+  const [phase, setPhase] = useState<Phase>("ready");
   const [result, setResult] = useState<SpinResult | null>(null);
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
+  const [pendingSpin, setPendingSpin] = useState<boolean>(false);
   const [restRotation, setRestRotation] = useState<number>(0);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -96,43 +100,112 @@ export default function WheelOfFortune({
   const lastTickWedgeRef = useRef<number>(-1);
   const attemptRef = useRef<number>(0);
   const startedRef = useRef<boolean>(false);
+  const pendingSpinRef = useRef<boolean>(false);
 
-  const prizes: Prize[] = result?.prizes ?? [];
+  // The wheel renders from the pre-fetched list immediately; once spinWheel
+  // resolves we switch to its authoritative list (usually identical).
+  const displayPrizes: Prize[] = result?.prizes ?? prizes;
+  const hasPrizes = displayPrizes.length > 0;
   const wedgeAngle = useMemo(
-    () => (prizes.length > 0 ? 360 / prizes.length : 45),
-    [prizes.length],
+    () => (displayPrizes.length > 0 ? 360 / displayPrizes.length : 45),
+    [displayPrizes.length],
   );
 
-  const resolveSpin = useCallback((promise: Promise<SpinResult>) => {
-    const attempt = ++attemptRef.current;
-    startedRef.current = false;
-    setPhase("loading");
-    setErrorInfo(null);
-    promise
-      .then((res) => {
-        if (attempt !== attemptRef.current) return;
-        if (!res.prizes || res.prizes.length === 0) {
-          setErrorInfo({ kind: "noPrizes", text: "Kho quà tạm hết." });
-          setPhase("error");
-          return;
+  // ---- The spin ----
+  const startSpinWith = useCallback(
+    (res: SpinResult) => {
+      if (startedRef.current) return;
+      startedRef.current = true;
+      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+      pendingSpinRef.current = false;
+      setPendingSpin(false);
+      setPhase("spinning");
+
+      const wAngle = 360 / res.prizes.length;
+      const wedgeCenter = res.wedgeIndex * wAngle + wAngle / 2;
+      const base = (360 - wedgeCenter) % 360;
+      const startRot = restRotationRef.current;
+      const windupTarget = startRot - WINDUP_DEG;
+      const finalRotation = startRot + 6 * 360 + base;
+      const total = WINDUP_MS + SPIN_MS + SETTLE_MS;
+      const t0 = performance.now();
+      let whooshed = false;
+
+      const frame = (now: number) => {
+        const t = now - t0;
+        let rot: number;
+        if (t < WINDUP_MS) {
+          const p = t / WINDUP_MS;
+          rot = startRot + (windupTarget - startRot) * (1 - Math.pow(1 - p, 2));
+        } else if (t < WINDUP_MS + SPIN_MS) {
+          if (!whooshed) {
+            whooshed = true;
+            if (soundEnabled) playWhoosh();
+          }
+          const p = (t - WINDUP_MS) / SPIN_MS;
+          rot = windupTarget + (finalRotation - windupTarget) * (1 - Math.pow(1 - p, 3.6));
+        } else if (t < total) {
+          const p = (t - WINDUP_MS - SPIN_MS) / SETTLE_MS;
+          rot = finalRotation + Math.sin(p * Math.PI) * Math.exp(-3 * p) * OVERSHOOT_DEG;
+        } else {
+          rot = finalRotation;
         }
-        setResult(res);
-        setPhase("ready");
-      })
-      .catch((err: unknown) => {
-        if (attempt !== attemptRef.current) return;
-        const msg = err instanceof Error ? err.message : String(err);
-        setErrorInfo(classifyError(msg));
-        setPhase("error");
-      });
-  }, []);
+
+        if (svgRef.current) svgRef.current.style.transform = `rotate(${rot}deg)`;
+
+        if (t >= WINDUP_MS) {
+          const wedge = Math.floor((((rot % 360) + 360) % 360) / wAngle);
+          if (wedge !== lastTickWedgeRef.current) {
+            lastTickWedgeRef.current = wedge;
+            if (soundEnabled) playWheelTick();
+          }
+        }
+
+        if (t < total) {
+          rafRef.current = requestAnimationFrame(frame);
+        } else {
+          restRotationRef.current = finalRotation;
+          setRestRotation(finalRotation);
+          setPhase("settling");
+          if (soundEnabled) playWinSting();
+          window.setTimeout(() => onComplete(res), 600);
+        }
+      };
+      rafRef.current = requestAnimationFrame(frame);
+    },
+    [soundEnabled, onComplete],
+  );
+
+  // Await the spin request in the background — does NOT block the wheel render.
+  const resolveSpin = useCallback(
+    (promise: Promise<SpinResult>) => {
+      const attempt = ++attemptRef.current;
+      promise
+        .then((res) => {
+          if (attempt !== attemptRef.current) return;
+          if (!res.prizes || res.prizes.length === 0) {
+            setErrorInfo({ kind: "noPrizes", text: "Kho quà tạm hết." });
+            return;
+          }
+          setErrorInfo(null);
+          setResult(res);
+          // If the player already tapped SPIN, launch the moment we're ready.
+          if (pendingSpinRef.current) startSpinWith(res);
+        })
+        .catch((err: unknown) => {
+          if (attempt !== attemptRef.current) return;
+          const msg = err instanceof Error ? err.message : String(err);
+          setErrorInfo(classifyError(msg));
+        });
+    },
+    [startSpinWith],
+  );
 
   useEffect(() => {
     resolveSpin(spinPromise ?? spinWheel(phone));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cleanup on unmount.
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -140,81 +213,31 @@ export default function WheelOfFortune({
     };
   }, []);
 
-  // ---- The spin ----
-  const startSpin = useCallback(() => {
-    if (startedRef.current || !result) return;
-    startedRef.current = true;
-    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
-    setPhase("spinning");
-
-    const wedgeCenter = result.wedgeIndex * wedgeAngle + wedgeAngle / 2;
-    const base = (360 - wedgeCenter) % 360;
-    const startRot = restRotationRef.current;
-    const windupTarget = startRot - WINDUP_DEG;
-    const finalRotation = startRot + 6 * 360 + base;
-    const total = WINDUP_MS + SPIN_MS + SETTLE_MS;
-    const t0 = performance.now();
-    let whooshed = false;
-
-    const frame = (now: number) => {
-      const t = now - t0;
-      let rot: number;
-      if (t < WINDUP_MS) {
-        // ease back — anticipation
-        const p = t / WINDUP_MS;
-        rot = startRot + (windupTarget - startRot) * (1 - Math.pow(1 - p, 2));
-      } else if (t < WINDUP_MS + SPIN_MS) {
-        if (!whooshed) {
-          whooshed = true;
-          if (soundEnabled) playWhoosh();
-        }
-        // punchy launch -> long friction tail
-        const p = (t - WINDUP_MS) / SPIN_MS;
-        rot = windupTarget + (finalRotation - windupTarget) * (1 - Math.pow(1 - p, 3.6));
-      } else if (t < total) {
-        // single damped settle-rock
-        const p = (t - WINDUP_MS - SPIN_MS) / SETTLE_MS;
-        rot = finalRotation + Math.sin(p * Math.PI) * Math.exp(-3 * p) * OVERSHOOT_DEG;
-      } else {
-        rot = finalRotation;
-      }
-
-      if (svgRef.current) svgRef.current.style.transform = `rotate(${rot}deg)`;
-
-      // Tick on each forward wedge crossing (after the wind-up).
-      if (t >= WINDUP_MS) {
-        const wedge = Math.floor((((rot % 360) + 360) % 360) / wedgeAngle);
-        if (wedge !== lastTickWedgeRef.current) {
-          lastTickWedgeRef.current = wedge;
-          if (soundEnabled) playWheelTick();
-        }
-      }
-
-      if (t < total) {
-        rafRef.current = requestAnimationFrame(frame);
-      } else {
-        restRotationRef.current = finalRotation;
-        setRestRotation(finalRotation);
-        setPhase("settling");
-        if (soundEnabled) playWinSting();
-        window.setTimeout(() => {
-          if (result) onComplete(result);
-        }, 600);
-      }
-    };
-    rafRef.current = requestAnimationFrame(frame);
-  }, [result, wedgeAngle, soundEnabled, onComplete]);
+  const handleSpinTap = useCallback(() => {
+    if (startedRef.current || errorInfo) return;
+    if (result) {
+      startSpinWith(result);
+    } else {
+      // result not back yet — launch automatically as soon as it arrives
+      pendingSpinRef.current = true;
+      setPendingSpin(true);
+    }
+  }, [result, errorInfo, startSpinWith]);
 
   // Idle fallback — auto-spin if the SPIN button is left untouched.
   useEffect(() => {
-    if (phase !== "ready") return;
-    idleTimerRef.current = window.setTimeout(() => startSpin(), IDLE_AUTOSPIN_MS);
+    if (phase !== "ready" || errorInfo || !hasPrizes) return;
+    idleTimerRef.current = window.setTimeout(() => handleSpinTap(), IDLE_AUTOSPIN_MS);
     return () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     };
-  }, [phase, startSpin]);
+  }, [phase, errorInfo, hasPrizes, handleSpinTap]);
 
   const handleRetry = useCallback(() => {
+    setErrorInfo(null);
+    pendingSpinRef.current = false;
+    setPendingSpin(false);
+    startedRef.current = false;
     resolveSpin(spinWheel(phone));
   }, [phone, resolveSpin]);
 
@@ -225,32 +248,31 @@ export default function WheelOfFortune({
   const badgeRadius = radius * 0.6;
   const badgeR = radius * 0.205;
 
-  const showWheel = phase === "ready" || phase === "spinning" || phase === "settling";
-
   return (
     <div className="fullscreen-portrait relative">
       <Ambient rays particles={18} />
 
-      <div className="screen-stack !justify-between">
+      <div className="screen-stack">
         {/* Heading */}
-        <div className="zone gap-3 flex-shrink-0 spring-in">
+        <div className="zone gap-2 flex-shrink-0 spring-in">
           <p className="text-eyebrow text-gold-light">Vòng quay may mắn</p>
-          <h2 className="text-display font-black tracking-tight text-center">
+          <h2 className="text-h1 font-black tracking-tight text-center">
             Quà của bạn đây!
           </h2>
         </div>
 
         {/* Wheel */}
-        <div className="zone flex-1 justify-center min-h-0">
+        <div className="zone flex-shrink-0">
           <div
             className="relative aspect-square"
-            style={{ width: "min(94vw, 70vh)", height: "min(94vw, 70vh)" }}
+            style={{ width: "min(94vw, 74vh)", height: "min(94vw, 74vh)" }}
           >
             <div className="absolute inset-0 -m-10 rounded-full bg-brand-glow/35 blur-[90px]" />
             <div className="absolute inset-0 rounded-full ring-[16px] ring-gold/70 shadow-gold-glow-lg" />
             <div className="absolute inset-[16px] rounded-full ring-1 ring-white/20" />
 
-            {phase === "loading" && (
+            {/* Loading shimmer — only if we genuinely have no prize list yet */}
+            {!hasPrizes && !errorInfo && (
               <div className="absolute inset-[24px] rounded-full overflow-hidden">
                 <div
                   className="absolute inset-0 animate-spin-slow"
@@ -262,7 +284,8 @@ export default function WheelOfFortune({
               </div>
             )}
 
-            {showWheel && result && (
+            {/* SVG wheel — rendered from the pre-fetched list, instantly */}
+            {hasPrizes && (
               <svg
                 ref={svgRef}
                 viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
@@ -270,7 +293,7 @@ export default function WheelOfFortune({
                 style={{ transform: `rotate(${restRotation}deg)`, willChange: "transform" }}
               >
                 <defs>
-                  {prizes.map((_, i) => {
+                  {displayPrizes.map((_, i) => {
                     const [a, b] = WHEEL_PALETTE[i % WHEEL_PALETTE.length];
                     return (
                       <radialGradient id={`wedge-grad-${i}`} key={i} cx="50%" cy="50%" r="62%">
@@ -279,12 +302,13 @@ export default function WheelOfFortune({
                       </radialGradient>
                     );
                   })}
-                  <clipPath id="badge-clip">
-                    <circle cx="0" cy="0" r={badgeR - 6} />
-                  </clipPath>
+                  <radialGradient id="badge-disc" cx="42%" cy="38%" r="72%">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="100%" stopColor="#e3e9ff" />
+                  </radialGradient>
                 </defs>
 
-                {prizes.map((p, i) => {
+                {displayPrizes.map((p, i) => {
                   const start = i * wedgeAngle;
                   const end = start + wedgeAngle;
                   const d = describeWedge(center, center, radius, start, end);
@@ -329,15 +353,16 @@ export default function WheelOfFortune({
                           </>
                         ) : (
                           <>
-                            <circle r={badgeR} fill="#ffffff" stroke="#f5c842" strokeWidth={6} />
+                            <circle r={badgeR} fill="url(#badge-disc)" stroke="#f5c842" strokeWidth={6} />
+                            {/* transparent product photo — sits on the disc with a soft shadow */}
                             <image
                               href={img!}
-                              x={-(badgeR - 6)}
-                              y={-(badgeR - 6)}
-                              width={(badgeR - 6) * 2}
-                              height={(badgeR - 6) * 2}
-                              clipPath="url(#badge-clip)"
+                              x={-badgeR * 0.72}
+                              y={-badgeR * 0.72}
+                              width={badgeR * 1.44}
+                              height={badgeR * 1.44}
                               preserveAspectRatio="xMidYMid meet"
+                              style={{ filter: "drop-shadow(0 5px 6px rgba(0,16,51,0.5))" }}
                             />
                           </>
                         )}
@@ -382,7 +407,7 @@ export default function WheelOfFortune({
             </div>
 
             {/* Error card overlay */}
-            {phase === "error" && errorInfo && (
+            {errorInfo && (
               <div className="absolute inset-0 flex items-center justify-center z-30 spring-in">
                 <div className="glass-panel-strong w-[82%] px-10 py-12 flex flex-col items-center gap-8 text-center">
                   <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white/10 border-2 border-white/25">
@@ -413,25 +438,30 @@ export default function WheelOfFortune({
         </div>
 
         {/* Action / status zone */}
-        <div className="zone flex-shrink-0 min-h-[clamp(110px,15vh,260px)] justify-center gap-3">
-          {phase === "loading" && (
-            <p className="text-h2 text-white/85 flex items-center gap-3">
-              <span className="dot-pulse" /> Đang chuẩn bị vòng quay…
-            </p>
-          )}
-          {phase === "ready" && (
+        <div className="zone flex-shrink-0 gap-3">
+          {!errorInfo && phase === "ready" && (
             <>
               <button
                 type="button"
-                onClick={startSpin}
+                onClick={handleSpinTap}
+                disabled={pendingSpin}
                 className="cta-gold animate-pulse-glow"
                 style={{ fontSize: "clamp(1.9rem, 4.2vw, 4.2rem)" }}
               >
-                <i className="fa-solid fa-arrows-spin" />
-                <span>Quay Ngay</span>
+                {pendingSpin ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin" />
+                    <span>Đang chuẩn bị…</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-arrows-spin" />
+                    <span>Quay Ngay</span>
+                  </>
+                )}
               </button>
               <p className="text-caption uppercase tracking-[0.3em] text-white/55">
-                Chạm nút để quay vòng may mắn
+                {pendingSpin ? "Vòng quay sẽ chạy ngay khi sẵn sàng" : "Chạm nút để quay vòng may mắn"}
               </p>
             </>
           )}

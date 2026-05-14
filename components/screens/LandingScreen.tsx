@@ -36,23 +36,29 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
         </div>
       </div>
 
-      {/* Lifestyle anchor — model peeks in from the lower-right */}
+      {/* Lifestyle anchor — model slides in from the lower-right and gently floats */}
       <div
-        className="absolute bottom-0 right-0 z-[2] pointer-events-none select-none"
-        style={{ width: "min(30vw, 540px)", opacity: 0.5 }}
+        className={`absolute bottom-0 right-0 z-[2] pointer-events-none select-none transition-all duration-[900ms] ease-out-soft ${
+          mounted ? "translate-x-0 opacity-[0.82]" : "translate-x-20 opacity-0"
+        }`}
+        style={{ width: "min(50vw, 920px)" }}
       >
-        <Image
-          src="/asset/Artboard 7.png"
-          alt=""
-          width={1236}
-          height={1710}
-          className="w-full h-auto"
-          style={{
-            maskImage: "linear-gradient(to top, transparent, #000 26%)",
-            WebkitMaskImage: "linear-gradient(to top, transparent, #000 26%)",
-          }}
-          priority
-        />
+        {/* soft glow behind her for presence */}
+        <div className="absolute inset-0 -m-10 rounded-full bg-brand-glow/25 blur-[90px]" />
+        <div className="relative float-soft">
+          <Image
+            src="/asset/Artboard 7.png"
+            alt=""
+            width={1236}
+            height={1710}
+            className="w-full h-auto"
+            style={{
+              maskImage: "linear-gradient(to top, transparent, #000 20%)",
+              WebkitMaskImage: "linear-gradient(to top, transparent, #000 20%)",
+            }}
+            priority
+          />
+        </div>
       </div>
 
       {/* Centered content cluster */}
