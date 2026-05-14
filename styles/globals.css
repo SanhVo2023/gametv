@@ -971,6 +971,38 @@ body {
   to { transform: translateX(130%); }
 }
 
+/* Prize hero — gentle breathing scale + sway (pairs with .float-soft parent) */
+.prize-breathe {
+  animation: prizeBreathe 4.2s ease-in-out infinite;
+}
+@keyframes prizeBreathe {
+  0%, 100% { transform: scale(1) rotate(-1.6deg); }
+  50%      { transform: scale(1.055) rotate(1.6deg); }
+}
+
+/* Gold sparkles orbiting the prize */
+.orbit-sparkle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    #fde98a 0%,
+    rgba(245, 200, 66, 0.85) 35%,
+    rgba(245, 200, 66, 0) 72%
+  );
+  pointer-events: none;
+  animation: orbit linear infinite;
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-r)); }
+  to   { transform: rotate(360deg) translateX(var(--orbit-r)); }
+}
+
 /* ============================================================
    Reduced motion
    ============================================================ */

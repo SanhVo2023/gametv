@@ -241,12 +241,12 @@ export default function WheelOfFortune({
     resolveSpin(spinWheel(phone));
   }, [phone, resolveSpin]);
 
-  // SVG geometry
+  // SVG geometry — badges pushed out toward the rim so the wheel breathes
   const center = VIEWBOX / 2;
   const radius = VIEWBOX / 2 - 18;
-  const hubRadius = radius * 0.19;
-  const badgeRadius = radius * 0.6;
-  const badgeR = radius * 0.205;
+  const hubRadius = radius * 0.17;
+  const badgeRadius = radius * 0.7;
+  const badgeR = radius * 0.195;
 
   return (
     <div className="fullscreen-portrait relative">

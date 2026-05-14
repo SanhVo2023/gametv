@@ -58,13 +58,14 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
     <div className="fullscreen-portrait relative">
       <Ambient rays particles={24} />
 
-      {/* Centered celebratory cluster */}
-      <div className="screen-stack !gap-[clamp(16px,2.8vh,52px)]">
+      {/* Centered celebratory cluster — bottom padding reserves space for the
+          anchored countdown ring so the cluster never overlaps it */}
+      <div className="screen-stack !gap-[clamp(14px,2.6vh,56px)] !pb-[clamp(120px,15vh,220px)]">
         <p className="text-eyebrow text-gold-light spring-in">Chúc mừng bạn đã trúng</p>
 
         <h2
           className="font-black tracking-tight text-center text-gold-light leading-none spring-in"
-          style={{ fontSize: "clamp(2.6rem, 6.4vw, 8rem)", animationDelay: "0.08s" }}
+          style={{ fontSize: "clamp(2.2rem, 5.2vw, 6.8rem)", animationDelay: "0.08s" }}
         >
           {spin.prize.name}
         </h2>
@@ -90,55 +91,75 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
               </div>
             </>
           ) : (
-            /* Transparent product photo — floats in a spotlight, no box */
+            /* Transparent product photo — floats large in an animated spotlight */
             <div
               className="relative flex items-center justify-center"
-              style={{ width: "min(82vw, 720px)", height: "min(82vw, 720px)" }}
+              style={{ width: "min(94vw, 880px)", height: "min(68vw, 600px)" }}
             >
               {/* radiating spotlight glow */}
               <div
-                className="absolute inset-0 animate-pulse-soft"
+                className="absolute inset-[-14%] animate-pulse-soft"
                 style={{
                   background:
-                    "radial-gradient(circle at 50% 46%, rgba(245,200,66,0.55) 0%, rgba(58,123,255,0.28) 38%, transparent 68%)",
-                  filter: "blur(20px)",
+                    "radial-gradient(circle at 50% 46%, rgba(245,200,66,0.6) 0%, rgba(58,123,255,0.34) 36%, transparent 66%)",
+                  filter: "blur(26px)",
                 }}
               />
-              {/* light rays behind the product */}
+              {/* spinning light rays */}
               <div
-                className="absolute inset-[-6%] animate-spin-slow"
+                className="absolute inset-[-10%] animate-spin-slow"
                 style={{
                   background:
-                    "repeating-conic-gradient(from 0deg, rgba(245,200,66,0.16) 0deg 6deg, transparent 6deg 20deg)",
+                    "repeating-conic-gradient(from 0deg, rgba(245,200,66,0.18) 0deg 6deg, transparent 6deg 20deg)",
                   borderRadius: "50%",
-                  maskImage: "radial-gradient(circle, #000 30%, transparent 70%)",
-                  WebkitMaskImage: "radial-gradient(circle, #000 30%, transparent 70%)",
+                  maskImage: "radial-gradient(circle, #000 28%, transparent 70%)",
+                  WebkitMaskImage: "radial-gradient(circle, #000 28%, transparent 70%)",
                 }}
               />
-              {/* the product, floating */}
-              <div className="absolute inset-[8%] float-soft">
-                <Image
-                  src={img!}
-                  alt={spin.prize.name}
-                  fill
-                  sizes="720px"
-                  priority
+              {/* orbiting gold sparkles */}
+              {[
+                { s: "clamp(9px,1.7vw,26px)", r: "clamp(150px,33vw,420px)", d: "10s", delay: "0s" },
+                { s: "clamp(6px,1.2vw,17px)", r: "clamp(130px,28vw,360px)", d: "13s", delay: "-4s" },
+                { s: "clamp(11px,2vw,30px)", r: "clamp(168px,37vw,470px)", d: "16s", delay: "-8s" },
+                { s: "clamp(5px,1vw,14px)", r: "clamp(158px,35vw,440px)", d: "12s", delay: "-10s" },
+              ].map((sp, i) => (
+                <span
+                  key={i}
+                  className="orbit-sparkle"
                   style={{
-                    objectFit: "contain",
-                    filter: "drop-shadow(0 30px 38px rgba(0,0,0,0.6))",
+                    ["--s" as string]: sp.s,
+                    ["--orbit-r" as string]: sp.r,
+                    animationDuration: sp.d,
+                    animationDelay: sp.delay,
                   }}
                 />
+              ))}
+              {/* the product — floats, breathes and sways */}
+              <div className="absolute inset-[2%] float-soft">
+                <div className="relative w-full h-full prize-breathe">
+                  <Image
+                    src={img!}
+                    alt={spin.prize.name}
+                    fill
+                    sizes="880px"
+                    priority
+                    style={{
+                      objectFit: "contain",
+                      filter: "drop-shadow(0 34px 44px rgba(0,0,0,0.62))",
+                    }}
+                  />
+                </div>
               </div>
               {/* soft ground shadow */}
               <div
                 className="absolute left-1/2 -translate-x-1/2"
                 style={{
-                  bottom: "6%",
-                  width: "56%",
-                  height: "8%",
+                  bottom: "2%",
+                  width: "52%",
+                  height: "7%",
                   background:
                     "radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 72%)",
-                  filter: "blur(10px)",
+                  filter: "blur(12px)",
                 }}
               />
             </div>
@@ -146,9 +167,9 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
         </div>
 
         {/* Detail + code */}
-        <div className="zone gap-5 slide-up-in" style={{ animationDelay: "0.34s" }}>
+        <div className="zone gap-6 slide-up-in" style={{ animationDelay: "0.34s" }}>
           {spin.prize.description && (
-            <p className="text-h2 text-white/85 max-w-[880px] text-balance text-center">
+            <p className="text-body text-white/85 max-w-[880px] text-balance text-center">
               {spin.prize.description}
             </p>
           )}
