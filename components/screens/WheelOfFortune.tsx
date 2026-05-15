@@ -5,6 +5,7 @@ import Image from "next/image";
 import { spinWheel } from "../../lib/gas";
 import { playWheelTick, playWhoosh, playWinSting } from "../../lib/audio";
 import { isVoucher, prizeImage } from "../../lib/prizeImages";
+import { isLowPerf } from "../../lib/perf";
 import type { Prize, SpinResult } from "../../lib/types";
 import Ambient from "../Ambient";
 
@@ -267,7 +268,20 @@ export default function WheelOfFortune({
             className="relative aspect-square"
             style={{ width: "min(94vw, 74vh)", height: "min(94vw, 74vh)" }}
           >
-            <div className="absolute inset-0 -m-10 rounded-full bg-brand-glow/35 blur-[90px]" />
+            {/* Glow halo behind the wheel — a 90px blur is the single most
+                expensive paint on this screen, so on low-perf use a static
+                radial gradient layer instead (no filter:blur). */}
+            {isLowPerf() ? (
+              <div
+                className="absolute inset-0 -m-6 rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(58,123,255,0.35) 0%, rgba(58,123,255,0) 70%)",
+                }}
+              />
+            ) : (
+              <div className="absolute inset-0 -m-10 rounded-full bg-brand-glow/35 blur-[90px]" />
+            )}
             <div className="absolute inset-0 rounded-full ring-[16px] ring-gold/70 shadow-gold-glow-lg" />
             <div className="absolute inset-[16px] rounded-full ring-1 ring-white/20" />
 

@@ -12,9 +12,13 @@ import {
 } from "../lib/audio";
 import { getPrizes, spinWheel } from "../lib/gas";
 import { preloadPrizeImages } from "../lib/prizeImages";
+// Importing lib/perf runs initPerfMode() once at module load (before render),
+// so <html data-perf="low"> is set in time for the first CSS pass.
+import { isLowPerf } from "../lib/perf";
 
 import LandingScreen from "./screens/LandingScreen";
 import PhonePad from "./screens/PhonePad";
+import InstructionsScreen from "./screens/InstructionsScreen";
 import DifficultyScreen from "./screens/DifficultyScreen";
 import MemoryBoard from "./screens/MemoryBoard";
 import WheelOfFortune from "./screens/WheelOfFortune";
@@ -39,9 +43,11 @@ export default function KioskApp() {
   const spinPromiseRef = useRef<Promise<SpinResult> | null>(null);
 
   // Load sound preference + warm the prize-photo cache once at app start.
+  // (Skip the preload on low-perf to avoid hitting RAM on the constrained TV;
+  // the wheel falls back to lazy loading at spin time.)
   useEffect(() => {
     setSoundOn(loadSoundPreference());
-    preloadPrizeImages();
+    if (!isLowPerf()) preloadPrizeImages();
   }, []);
 
   // Lock portrait orientation when possible.
@@ -113,7 +119,7 @@ export default function KioskApp() {
   const handlePhoneAllowed = useCallback((confirmedPhone: string, tester: boolean) => {
     setPhone(confirmedPhone);
     setIsTester(tester);
-    setAppState("difficulty");
+    setAppState("instructions");
   }, []);
 
   const handlePhoneCancel = useCallback(() => {
@@ -122,15 +128,24 @@ export default function KioskApp() {
     setAppState("idle");
   }, []);
 
+  const handleInstructionsDone = useCallback(() => {
+    setAppState("difficulty");
+  }, []);
+
+  const handleInstructionsCancel = useCallback(() => {
+    setPhone("");
+    setIsTester(false);
+    setAppState("phone");
+  }, []);
+
   const handleDifficultyChosen = useCallback((d: Difficulty) => {
     setDifficulty(d);
     setAppState("game");
   }, []);
 
   const handleDifficultyCancel = useCallback(() => {
-    setPhone("");
-    setIsTester(false);
-    setAppState("phone");
+    // Back-stack: difficulty → instructions (phone stays)
+    setAppState("instructions");
   }, []);
 
   const handleGameWin = useCallback(() => {
@@ -177,6 +192,13 @@ export default function KioskApp() {
 
       {appState === "phone" && (
         <PhonePad onAllowed={handlePhoneAllowed} onCancel={handlePhoneCancel} />
+      )}
+
+      {appState === "instructions" && (
+        <InstructionsScreen
+          onDone={handleInstructionsDone}
+          onCancel={handleInstructionsCancel}
+        />
       )}
 
       {appState === "difficulty" && (

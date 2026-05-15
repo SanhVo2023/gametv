@@ -49,16 +49,31 @@ See [`gas/README.md`](gas/README.md) for the full endpoint reference.
 
 ## Kiosk deployment (43″ portrait TV)
 
-Use Chrome in kiosk mode:
+Use Chrome in kiosk mode. For the **LG One:Flex** (mobile-class GPU/CPU)
+launch with `?perf=low` and the low-end flags below — the app stays smooth
+and the rich design still reads, just without the GPU-heavy continuous
+effects (backdrop blurs, conic-gradient light-rays, breathing icons, etc.).
 
 ```
 chrome --kiosk --disable-pinch --overscroll-history-navigation=0 ^
        --autoplay-policy=no-user-gesture-required ^
        --noerrdialogs --disable-translate --no-first-run ^
-       https://your-host.example/
+       --enable-low-end-device-mode ^
+       --disable-background-timer-throttling ^
+       --disable-features=Translate,InterestFeedV2,IsolateOrigins ^
+       https://your-host.example/?perf=low
 ```
 
-In Windows tablet/kiosk settings, set the display orientation to portrait.
+The `?perf=low` flag is persisted to localStorage on the first visit, so a
+later launch without it still uses low-perf mode. Pass `?perf=high` to
+switch back to the full visual profile (recommended for capable desktops /
+demo screenshots, not for the TV).
+
+Also: **always run the production build on the kiosk** (`npm run build &&
+npm run start` or a deployed prod URL) — `next dev` adds significant
+overhead that the TV cannot afford. In Windows tablet/kiosk settings, set
+the display orientation to portrait, and confirm the panel/browser are at
+60 Hz (some webOS/AndroidTV builds default to 30 Hz output).
 
 If sound doesn't unlock automatically, the user must tap the **BẮT ĐẦU CHƠI**
 button once after page load — the touch unlocks the WebAudio context.

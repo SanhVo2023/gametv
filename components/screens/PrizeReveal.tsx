@@ -5,6 +5,7 @@ import Image from "next/image";
 import confetti from "canvas-confetti";
 import type { SpinResult } from "../../lib/types";
 import { isVoucher, prizeImage, voucherAmount } from "../../lib/prizeImages";
+import { isLowPerf } from "../../lib/perf";
 import Ambient from "../Ambient";
 
 interface PrizeRevealProps {
@@ -20,10 +21,12 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
 
   const img = prizeImage(spin.prize.id);
   const voucher = isVoucher(spin.prize.id) || !img;
+  const lowPerf = isLowPerf();
 
   useEffect(() => {
+    const total = lowPerf ? 90 : 240;
     const burst = (ratio: number, opts: confetti.Options) =>
-      confetti({ particleCount: Math.floor(240 * ratio), ...opts });
+      confetti({ particleCount: Math.floor(total * ratio), ...opts });
     burst(0.28, { spread: 30, startVelocity: 62, origin: { x: 0.5, y: 0.46 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
     burst(0.24, { spread: 75, startVelocity: 50, origin: { x: 0.2, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
     burst(0.24, { spread: 75, startVelocity: 50, origin: { x: 0.8, y: 0.5 }, colors: ["#f5c842", "#fde98a", "#ffffff"] });
@@ -105,35 +108,38 @@ export default function PrizeReveal({ spin, isTester, autoResetMs, onReset }: Pr
                   filter: "blur(26px)",
                 }}
               />
-              {/* spinning light rays */}
-              <div
-                className="absolute inset-[-10%] animate-spin-slow"
-                style={{
-                  background:
-                    "repeating-conic-gradient(from 0deg, rgba(245,200,66,0.18) 0deg 6deg, transparent 6deg 20deg)",
-                  borderRadius: "50%",
-                  maskImage: "radial-gradient(circle, #000 28%, transparent 70%)",
-                  WebkitMaskImage: "radial-gradient(circle, #000 28%, transparent 70%)",
-                }}
-              />
-              {/* orbiting gold sparkles */}
-              {[
-                { s: "clamp(9px,1.7vw,26px)", r: "clamp(150px,33vw,420px)", d: "10s", delay: "0s" },
-                { s: "clamp(6px,1.2vw,17px)", r: "clamp(130px,28vw,360px)", d: "13s", delay: "-4s" },
-                { s: "clamp(11px,2vw,30px)", r: "clamp(168px,37vw,470px)", d: "16s", delay: "-8s" },
-                { s: "clamp(5px,1vw,14px)", r: "clamp(158px,35vw,440px)", d: "12s", delay: "-10s" },
-              ].map((sp, i) => (
-                <span
-                  key={i}
-                  className="orbit-sparkle"
-                  style={{
-                    ["--s" as string]: sp.s,
-                    ["--orbit-r" as string]: sp.r,
-                    animationDuration: sp.d,
-                    animationDelay: sp.delay,
-                  }}
-                />
-              ))}
+              {/* spinning light rays + orbiting sparkles — skipped on low-perf */}
+              {!lowPerf && (
+                <>
+                  <div
+                    className="absolute inset-[-10%] animate-spin-slow"
+                    style={{
+                      background:
+                        "repeating-conic-gradient(from 0deg, rgba(245,200,66,0.18) 0deg 6deg, transparent 6deg 20deg)",
+                      borderRadius: "50%",
+                      maskImage: "radial-gradient(circle, #000 28%, transparent 70%)",
+                      WebkitMaskImage: "radial-gradient(circle, #000 28%, transparent 70%)",
+                    }}
+                  />
+                  {[
+                    { s: "clamp(9px,1.7vw,26px)", r: "clamp(150px,33vw,420px)", d: "10s", delay: "0s" },
+                    { s: "clamp(6px,1.2vw,17px)", r: "clamp(130px,28vw,360px)", d: "13s", delay: "-4s" },
+                    { s: "clamp(11px,2vw,30px)", r: "clamp(168px,37vw,470px)", d: "16s", delay: "-8s" },
+                    { s: "clamp(5px,1vw,14px)", r: "clamp(158px,35vw,440px)", d: "12s", delay: "-10s" },
+                  ].map((sp, i) => (
+                    <span
+                      key={i}
+                      className="orbit-sparkle"
+                      style={{
+                        ["--s" as string]: sp.s,
+                        ["--orbit-r" as string]: sp.r,
+                        animationDuration: sp.d,
+                        animationDelay: sp.delay,
+                      }}
+                    />
+                  ))}
+                </>
+              )}
               {/* the product — floats, breathes and sways */}
               <div className="absolute inset-[2%] float-soft">
                 <div className="relative w-full h-full prize-breathe">

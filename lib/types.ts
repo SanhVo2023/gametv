@@ -1,6 +1,7 @@
 export type AppState =
   | "idle"
   | "phone"
+  | "instructions"
   | "difficulty"
   | "game"
   | "win_transition"

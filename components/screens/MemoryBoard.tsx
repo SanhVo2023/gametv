@@ -12,6 +12,7 @@ import {
   playWinSting,
 } from "../../lib/audio";
 import { playfulCopy } from "../../lib/playfulCopy";
+import { isLowPerf } from "../../lib/perf";
 import type { Difficulty } from "../../lib/types";
 import { VisionIcon, VISION_ICON_KEYS, type VisionIconKey } from "../icons/VisionIcons";
 import Ambient from "../Ambient";
@@ -165,7 +166,7 @@ export default function MemoryBoard({
       if (timerRef.current) window.clearInterval(timerRef.current);
       if (soundEnabled) playWinSting();
       confetti({
-        particleCount: 160,
+        particleCount: isLowPerf() ? 50 : 160,
         spread: 95,
         startVelocity: 58,
         origin: { y: 0.6 },
@@ -269,7 +270,7 @@ export default function MemoryBoard({
             if (soundEnabled) playMatchSound();
             pushToast("match");
             confetti({
-              particleCount: 32,
+              particleCount: isLowPerf() ? 12 : 32,
               spread: 70,
               startVelocity: 34,
               origin: { y: 0.5 },
