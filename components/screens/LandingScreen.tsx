@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { QRCodeSVG } from "qrcode.react";
 import type { Prize } from "../../lib/types";
 import Ambient from "../Ambient";
 import PrizeMarquee from "../PrizeMarquee";
+
+const NEOEYESIGHT_URL = "https://neoeyesight.netlify.app/";
 
 interface LandingScreenProps {
   onStart: () => void;
@@ -62,7 +65,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
       </div>
 
       {/* Centered content cluster */}
-      <div className="screen-stack">
+      <div className="screen-stack !gap-[clamp(18px,3.6vh,84px)] !pb-[clamp(80px,11vh,220px)]">
         {/* Hero */}
         <div className={`zone gap-4 ${mounted ? "spring-in" : "opacity-0"}`}>
           <div className="w-[min(38vw,460px)] brand-glow">
@@ -151,10 +154,10 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           style={{ animationDelay: "0.6s" }}
         >
           <a
-            href="https://neoeyesight.netlify.app/"
+            href={NEOEYESIGHT_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="ai-section w-full max-w-[760px]"
+            className="ai-section w-full max-w-[780px]"
           >
             <div className="ai-icon-tile">
               <i
@@ -162,7 +165,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
                 style={{ fontSize: "clamp(1.3rem, 2.5vw, 2.4rem)" }}
               />
             </div>
-            <div className="flex flex-col flex-1 min-w-0 text-left">
+            <div className="flex flex-col flex-1 min-w-0 text-left gap-1">
               <span className="text-eyebrow ai-text-gradient">
                 <i className="fa-solid fa-sparkles mr-2" />
                 Công nghệ AI
@@ -171,16 +174,26 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
                 className="font-bold text-white/95 leading-tight"
                 style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.7rem)" }}
               >
-                Khám phá AI phân tích thị lực
+                AI phân tích thị lực
+              </span>
+              <span
+                className="flex items-center gap-2 text-white/65 leading-tight mt-1"
+                style={{ fontSize: "clamp(0.75rem, 1.25vw, 1.2rem)" }}
+              >
+                <i className="fa-solid fa-mobile-screen text-brand-glow" />
+                Quét mã bằng điện thoại để trải nghiệm
               </span>
             </div>
-            <span
-              className="cta-ai"
-              style={{ fontSize: "clamp(0.85rem, 1.4vw, 1.25rem)" }}
-            >
-              <span>NeoEyeSight</span>
-              <i className="fa-solid fa-arrow-up-right-from-square" />
-            </span>
+            <div className="ai-qr-tile">
+              <QRCodeSVG
+                value={NEOEYESIGHT_URL}
+                bgColor="#ffffff"
+                fgColor="#001033"
+                level="M"
+                marginSize={0}
+                size={320}
+              />
+            </div>
           </a>
         </div>
       </div>
