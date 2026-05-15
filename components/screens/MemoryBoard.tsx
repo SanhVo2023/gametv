@@ -22,6 +22,7 @@ interface MemoryBoardProps {
   soundEnabled: boolean;
   onWin: () => void;
   onLose: () => void;
+  onRestart: () => void;
 }
 
 interface Card {
@@ -32,8 +33,8 @@ interface Card {
 }
 
 const PAIR_COUNT = VISION_ICON_KEYS.length; // 8
-const EASY_DURATION = 60;
-const HARD_DURATION = 50;
+const EASY_DURATION = 80;
+const HARD_DURATION = 70;
 const FLIP_BACK_DELAY_MS = 620;
 const MATCH_CELEBRATE_MS = 360;
 const MATCH_VANISH_MS = 1150;
@@ -67,7 +68,13 @@ interface Toast {
   key: number;
 }
 
-export default function MemoryBoard({ difficulty, soundEnabled, onWin, onLose }: MemoryBoardProps) {
+export default function MemoryBoard({
+  difficulty,
+  soundEnabled,
+  onWin,
+  onLose,
+  onRestart,
+}: MemoryBoardProps) {
   const gameDuration = difficulty === "hard" ? HARD_DURATION : EASY_DURATION;
 
   // `cards` stays in a STABLE id-order for the component's whole life — it is
@@ -325,6 +332,21 @@ export default function MemoryBoard({ difficulty, soundEnabled, onWin, onLose }:
     <div className="fullscreen-portrait relative">
       <Ambient particles={14} />
       {isIntense && <div className="danger-vignette" />}
+
+      {/* Restart — bail back to difficulty selection mid-game */}
+      <button
+        type="button"
+        onClick={onRestart}
+        aria-label="Chơi lại"
+        className="cta-ghost !min-h-0 !py-[1.2vh] !px-[1.8vw] text-label absolute z-30"
+        style={{
+          left: "clamp(20px, 3vw, 90px)",
+          bottom: "clamp(20px, 3vh, 60px)",
+        }}
+      >
+        <i className="fa-solid fa-rotate-right mr-3" />
+        <span>Chơi lại</span>
+      </button>
 
       <div className="screen-stack !gap-0 justify-between">
         {/* HUD */}

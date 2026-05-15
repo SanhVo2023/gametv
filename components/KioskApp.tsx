@@ -190,6 +190,7 @@ export default function KioskApp() {
           soundEnabled={soundOn}
           onWin={handleGameWin}
           onLose={handleGameLose}
+          onRestart={handleRetryAfterLoss}
         />
       )}
 

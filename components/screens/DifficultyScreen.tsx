@@ -99,7 +99,7 @@ export default function DifficultyScreen({ onChosen, onCancel }: DifficultyScree
             </p>
             <div className="flex flex-col gap-2 mt-1 w-full">
               <span className="pill justify-center !tracking-normal !normal-case text-label">
-                <i className="fa-solid fa-clock text-gold-light" /> 60 giây
+                <i className="fa-solid fa-clock text-gold-light" /> 80 giây
               </span>
               <span className="pill justify-center !tracking-normal !normal-case text-label">
                 <i className="fa-solid fa-thumbtack text-gold-light" /> Thẻ bài đứng yên
@@ -172,7 +172,7 @@ export default function DifficultyScreen({ onChosen, onCancel }: DifficultyScree
                 className="pill justify-center !tracking-normal !normal-case text-label"
                 style={{ background: "rgba(220,38,38,0.18)", borderColor: "rgba(248,113,113,0.4)" }}
               >
-                <i className="fa-solid fa-bolt text-red-300" /> 50 giây
+                <i className="fa-solid fa-bolt text-red-300" /> 70 giây
               </span>
               <span
                 className="pill justify-center !tracking-normal !normal-case text-label"
