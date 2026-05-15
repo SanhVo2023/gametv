@@ -144,6 +144,45 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
             Chạm để tham gia trò chơi
           </p>
         </div>
+
+        {/* AI webapp — opens in a new tab */}
+        <div
+          className={`zone flex-shrink-0 ${mounted ? "slide-up-in" : "opacity-0"}`}
+          style={{ animationDelay: "0.6s" }}
+        >
+          <a
+            href="https://neoeyesight.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ai-section w-full max-w-[760px]"
+          >
+            <div className="ai-icon-tile">
+              <i
+                className="fa-solid fa-wand-magic-sparkles"
+                style={{ fontSize: "clamp(1.3rem, 2.5vw, 2.4rem)" }}
+              />
+            </div>
+            <div className="flex flex-col flex-1 min-w-0 text-left">
+              <span className="text-eyebrow ai-text-gradient">
+                <i className="fa-solid fa-sparkles mr-2" />
+                Công nghệ AI
+              </span>
+              <span
+                className="font-bold text-white/95 leading-tight"
+                style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.7rem)" }}
+              >
+                Khám phá AI phân tích thị lực
+              </span>
+            </div>
+            <span
+              className="cta-ai"
+              style={{ fontSize: "clamp(0.85rem, 1.4vw, 1.25rem)" }}
+            >
+              <span>NeoEyeSight</span>
+              <i className="fa-solid fa-arrow-up-right-from-square" />
+            </span>
+          </a>
+        </div>
       </div>
     </div>
   );
