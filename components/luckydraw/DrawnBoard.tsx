@@ -32,7 +32,7 @@ export default function DrawnBoard({ state }: DrawnBoardProps) {
     TOTAL_NUMBERS - state.winners.length - state.absent.length - (state.pending ? 1 : 0);
 
   return (
-    <div className="zone gap-[1.6vh] w-full max-w-[1000px]">
+    <div className="zone gap-[1.6vh] w-full max-w-[min(94vw,1120px)]">
       {/* Prize strip — 10 slots, ascending prestige */}
       <div className="flex flex-wrap justify-center gap-2.5">
         {PRIZE_SLOTS.map((slot, i) => {

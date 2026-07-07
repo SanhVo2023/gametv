@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Ambient from "../Ambient";
-import NumberTicker from "./NumberTicker";
+import SlotMachine from "./SlotMachine";
 import CongratsOverlay from "./CongratsOverlay";
 import DrawnBoard from "./DrawnBoard";
 import { playWhoosh, playWinSting, unlockAudio } from "../../lib/audio";
@@ -195,7 +195,8 @@ export default function LuckyDraw() {
   }, []);
 
   const currentSlot = PRIZE_SLOTS[Math.min(state.winners.length, PRIZE_SLOTS.length - 1)];
-  const pool = getPool(state);
+  const lastNumber =
+    state.pending?.number ?? state.winners[state.winners.length - 1]?.number ?? null;
 
   return (
     <div className="fullscreen-portrait relative">
@@ -211,7 +212,9 @@ export default function LuckyDraw() {
         <span>Trở về</span>
       </a>
 
-      <div className="screen-stack !gap-[clamp(14px,2.4vh,52px)]">
+      {/* justify-evenly spreads the sections across the full height instead of
+          packing them at the center */}
+      <div className="screen-stack !justify-evenly !gap-0 !py-[clamp(70px,7.5vh,150px)]">
         {/* Header */}
         <div className="zone gap-2">
           <div
@@ -260,31 +263,18 @@ export default function LuckyDraw() {
           </div>
         ) : (
           <>
-            {/* Number stage */}
+            {/* Slot machine */}
             <div className="zone">
-              <div
-                className="glass-panel-strong flex items-center justify-center"
-                style={{
-                  width: "min(64vw, 720px)",
-                  height: "clamp(260px, 30vh, 560px)",
-                  borderRadius: "36px",
-                }}
-              >
-                {phase === "spinning" ? (
-                  <NumberTicker pool={pool} target={spinTarget} onLanded={handleLanded} />
-                ) : (
-                  <span
-                    className="numeric-display font-black leading-none text-white/25"
-                    style={{ fontSize: "clamp(9rem, 26vw, 22rem)" }}
-                  >
-                    ?
-                  </span>
-                )}
-              </div>
+              <SlotMachine
+                spinning={phase === "spinning"}
+                target={spinTarget}
+                restNumber={lastNumber}
+                onLanded={handleLanded}
+              />
             </div>
 
             {/* CTA */}
-            <div className="zone">
+            <div className="zone" style={{ minHeight: "clamp(70px, 8vh, 150px)" }}>
               {phase === "idle" && (
                 <button
                   type="button"
@@ -305,6 +295,16 @@ export default function LuckyDraw() {
           </>
         )}
       </div>
+
+      {/* Staff: wipe everything and start over (also ?reset=1 / long-press title) */}
+      <button
+        type="button"
+        onClick={() => setPhase("confirm_reset")}
+        aria-label="Làm mới lượt rút thăm"
+        className="fixed bottom-8 right-8 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-navy-deep/50 text-xl text-white/80 opacity-40 transition-opacity active:opacity-80"
+      >
+        <i className="fa-solid fa-arrows-rotate" />
+      </button>
 
       {/* Overlays */}
       {phase === "congrats" && state.pending && (

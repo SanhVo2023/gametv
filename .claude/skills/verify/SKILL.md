@@ -43,7 +43,9 @@ idle → phone → instructions → difficulty → game → win → wheel → re
   the landing: **double-tap** the dim gift button bottom-left within 1.5 s.
 - State lives in localStorage `lucky_draw_state_v1` — seed it via
   `page.evaluate` to fast-forward tests; `/spin?reset=1` opens the reset
-  confirm panel. A full spin takes ~5.6 s (1.5 s shuffle + ~4 s decelerate).
+  confirm panel (also: visible refresh button bottom-right, long-press title).
+  The draw is a two-reel slot machine: ~1.5 s loop (hides the force check) +
+  tens reel brakes at 1.5 s, units at 2.9 s → congrats ≈ 4.6 s after tap.
 - Admin force channel: `/spin-admin?key=<Config spin_admin_key>`; requires the
   GAS deployment to have the draw* actions — against an older deployment the
   submit toast shows "unknown_action" and the TV spins pure-random (by design).

@@ -35,6 +35,13 @@ export default function LuckyDrawAdmin() {
     setKey(new URLSearchParams(window.location.search).get("key") ?? "");
   }, []);
 
+  // The kiosk locks body scrolling globally — this page runs on a phone and
+  // is taller than the viewport, so re-enable scrolling while mounted.
+  useEffect(() => {
+    document.body.classList.add("allow-scroll");
+    return () => document.body.classList.remove("allow-scroll");
+  }, []);
+
   const showToast = useCallback((t: Toast) => {
     setToast(t);
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
@@ -105,7 +112,7 @@ export default function LuckyDrawAdmin() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center gap-5 px-4 py-8">
+    <div className="min-h-screen flex flex-col items-center gap-5 px-4 pt-6 pb-32">
       <h1 className="text-2xl font-black text-gold-light">Điều khiển rút thăm</h1>
 
       {/* Pending force banner */}
@@ -155,20 +162,28 @@ export default function LuckyDrawAdmin() {
         nếu số không còn hợp lệ.
       </p>
 
-      {/* Submit */}
-      <button
-        type="button"
-        onClick={submit}
-        disabled={selected === null || busy}
-        className="cta-gold !min-h-0 disabled:opacity-40"
-        style={{ fontSize: "1.4rem" }}
+      {/* Submit — sticky bottom bar, always thumb-reachable */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 flex justify-center px-4 pt-3 pb-5"
+        style={{
+          background: "linear-gradient(180deg, transparent 0%, rgba(0,16,51,0.92) 35%)",
+          paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))",
+        }}
       >
-        {busy ? "Đang gửi…" : selected === null ? "Chọn một số" : `Gửi số ${selected}`}
-      </button>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={selected === null || busy}
+          className="cta-gold !min-h-0 w-full max-w-md !py-4 disabled:opacity-40"
+          style={{ fontSize: "1.3rem" }}
+        >
+          {busy ? "Đang gửi…" : selected === null ? "Chọn một số" : `Gửi số ${selected}`}
+        </button>
+      </div>
 
       {toast && (
         <div
-          className={`fixed bottom-6 left-4 right-4 mx-auto max-w-md rounded-2xl px-5 py-4 text-center font-semibold ${
+          className={`fixed bottom-28 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl px-5 py-4 text-center font-semibold shadow-xl ${
             toast.kind === "ok" ? "bg-gold text-navy-deep" : "bg-red-600 text-white"
           }`}
         >

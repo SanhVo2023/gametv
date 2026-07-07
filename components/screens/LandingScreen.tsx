@@ -43,8 +43,17 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
 
   return (
     <div className="fullscreen-portrait relative">
-      {/* Poster gradient FIRST (opaque), ambient washes layer on top of it */}
+      {/* Poster gradient FIRST (opaque), then the KV as the bottom backdrop —
+          its sky melts upward into the gradient — then the ambient washes. */}
       <div className="landing-anniv-bg" />
+      <Image
+        src="/asset/kv-hero.jpg"
+        alt=""
+        width={2560}
+        height={1440}
+        priority
+        className="landing-hero-bottom"
+      />
       <Ambient rays particles={22} />
 
       {/* Top chrome — anchored */}
@@ -56,7 +65,9 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
       </div>
 
       {/* Centered content cluster */}
-      <div className="screen-stack !gap-[clamp(14px,2.5vh,54px)] !pb-[clamp(36px,4.5vh,100px)] !pt-[clamp(84px,9.5vh,190px)]">
+      {/* Content ends above the KV footer zone (see !pb) so the photo reads
+          as the page's grand finale instead of a background under text. */}
+      <div className="screen-stack !gap-[clamp(14px,2.5vh,54px)] !pb-[clamp(150px,24vh,480px)] !pt-[clamp(84px,9.5vh,190px)]">
         {/* Hero — poster typography */}
         <div className={`zone gap-2 ${mounted ? "spring-in" : "opacity-0"}`}>
           <span
@@ -86,23 +97,6 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
             <span className="h-px w-[8vw] max-w-24 bg-gold/40" />
           </div>
           <PrizeMarquee prizes={prizes} />
-        </div>
-
-        {/* KV — full-bleed, masked so it melts into the gradient (no frame) */}
-        <div
-          className={`zone ${mounted ? "fade-in" : "opacity-0"}`}
-          style={{ animationDelay: "0.28s" }}
-        >
-          <div className="w-screen" style={{ height: "clamp(170px, 19vh, 380px)" }}>
-            <Image
-              src="/asset/kv-hero.jpg"
-              alt=""
-              width={2560}
-              height={1440}
-              priority
-              className="landing-hero-blend"
-            />
-          </div>
         </div>
 
         {/* How to play — sits on the LIGHT zone: navy text */}
@@ -208,8 +202,8 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
         aria-label="Rút thăm trúng thưởng"
         className={`fixed bottom-8 left-8 z-50 flex h-12 w-12 items-center justify-center rounded-full border text-xl transition-opacity ${
           drawArmed
-            ? "opacity-70 border-gold/60 bg-navy-deep/70 text-gold-light"
-            : "opacity-30 border-white/20 bg-navy-deep/40 text-white/70"
+            ? "opacity-80 border-gold/60 bg-navy-deep/70 text-gold-light"
+            : "opacity-40 border-white/25 bg-navy-deep/50 text-white/80"
         }`}
       >
         <i className="fa-solid fa-gift" />
