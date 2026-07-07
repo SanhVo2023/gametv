@@ -33,29 +33,26 @@ export default function DrawnBoard({ state }: DrawnBoardProps) {
 
   return (
     <div className="zone gap-[1.6vh] w-full max-w-[min(94vw,1120px)]">
-      {/* Prize strip — 10 slots, ascending prestige */}
-      <div className="flex flex-wrap justify-center gap-2.5">
+      {/* Prize progress track — one row, gold fills as the draw advances */}
+      <div className="flex items-start w-full px-[1vw]">
         {PRIZE_SLOTS.map((slot, i) => {
           const winner = state.winners[i];
           const isCurrent = i === currentSlot && !winner;
+          const stepState = winner ? "done" : isCurrent ? "current" : "";
           return (
-            <div
-              key={i}
-              className={`flex flex-col items-center rounded-2xl border px-3 py-2 min-w-[74px] ${
-                winner
-                  ? "bg-gold text-navy-deep border-gold"
-                  : isCurrent
-                    ? "border-gold/70 text-gold-light"
-                    : "border-white/15 text-white/40"
-              }`}
-            >
-              <span className="text-caption font-bold uppercase tracking-wider">
-                {tierTag(slot.tier)}
-                {slot.tierTotal > 1 ? ` ${slot.nth}` : ""}
-              </span>
-              <span className="font-black" style={{ fontSize: "clamp(1.1rem, 1.8vw, 2rem)" }}>
-                {winner ? winner.number : isCurrent ? "•" : "—"}
-              </span>
+            <div key={i} className="contents">
+              {i > 0 && (
+                <div className={`pq-connector ${state.winners[i - 1] ? "done" : ""}`} />
+              )}
+              <div className={`pq-step flex flex-col items-center ${stepState}`}>
+                <div className={`pq-node ${stepState}`}>
+                  {winner ? winner.number : isCurrent ? <i className="fa-solid fa-dice" /> : ""}
+                </div>
+                <span className="pq-label">
+                  {tierTag(slot.tier)}
+                  {slot.tierTotal > 1 ? ` ${slot.nth}` : ""}
+                </span>
+              </div>
             </div>
           );
         })}

@@ -276,7 +276,10 @@ body.allow-scroll {
   grid-template-columns: repeat(4, 1fr);
   gap: clamp(14px, 2vw, 38px);
   width: 100%;
-  max-width: min(88vw, 1680px);
+  /* Height-aware cap: on shorter/wider screens (iPad 3:4) the 4×4 board is
+     limited by height, not width — without this the bottom row clips. The
+     height term only bites below ~2000px tall, so the TV is unaffected. */
+  max-width: min(88vw, calc((100vh - 430px) * 0.75), 1680px);
   margin: 0 auto;
   perspective: 1800px;
   padding: 0 8px;
@@ -1288,11 +1291,21 @@ body.allow-scroll {
   right: 0;
   bottom: 0;
   width: 100%;
-  height: clamp(220px, 34vh, 660px);
+  height: clamp(240px, 36vh, 700px);
   object-fit: cover;
   object-position: center bottom;
-  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 30%, #000 62%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 30%, #000 62%);
+  /* Short, soft fade only at the very top edge — the photo itself stays
+     fully visible instead of being dissolved halfway down. */
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 14%, #000 30%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 14%, #000 30%);
+}
+
+/* iPad-class screens (shorter portrait): shrink the KV footer so it doesn't
+   ride up under the content. */
+@media (max-height: 1400px) {
+  .landing-hero-bottom {
+    height: clamp(180px, 28vh, 400px);
+  }
 }
 
 /* ---- Lucky-draw slot machine ---- */
@@ -1418,6 +1431,68 @@ body.allow-scroll {
 
 html[data-perf="low"] .slot-strip.reel-looping { filter: none; }
 html[data-perf="low"] .slot-bulb.lit { animation: none; background: #fde98a; }
+
+/* ---- Lucky-draw prize progress track ---- */
+
+.pq-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 4.4vw, 76px);
+  height: clamp(40px, 4.4vw, 76px);
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: clamp(0.95rem, 1.7vw, 1.8rem);
+  line-height: 1;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+.pq-node.done {
+  background: linear-gradient(150deg, #f5c842 0%, #fde98a 55%, #c9962a 100%);
+  border-color: #f5c842;
+  color: #001033;
+  box-shadow: 0 6px 20px -6px rgba(245, 200, 66, 0.6);
+}
+.pq-node.current {
+  border-color: #f5c842;
+  color: #fde98a;
+  background: rgba(245, 200, 66, 0.12);
+  animation: pqPulse 1.6s ease-in-out infinite;
+}
+@keyframes pqPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 200, 66, 0.55); }
+  50%      { box-shadow: 0 0 0 12px rgba(245, 200, 66, 0); }
+}
+html[data-perf="low"] .pq-node.current { animation: none; box-shadow: 0 0 14px rgba(245, 200, 66, 0.5); }
+
+.pq-connector {
+  flex: 1;
+  height: 4px;
+  min-width: clamp(8px, 1vw, 26px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  /* vertically align with the node centers */
+  margin-top: calc(clamp(40px, 4.4vw, 76px) / 2 - 2px);
+}
+.pq-connector.done {
+  background: linear-gradient(90deg, #c9962a, #f5c842);
+  box-shadow: 0 0 10px rgba(245, 200, 66, 0.4);
+}
+
+.pq-label {
+  margin-top: 6px;
+  font-size: clamp(0.6rem, 0.95vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+.pq-step.done .pq-label { color: #fde98a; }
+.pq-step.current .pq-label { color: #fde98a; }
 
 /* Lucky-draw 1–50 grid chips (TV board) */
 .draw-chip {

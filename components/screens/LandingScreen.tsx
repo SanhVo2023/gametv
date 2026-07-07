@@ -99,38 +99,8 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           <PrizeMarquee prizes={prizes} />
         </div>
 
-        {/* How to play — sits on the LIGHT zone: navy text */}
-        <div
-          className={`zone ${mounted ? "slide-up-in" : "opacity-0"}`}
-          style={{ animationDelay: "0.36s" }}
-        >
-          <div className="flex items-stretch gap-[1.8vw] w-full max-w-[1100px] justify-center">
-            {STEPS.map((s, i) => (
-              <div
-                key={s.label}
-                className="landing-light-panel flex-1 flex flex-col items-center text-center gap-[0.8vh] px-[1.4vw] py-[2vh]"
-              >
-                <div
-                  className="flex shrink-0 items-center justify-center rounded-full bg-gold text-navy-deep font-black"
-                  style={{
-                    width: "clamp(42px,3.6vw,76px)",
-                    height: "clamp(42px,3.6vw,76px)",
-                    fontSize: "clamp(1.15rem,1.9vw,2.4rem)",
-                  }}
-                >
-                  {i + 1}
-                </div>
-                <i className={`fa-solid ${s.icon} text-gold-deep text-h2`} />
-                <span className="text-label text-navy-deep leading-tight whitespace-nowrap">
-                  {s.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className={`zone gap-4 ${mounted ? "spring-in" : "opacity-0"}`} style={{ animationDelay: "0.44s" }}>
+        {/* CTA — the primary action sits right under the prizes */}
+        <div className={`zone gap-3 ${mounted ? "spring-in" : "opacity-0"}`} style={{ animationDelay: "0.36s" }}>
           <button
             type="button"
             onClick={onStart}
@@ -140,9 +110,47 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
             <span>Bắt Đầu Chơi</span>
             <i className="fa-solid fa-arrow-right" />
           </button>
-          <p className="text-caption uppercase tracking-[0.32em] text-navy-deep/60">
+          <p className="text-caption uppercase tracking-[0.32em] text-white/60">
             Chạm để tham gia trò chơi
           </p>
+        </div>
+
+        {/* How to play — one slim strip: 1 → 2 → 3 */}
+        <div
+          className={`zone ${mounted ? "slide-up-in" : "opacity-0"}`}
+          style={{ animationDelay: "0.46s" }}
+        >
+          <div className="landing-light-panel flex items-center justify-center gap-[1.6vw] px-[2.6vw] py-[1.6vh] max-w-[96vw]">
+            {STEPS.map((s, i) => (
+              <div key={s.label} className="contents">
+                {i > 0 && (
+                  <i
+                    className="fa-solid fa-arrow-right text-gold-deep/60"
+                    style={{ fontSize: "clamp(0.85rem, 1.3vw, 1.5rem)" }}
+                  />
+                )}
+                <div className="flex items-center gap-[0.7vw]">
+                  <div
+                    className="flex shrink-0 items-center justify-center rounded-full bg-gold text-navy-deep font-black"
+                    style={{
+                      width: "clamp(30px,2.6vw,52px)",
+                      height: "clamp(30px,2.6vw,52px)",
+                      fontSize: "clamp(0.9rem,1.4vw,1.7rem)",
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                  <i
+                    className={`fa-solid ${s.icon} text-gold-deep`}
+                    style={{ fontSize: "clamp(1rem,1.6vw,1.9rem)" }}
+                  />
+                  <span className="text-label text-navy-deep leading-tight whitespace-nowrap">
+                    {s.label}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* AI webapp — dark card pops on the light zone, opens in a new tab */}
