@@ -14,7 +14,7 @@ import {
 import { playfulCopy } from "../../lib/playfulCopy";
 import { isLowPerf } from "../../lib/perf";
 import type { Difficulty } from "../../lib/types";
-import { VisionIcon, VISION_ICON_KEYS, type VisionIconKey } from "../icons/VisionIcons";
+import { BrandLogo, BRAND_KEYS, type BrandKey } from "../icons/BrandLogos";
 import Ambient from "../Ambient";
 
 interface MemoryBoardProps {
@@ -28,12 +28,12 @@ interface MemoryBoardProps {
 
 interface Card {
   id: number;
-  icon: VisionIconKey;
+  icon: BrandKey;
   isFlipped: boolean;
   isMatched: boolean;
 }
 
-const PAIR_COUNT = VISION_ICON_KEYS.length; // 8
+const PAIR_COUNT = 8; // board stays 4×4; brands are sampled 8-of-10 per game
 const EASY_DURATION = 80;
 const HARD_DURATION = 70;
 const FLIP_BACK_DELAY_MS = 620;
@@ -54,7 +54,10 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 function buildBoard(): Card[] {
-  const seed = VISION_ICON_KEYS.flatMap((icon) => [icon, icon]);
+  // Random 8 of the 10 brands each game (the component remounts per game,
+  // so every round gets a fresh sample + layout).
+  const brands = shuffle(BRAND_KEYS).slice(0, PAIR_COUNT);
+  const seed = brands.flatMap((icon) => [icon, icon]);
   return shuffle(seed).map((icon, id) => ({
     id,
     icon,
@@ -87,10 +90,8 @@ export default function MemoryBoard({
   const [slots, setSlots] = useState<number[]>(() =>
     Array.from({ length: PAIR_COUNT * 2 }, (_, i) => i),
   );
-  const [flipped, setFlipped] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<number>(0);
   const [secondsLeft, setSecondsLeft] = useState<number>(gameDuration);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [vanishedIds, setVanishedIds] = useState<Set<number>>(new Set());
   const [shakingIds, setShakingIds] = useState<Set<number>>(new Set());
   const [swappingIds, setSwappingIds] = useState<Set<number>>(new Set());
@@ -106,6 +107,21 @@ export default function MemoryBoard({
   cardsRef.current = cards;
   const cardElsRef = useRef<Map<number, HTMLDivElement>>(new Map());
   const flipFromRef = useRef<Map<number, DOMRect> | null>(null);
+
+  // Tap handling lives in refs, NOT state: on the TV's weak GPU a re-render
+  // can take longer than the gap between two quick taps, so any state the
+  // handler reads from its render closure can be stale. Refs are mutated
+  // synchronously inside the handler, which makes back-to-back taps safe.
+  const flippedRef = useRef<number[]>([]); // the in-progress pair (0–2 ids)
+  const matchedIdsRef = useRef<Set<number>>(new Set()); // set the instant a match is detected
+  const lockRef = useRef<boolean>(false); // input lock — hard-mode swap glide ONLY
+  const missTimerRef = useRef<number | null>(null); // pending flip-back, cancellable by a 3rd tap
+
+  useEffect(() => {
+    return () => {
+      if (missTimerRef.current) window.clearTimeout(missTimerRef.current);
+    };
+  }, []);
 
   const isWarning = secondsLeft <= WARNING_SECONDS && secondsLeft > INTENSE_SECONDS;
   const isIntense = secondsLeft <= INTENSE_SECONDS && secondsLeft > 0;
@@ -220,8 +236,10 @@ export default function MemoryBoard({
     // Only the `slots` map changes — `cards` (and therefore the DOM order) is
     // left untouched, so React never moves a node and nothing's animation
     // gets restarted. The FLIP effect animates the two cards that moved.
+    // matchedIdsRef also excludes pairs still celebrating (matched but not
+    // yet flagged isMatched during the pre-vanish window).
     const movableIds = cardsRef.current
-      .filter((c) => !c.isMatched)
+      .filter((c) => !c.isMatched && !matchedIdsRef.current.has(c.id))
       .map((c) => c.id);
     if (movableIds.length < 2) return;
 
@@ -246,80 +264,110 @@ export default function MemoryBoard({
   }, [soundEnabled]);
 
   // ---- Card interaction ----
-  const handleCardClick = useCallback(
-    (id: number) => {
-      if (isProcessing || completedRef.current) return;
-      const card = cards.find((c) => c.id === id);
-      if (!card || card.isFlipped || card.isMatched) return;
-      if (flipped.length >= 2) return;
 
-      if (soundEnabled) playFlipSound();
-      const nextFlipped = [...flipped, id];
-      setCards((prev) => prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c)));
-      setFlipped(nextFlipped);
+  // Flip a mismatched pair face-down + hard-mode miss accounting.
+  // Returns true when it triggered the hard swap (input is then locked).
+  const resolveMiss = useCallback(
+    (a: number, b: number): boolean => {
+      setCards((prev) =>
+        prev.map((c) => (c.id === a || c.id === b ? { ...c, isFlipped: false } : c)),
+      );
+      setShakingIds(new Set());
+      flippedRef.current = [];
 
-      if (nextFlipped.length === 2) {
-        const [a, b] = nextFlipped;
-        const aCard = cards.find((c) => c.id === a)!;
-        const bCard = cards.find((c) => c.id === b)!;
-
-        if (aCard.icon === bCard.icon) {
-          // Match — flip fully open, celebrate, sit a beat, then dissolve.
-          setIsProcessing(true);
+      if (difficulty === "hard") {
+        const newMiss = missCountRef.current + 1;
+        setMissCount(newMiss); // show the full count briefly (incl. 3/3)
+        missCountRef.current = newMiss >= SWAP_AFTER_MISSES ? 0 : newMiss;
+        if (newMiss >= SWAP_AFTER_MISSES) {
+          // keep input locked through the slow swap glide
+          lockRef.current = true;
           window.setTimeout(() => {
-            if (soundEnabled) playMatchSound();
-            pushToast("match");
-            confetti({
-              particleCount: isLowPerf() ? 12 : 32,
-              spread: 70,
-              startVelocity: 34,
-              origin: { y: 0.5 },
-              colors: ["#f5c842", "#ffffff", "#2156e8"],
-              ticks: 100,
-            });
-          }, MATCH_CELEBRATE_MS);
-          window.setTimeout(() => {
-            setCards((prev) =>
-              prev.map((c) => (c.id === a || c.id === b ? { ...c, isMatched: true } : c)),
-            );
-            setMatchedPairs((m) => m + 1);
-            setFlipped([]);
-            setIsProcessing(false);
-            setVanishedIds((prev) => new Set(prev).add(a).add(b));
-          }, MATCH_VANISH_MS);
-        } else {
-          // Miss — head-shake + boing, flip back, and (hard mode) maybe swap.
-          setIsProcessing(true);
-          setShakingIds(new Set([a, b]));
-          if (soundEnabled) playBoing();
-          pushToast("miss");
-          window.setTimeout(() => {
-            setCards((prev) =>
-              prev.map((c) => (c.id === a || c.id === b ? { ...c, isFlipped: false } : c)),
-            );
-            setShakingIds(new Set());
-            setFlipped([]);
-
-            if (difficulty === "hard") {
-              const newMiss = missCountRef.current + 1;
-              setMissCount(newMiss); // show the full count briefly (incl. 3/3)
-              missCountRef.current = newMiss >= SWAP_AFTER_MISSES ? 0 : newMiss;
-              if (newMiss >= SWAP_AFTER_MISSES) {
-                // keep input locked through the slow swap glide
-                window.setTimeout(() => {
-                  doHardSwap();
-                  setMissCount(0);
-                  window.setTimeout(() => setIsProcessing(false), SWAP_LOCK_MS);
-                }, 320);
-                return;
-              }
-            }
-            setIsProcessing(false);
-          }, FLIP_BACK_DELAY_MS);
+            doHardSwap();
+            setMissCount(0);
+            window.setTimeout(() => {
+              lockRef.current = false;
+            }, SWAP_LOCK_MS);
+          }, 320);
+          return true;
         }
       }
+      return false;
     },
-    [cards, flipped, isProcessing, soundEnabled, pushToast, difficulty, doHardSwap],
+    [difficulty, doHardSwap],
+  );
+
+  const handleCardTap = useCallback(
+    (id: number) => {
+      if (lockRef.current || completedRef.current) return;
+      if (matchedIdsRef.current.has(id)) return; // matched (even mid-celebration)
+      if (flippedRef.current.includes(id)) return; // re-tap on an open card
+
+      // A mismatched pair is on screen awaiting flip-back — a tap on a third
+      // card interrupts: snap the pair down now and count this tap as card 1
+      // of the next pair. (A match clears flippedRef synchronously, so
+      // length === 2 here always means miss-pending.)
+      if (flippedRef.current.length === 2) {
+        const [a, b] = flippedRef.current;
+        if (missTimerRef.current) {
+          window.clearTimeout(missTimerRef.current);
+          missTimerRef.current = null;
+        }
+        // If this was the 3rd hard-mode miss the swap glide starts — swallow
+        // the tap, the cards are about to move.
+        if (resolveMiss(a, b)) return;
+      }
+
+      if (soundEnabled) playFlipSound();
+      flippedRef.current = [...flippedRef.current, id];
+      setCards((prev) => prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c)));
+
+      if (flippedRef.current.length < 2) return;
+
+      const [a, b] = flippedRef.current;
+      // Icons never change after mount, so cardsRef can't be stale for this.
+      const aIcon = cardsRef.current.find((c) => c.id === a)!.icon;
+      const bIcon = cardsRef.current.find((c) => c.id === b)!.icon;
+
+      if (aIcon === bIcon) {
+        // Match — release input IMMEDIATELY; celebrate + dissolve are purely
+        // visual timers. The matched ids are dead to taps from this instant.
+        matchedIdsRef.current.add(a);
+        matchedIdsRef.current.add(b);
+        flippedRef.current = [];
+        window.setTimeout(() => {
+          if (completedRef.current) return;
+          if (soundEnabled) playMatchSound();
+          pushToast("match");
+          confetti({
+            particleCount: isLowPerf() ? 12 : 32,
+            spread: 70,
+            startVelocity: 34,
+            origin: { y: 0.5 },
+            colors: ["#f5c842", "#ffffff", "#2156e8"],
+            ticks: 100,
+          });
+        }, MATCH_CELEBRATE_MS);
+        window.setTimeout(() => {
+          setCards((prev) =>
+            prev.map((c) => (c.id === a || c.id === b ? { ...c, isMatched: true } : c)),
+          );
+          setMatchedPairs((m) => m + 1);
+          setVanishedIds((prev) => new Set(prev).add(a).add(b));
+        }, MATCH_VANISH_MS);
+      } else {
+        // Miss — head-shake + boing; NO input lock. The pair flips back on a
+        // timer, or instantly when the player taps a third card.
+        setShakingIds(new Set([a, b]));
+        if (soundEnabled) playBoing();
+        pushToast("miss");
+        missTimerRef.current = window.setTimeout(() => {
+          missTimerRef.current = null;
+          resolveMiss(a, b);
+        }, FLIP_BACK_DELAY_MS);
+      }
+    },
+    [soundEnabled, pushToast, resolveMiss],
   );
 
   const timerPercent = useMemo(
@@ -485,7 +533,12 @@ export default function MemoryBoard({
                     shaking ? "shake" : ""
                   } ${swappingIds.has(card.id) ? "card-swapping" : ""}`}
                   style={{ order: slots[card.id] }}
-                  onClick={() => handleCardClick(card.id)}
+                  // pointerdown (not click): fires on touch-DOWN and per-finger,
+                  // so a quick second tap — even mid-multi-touch — always lands.
+                  onPointerDown={(e) => {
+                    if (e.pointerType === "mouse" && e.button !== 0) return;
+                    handleCardTap(card.id);
+                  }}
                 >
                   <div className="card-inner pop-in" style={{ animationDelay: `${card.id * 34}ms` }}>
                     <div
@@ -502,7 +555,7 @@ export default function MemoryBoard({
                         />
                       </div>
                       <div className="face face-front">
-                        <VisionIcon name={card.icon} className="face-front-icon" />
+                        <BrandLogo name={card.icon} className="face-front-icon" />
                       </div>
                     </div>
                   </div>

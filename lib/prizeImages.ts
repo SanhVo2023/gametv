@@ -6,11 +6,11 @@
 
 const PRIZE_IMAGES: Record<string, string> = {
   "HK-BD117": "/present/HK-BD117.png",
-  "HK-BD054": "/present/HK-BD054.png",
-  BOOKTRAY2: "/present/BOOKTRAY2.png",
   VIBOLON: "/present/VIBOLON.png",
   BUTBOLON: "/present/BUTBOLON.png",
   NONMOLSION: "/present/NONMOLSION.png",
+  TUIBLING: "/present/tui-bling.png",
+  VONGDEO: "/present/vong-deo.png",
 };
 
 export function prizeImage(id: string): string | null {

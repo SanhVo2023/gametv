@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Ambient from "../Ambient";
-import { VisionIcon, type VisionIconKey } from "../icons/VisionIcons";
+import { BrandLogo, type BrandKey } from "../icons/BrandLogos";
 import { playKeyTap, playMatchSound } from "../../lib/audio";
 
 interface InstructionsScreenProps {
@@ -14,7 +14,7 @@ const AUTO_ADVANCE_S = 15;
 
 /* --- Looping demos ---------------------------------------------- */
 
-function DemoCard({ icon, demoClass }: { icon: VisionIconKey; demoClass: string }) {
+function DemoCard({ icon, demoClass }: { icon: BrandKey; demoClass: string }) {
   return (
     <div
       className={`card-container ${demoClass}`}
@@ -34,7 +34,7 @@ function DemoCard({ icon, demoClass }: { icon: VisionIconKey; demoClass: string 
           />
         </div>
         <div className="face face-front">
-          <VisionIcon name={icon} className="face-front-icon" />
+          <BrandLogo name={icon} className="face-front-icon" />
         </div>
       </div>
     </div>
@@ -42,14 +42,14 @@ function DemoCard({ icon, demoClass }: { icon: VisionIconKey; demoClass: string 
 }
 
 function DemoFlipCard() {
-  return <DemoCard icon="glasses" demoClass="demo-flip-card" />;
+  return <DemoCard icon="rayban" demoClass="demo-flip-card" />;
 }
 
 function DemoMatch() {
   return (
     <div className="flex items-center gap-[clamp(8px,1vw,20px)]" aria-hidden="true">
-      <DemoCard icon="eye" demoClass="demo-match-card" />
-      <DemoCard icon="eye" demoClass="demo-match-card" />
+      <DemoCard icon="gucci" demoClass="demo-match-card" />
+      <DemoCard icon="gucci" demoClass="demo-match-card" />
     </div>
   );
 }

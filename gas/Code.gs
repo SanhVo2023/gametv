@@ -1,5 +1,5 @@
 /**
- * Mắt Việt — Vision Care + Elite Day kiosk backend.
+ * Mắt Việt — Anniversary Event kiosk backend.
  *
  * Single Apps Script Web App. Deploy as:
  *   Execute as:        Me
@@ -26,24 +26,24 @@ var PLAYS_HEADERS  = ['timestamp', 'phone', 'prize_id', 'prize_name', 'prize_cod
 
 var DEFAULT_CONFIG = [
   ['tester_phone', '0777863808'],
-  ['event_name', 'Vision Care + Elite Day'],
-  ['event_location', 'Diamond Plaza × LOTTE'],
+  ['event_name', 'Mắt Việt Anniversary Event'],
+  ['event_location', 'Mắt Việt Sala'],
   ['auto_reset_seconds', 15]
 ];
 
-// Initial prize stock for the event (total 310 units).
+// Anniversary event: every gift is effectively unlimited, so each row is
+// seeded with a big stock (500). Weight = stock, so the initial distribution
+// is uniform; the operator can edit weights live in the Prizes sheet.
 // `id` doubles as the operator's mã hàng so SKU tracking lines up with their inventory list.
-// Weight is initialized equal to stock so the random distribution mirrors the inventory mix;
-// the operator can edit weights live in the Prizes sheet during the event.
 var DEFAULT_PRIZES = [
-  ['HK-BD117',    'Hộp kính thời trang',   50, 50, 'HK1',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD117)', '#1138c4'],
-  ['HK-BD054',    'Hộp kính thời trang',   50, 50, 'HK2',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD054)', '#2156e8'],
-  ['BOOKTRAY2',   'Hộp kính 2 ngăn',       20, 20, 'BT2',  '', 'Hộp đựng kính 2 ngăn cao cấp',                  '#1d4ed8'],
-  ['VIBOLON',     'Ví Bolon',              20, 20, 'VB',   '', 'Ví thương hiệu Bolon',                          '#0a2070'],
-  ['BUTBOLON',    'Bút Bolon',             20, 20, 'PB',   '', 'Bút thương hiệu Bolon',                         '#001a5c'],
-  ['NONMOLSION',  'Nón thời trang Molsion', 50, 50, 'NM',   '', 'Nón thời trang thương hiệu Molsion',            '#0d2680'],
-  ['VOUCHER200K', 'Voucher 200.000đ',      50, 50, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',         '#1138c4'],
-  ['VOUCHER100K', 'Voucher 100.000đ',      50, 50, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',         '#2156e8']
+  ['HK-BD117',    'Hộp kính thời trang',    500, 500, 'HK1',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD117)', '#1138c4'],
+  ['VIBOLON',     'Ví Bolon',               500, 500, 'VB',   '', 'Ví thương hiệu Bolon',                          '#0a2070'],
+  ['BUTBOLON',    'Bút Bolon',              500, 500, 'PB',   '', 'Bút thương hiệu Bolon',                         '#001a5c'],
+  ['NONMOLSION',  'Nón thời trang Molsion', 500, 500, 'NM',   '', 'Nón thời trang thương hiệu Molsion',            '#0d2680'],
+  ['TUIBLING',    'Túi Bling Molsion',      500, 500, 'TB',   '', 'Túi hologram thời trang Molsion',               '#1d4ed8'],
+  ['VONGDEO',     'Vòng đeo kính',          500, 500, 'VD',   '', 'Vòng đeo kính phối ngọc thời trang',            '#2156e8'],
+  ['VOUCHER200K', 'Voucher 200.000đ',       500, 500, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',         '#1138c4'],
+  ['VOUCHER100K', 'Voucher 100.000đ',       500, 500, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',         '#2156e8']
 ];
 
 // ============================================================

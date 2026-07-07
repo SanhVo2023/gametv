@@ -12,6 +12,7 @@ import {
 } from "../lib/audio";
 import { getPrizes, spinWheel } from "../lib/gas";
 import { preloadPrizeImages } from "../lib/prizeImages";
+import { preloadBrandLogos } from "./icons/BrandLogos";
 // Importing lib/perf runs initPerfMode() once at module load (before render),
 // so <html data-perf="low"> is set in time for the first CSS pass.
 import { isLowPerf } from "../lib/perf";
@@ -48,6 +49,9 @@ export default function KioskApp() {
   useEffect(() => {
     setSoundOn(loadSoundPreference());
     if (!isLowPerf()) preloadPrizeImages();
+    // Card-face logos are small (~200 KB total) and gameplay-critical, so
+    // they preload even on low-perf.
+    preloadBrandLogos();
   }, []);
 
   // Lock portrait orientation when possible.

@@ -29,64 +29,36 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
 
   return (
     <div className="fullscreen-portrait relative">
+      {/* Poster gradient FIRST (opaque), ambient washes layer on top of it */}
+      <div className="landing-anniv-bg" />
       <Ambient rays particles={22} />
 
       {/* Top chrome — anchored */}
       <div className="absolute left-0 right-0 z-20 flex justify-center top-[clamp(18px,3vh,64px)]">
         <div className={`pill pill-gold ${mounted ? "fade-in" : "opacity-0"}`}>
           <span className="dot-pulse" />
-          <span>Mắt Việt × Diamond Plaza × LOTTE</span>
-        </div>
-      </div>
-
-      {/* Lifestyle anchor — model slides in from the lower-right and gently floats */}
-      <div
-        className={`absolute bottom-0 right-0 z-[2] pointer-events-none select-none transition-all duration-[900ms] ease-out-soft ${
-          mounted ? "translate-x-0 opacity-[0.82]" : "translate-x-20 opacity-0"
-        }`}
-        style={{ width: "min(50vw, 920px)" }}
-      >
-        {/* soft glow behind her for presence */}
-        <div className="absolute inset-0 -m-10 rounded-full bg-brand-glow/25 blur-[90px]" />
-        <div className="relative float-soft">
-          <Image
-            src="/asset/Artboard 7.png"
-            alt=""
-            width={1236}
-            height={1710}
-            className="w-full h-auto"
-            style={{
-              maskImage: "linear-gradient(to top, transparent, #000 20%)",
-              WebkitMaskImage: "linear-gradient(to top, transparent, #000 20%)",
-            }}
-            priority
-          />
+          <span>Mắt Việt Sala — 10.07.2026</span>
         </div>
       </div>
 
       {/* Centered content cluster */}
-      <div className="screen-stack !gap-[clamp(18px,3.6vh,84px)] !pb-[clamp(80px,11vh,220px)]">
-        {/* Hero */}
-        <div className={`zone gap-4 ${mounted ? "spring-in" : "opacity-0"}`}>
-          <div className="w-[min(38vw,460px)] brand-glow">
-            <Image
-              src="/asset/Artboard 1.png"
-              alt="Vision Care + — Mắt Việt"
-              width={1005}
-              height={990}
-              priority
-              className="w-full h-auto"
-            />
-          </div>
-          <h1
-            className="font-black tracking-[0.05em] text-gold-light leading-none"
-            style={{ fontSize: "clamp(2.6rem, 6.6vw, 8.5rem)" }}
+      <div className="screen-stack !gap-[clamp(14px,2.5vh,54px)] !pb-[clamp(36px,4.5vh,100px)] !pt-[clamp(84px,9.5vh,190px)]">
+        {/* Hero — poster typography */}
+        <div className={`zone gap-2 ${mounted ? "spring-in" : "opacity-0"}`}>
+          <span
+            className="script-gold leading-none"
+            style={{ fontSize: "clamp(2.6rem, 6vw, 6.5rem)" }}
           >
-            ELITE DAY
+            Welcome to
+          </span>
+          <h1
+            className="anniv-headline font-black tracking-[0.04em] leading-[1.08] text-center text-balance max-w-[92vw]"
+            style={{ fontSize: "clamp(2.2rem, 4.5vw, 5.4rem)" }}
+          >
+            MẮT VIỆT ANNIVERSARY EVENT
           </h1>
           <p className="text-h2 font-light text-white/85 text-center text-balance max-w-[80vw]">
-            Trải nghiệm chăm sóc thị lực{" "}
-            <span className="text-gold-light font-semibold">đẳng cấp</span>
+            Chơi mini game — <span className="text-gold-light font-semibold">nhận quà liền tay</span>
           </p>
         </div>
 
@@ -95,23 +67,48 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           <div className="flex items-center gap-4">
             <span className="h-px w-[8vw] max-w-24 bg-gold/40" />
             <p className="text-caption font-bold uppercase tracking-[0.28em] text-gold-light">
-              310 phần quà — quay là trúng
+              Quay là trúng — 100% có quà
             </p>
             <span className="h-px w-[8vw] max-w-24 bg-gold/40" />
           </div>
           <PrizeMarquee prizes={prizes} />
         </div>
 
-        {/* How to play */}
+        {/* KV photo card — poster-style tile with blue caption ribbon */}
         <div
           className={`zone ${mounted ? "slide-up-in" : "opacity-0"}`}
-          style={{ animationDelay: "0.32s" }}
+          style={{ animationDelay: "0.28s" }}
+        >
+          <div className="relative w-full max-w-[min(86vw,980px)]">
+            <div style={{ height: "clamp(150px, 16vh, 320px)" }}>
+              <Image
+                src="/asset/kv-hero.jpg"
+                alt=""
+                width={2560}
+                height={1440}
+                priority
+                className="landing-hero-photo"
+              />
+            </div>
+            <span
+              className="landing-ribbon absolute left-1/2 -translate-x-1/2 -bottom-[1.2em]"
+              style={{ fontSize: "clamp(0.7rem, 1.15vw, 1.15rem)" }}
+            >
+              Mini game với nhiều quà tặng
+            </span>
+          </div>
+        </div>
+
+        {/* How to play — sits on the LIGHT zone: navy text */}
+        <div
+          className={`zone ${mounted ? "slide-up-in" : "opacity-0"}`}
+          style={{ animationDelay: "0.36s" }}
         >
           <div className="flex items-stretch gap-[1.8vw] w-full max-w-[1100px] justify-center">
             {STEPS.map((s, i) => (
               <div
                 key={s.label}
-                className="glass-panel flex-1 flex flex-col items-center text-center gap-[0.8vh] px-[1.4vw] py-[2vh]"
+                className="landing-light-panel flex-1 flex flex-col items-center text-center gap-[0.8vh] px-[1.4vw] py-[2vh]"
               >
                 <div
                   className="flex shrink-0 items-center justify-center rounded-full bg-gold text-navy-deep font-black"
@@ -123,8 +120,8 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
                 >
                   {i + 1}
                 </div>
-                <i className={`fa-solid ${s.icon} text-gold-light text-h2`} />
-                <span className="text-label text-white/90 leading-tight whitespace-nowrap">
+                <i className={`fa-solid ${s.icon} text-gold-deep text-h2`} />
+                <span className="text-label text-navy-deep leading-tight whitespace-nowrap">
                   {s.label}
                 </span>
               </div>
@@ -143,12 +140,12 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
             <span>Bắt Đầu Chơi</span>
             <i className="fa-solid fa-arrow-right" />
           </button>
-          <p className="text-caption uppercase tracking-[0.32em] text-white/55">
+          <p className="text-caption uppercase tracking-[0.32em] text-navy-deep/60">
             Chạm để tham gia trò chơi
           </p>
         </div>
 
-        {/* AI webapp — opens in a new tab */}
+        {/* AI webapp — dark card pops on the light zone, opens in a new tab */}
         <div
           className={`zone flex-shrink-0 ${mounted ? "slide-up-in" : "opacity-0"}`}
           style={{ animationDelay: "0.6s" }}

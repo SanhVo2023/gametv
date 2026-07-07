@@ -51,18 +51,22 @@ already run `setup()`, run **`resetPrizes()`** from the script editor. It wipes
 just the `Prizes` tab and re-seeds it from the latest code — `Plays` history
 and `Config` are untouched.
 
-## Initial event stock (from the operator's master list — total 310)
+## Initial event stock (Anniversary Event — every gift unlimited)
+
+All gifts are effectively unlimited for this event, so every row is seeded with
+a big stock (500). Weight = stock → uniform initial distribution; edit weights
+live in the sheet to bias the wheel.
 
 | id (mã hàng) | name | stock | weight |
 |---|---|---|---|
-| HK-BD117    | Hộp kính thời trang   | 50 | 50 |
-| HK-BD054    | Hộp kính thời trang   | 50 | 50 |
-| BOOKTRAY2   | Hộp kính 2 ngăn       | 20 | 20 |
-| VIBOLON     | Ví Bolon              | 20 | 20 |
-| BUTBOLON    | Bút Bolon             | 20 | 20 |
-| NONMOLSION  | Nón thời trang Molsion | 50 | 50 |
-| VOUCHER200K | Voucher 200.000đ      | 50 | 50 |
-| VOUCHER100K | Voucher 100.000đ      | 50 | 50 |
+| HK-BD117    | Hộp kính thời trang    | 500 | 500 |
+| VIBOLON     | Ví Bolon               | 500 | 500 |
+| BUTBOLON    | Bút Bolon              | 500 | 500 |
+| NONMOLSION  | Nón thời trang Molsion | 500 | 500 |
+| TUIBLING    | Túi Bling Molsion      | 500 | 500 |
+| VONGDEO     | Vòng đeo kính          | 500 | 500 |
+| VOUCHER200K | Voucher 200.000đ       | 500 | 500 |
+| VOUCHER100K | Voucher 100.000đ       | 500 | 500 |
 
 ## Endpoints
 

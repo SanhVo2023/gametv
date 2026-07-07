@@ -283,6 +283,11 @@ body {
   cursor: pointer;
   transition: transform 0.28s var(--ease-spring);
   min-height: 140px;
+  /* Cards react on pointerdown; make sure no touch gesture heuristics or
+     text selection ever swallow a tap (two-handed play on the TV). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .card-container:active:not(.vanished) {
@@ -384,8 +389,12 @@ body {
 }
 
 .face-front-icon {
-  width: 64%;
-  height: 64%;
+  /* Brand logos are mostly wide — give them nearly the full card width so
+     the type reads across the room on the TV. contain keeps each logo's
+     own aspect ratio inside the box. */
+  width: 82%;
+  height: 60%;
+  object-fit: contain;
 }
 
 /* ============================================================
@@ -1227,6 +1236,81 @@ body {
 }
 
 /* ============================================================
+   Anniversary landing — mirrors the event poster: deep navy on
+   top fading to a soft silver/beige lower third, gold script
+   "Welcome to", cream headline. Static gradients only (cheap on
+   low-perf), so no perf overrides are needed.
+   ============================================================ */
+
+/* Rendered first inside the screen, before the Ambient layers — no z-index,
+   so the aurora/particles (later siblings) still paint on top of it. */
+.landing-anniv-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #001033 0%,
+    #001a5c 32%,
+    #274678 54%,
+    #8f9cb5 72%,
+    #ddd9d2 86%,
+    #f0ede6 100%
+  );
+}
+
+.script-gold {
+  font-family: "Segoe Script", "Lucida Handwriting", "Brush Script MT", cursive;
+  font-style: italic;
+  background: linear-gradient(100deg, #c9962a 0%, #f5c842 38%, #fde98a 55%, #c9962a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 12px rgba(245, 200, 66, 0.35));
+}
+
+.anniv-headline {
+  color: #f7f3e6;
+  text-shadow: 0 4px 24px rgba(0, 16, 51, 0.55);
+}
+
+/* Poster-style photo card + its blue caption ribbon */
+.landing-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 28px;
+  box-shadow:
+    0 24px 60px -18px rgba(0, 16, 51, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.landing-ribbon {
+  background: linear-gradient(90deg, #1138c4, #2156e8);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.55em 1.6em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 26px -10px rgba(17, 56, 196, 0.6);
+  white-space: nowrap;
+}
+
+/* Step tiles that sit on the LIGHT lower zone of the gradient */
+.landing-light-panel {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 56, 196, 0.16);
+  border-radius: 24px;
+  box-shadow: 0 14px 34px -16px rgba(0, 16, 51, 0.35);
+}
+
+/* The AI card also sits on the light zone — solid navy so its white copy
+   stays readable (echoes the poster's blue ribbon tiles). */
+.landing-anniv-bg ~ .screen-stack .ai-section {
+  background: rgba(0, 16, 51, 0.8);
+}
+
+/* ============================================================
    Low-perf mode — opt-in via ?perf=low query param (lib/perf.ts
    sets <html data-perf="low">). Disables the GPU-expensive
    effects so the app stays smooth on the LG One:Flex TV. The
@@ -1271,6 +1355,9 @@ html[data-perf="low"] .face-back {
   background: #001a5c;
   box-shadow: inset 0 0 24px rgba(33, 86, 232, 0.25);
 }
+/* Faster flips on the weak GPU — the springy 0.58s flip reads as input lag. */
+html[data-perf="low"] .card { transition-duration: 0.34s; }
+html[data-perf="low"] .card-container { transition-duration: 0.15s; }
 
 /* 5) Always-running infinite animations across the rest of the UI */
 html[data-perf="low"] .flame-border::before,

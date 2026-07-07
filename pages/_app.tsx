@@ -13,7 +13,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <title>Vision Care + Elite Day — Mắt Việt</title>
+        <title>Mắt Việt Anniversary Event</title>
       </Head>
       <Component {...pageProps} />
     </>

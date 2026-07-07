@@ -1,7 +1,8 @@
-# Mắt Việt — Vision Care + Elite Day Kiosk
+# Mắt Việt — Anniversary Event Kiosk
 
-A vertical 43″ touchscreen kiosk app for the *Vision Care + Elite Day* event
-(Mắt Việt × Diamond Plaza × LOTTE Department Store).
+A vertical 43″ touchscreen kiosk app for the *Mắt Việt Anniversary Event*
+(Mắt Việt Sala, 10.07.2026). Originally built for the Vision Care + Elite Day
+event and re-themed.
 
 Flow: idle → enter phone → memory game → win → wheel of fortune → prize reveal → auto-reset.
 
@@ -84,17 +85,20 @@ button once after page load — the touch unlocks the WebAudio context.
 
 ```
 components/
-  KioskApp.tsx                State machine: idle → phone → game → win → wheel → reveal.
+  KioskApp.tsx                State machine: idle → phone → instructions → difficulty → game → win → wheel → reveal.
   screens/
-    LandingScreen.tsx         Idle: logo, CTA.
+    LandingScreen.tsx         Idle: anniversary poster look, CTA, AI QR.
     PhonePad.tsx              Touch numpad.
-    MemoryBoard.tsx           4×4 grid, 75s timer.
+    InstructionsScreen.tsx    Looping how-to demos.
+    DifficultyScreen.tsx      Easy / hard selection.
+    MemoryBoard.tsx           4×4 grid, timed; brand-logo pairs (random 8 of 10).
     WheelOfFortune.tsx        SVG wheel, deterministic land on chosen wedge.
     PrizeReveal.tsx           Prize, code, 15s auto-reset countdown.
-    NoPrizesScreen.tsx        Empty-stock fallback.
   overlays/
     WinTransition.tsx         1.4s "Xuất sắc!" flash before wheel.
     LoseModal.tsx             Out-of-time retry / home.
+  icons/
+    BrandLogos.tsx            10 brand SVG wordmarks → memory-card faces.
   ui/
     SoundToggle.tsx           Bottom-right speaker on/off.
     button.tsx                Legacy reusable button (kept).
@@ -107,9 +111,10 @@ gas/
   Code.gs                     The Google Apps Script web app.
   README.md                   Setup + endpoint docs.
 public/asset/
-  Artboard 1.png              VISION CARE+ lockup → landing hero.
-  Artboard 7.png              Model portrait.
-  Artboard 9.png              Eye-heart icon → cards, wheel, prize.
+  kv-hero.jpg                 Anniversary KV (family + lens arch) → landing photo card.
+  kv-poster.jpg               Event poster (reference / crops).
+  Artboard 9.png              Eye-heart icon → card backs, wheel hub, watermark.
+public/present/               Prize product photos (ids match the GAS Prizes tab).
 ```
 
 ---
@@ -120,8 +125,8 @@ public/asset/
 
 | step | expect |
 |---|---|
-| `POST {action:'setup'}` | `ok:true`, 3 sheets created, 6 prizes seeded |
-| `POST {action:'getPrizes'}` | 6 prizes returned, all `stock>0` |
+| `POST {action:'setup'}` | `ok:true`, 3 sheets created, 8 prizes seeded |
+| `POST {action:'getPrizes'}` | 8 prizes returned, all `stock>0` |
 | `POST {action:'checkPhone', phone:'0777863808'}` | `{allowed:true, isTester:true}` |
 | `POST {action:'checkPhone', phone:'0900000001'}` | `{allowed:true, isTester:false}` |
 | `POST {action:'spinWheel', phone:'0777863808'}` ×3 | valid `wedgeIndex` each; **stock unchanged** in sheet |
