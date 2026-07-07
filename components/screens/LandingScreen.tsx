@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import type { Prize } from "../../lib/types";
@@ -26,6 +26,20 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
     const t = setTimeout(() => setMounted(true), 30);
     return () => clearTimeout(t);
   }, []);
+
+  // Staff-only lucky-draw entry: requires two taps within 1.5s so a stray
+  // guest tap does nothing. First tap brightens the button as feedback.
+  const [drawArmed, setDrawArmed] = useState(false);
+  const drawArmTimer = useRef<number | null>(null);
+  const handleDrawTap = () => {
+    if (drawArmed) {
+      window.location.href = "/spin";
+      return;
+    }
+    setDrawArmed(true);
+    if (drawArmTimer.current) window.clearTimeout(drawArmTimer.current);
+    drawArmTimer.current = window.setTimeout(() => setDrawArmed(false), 1500);
+  };
 
   return (
     <div className="fullscreen-portrait relative">
@@ -74,28 +88,20 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           <PrizeMarquee prizes={prizes} />
         </div>
 
-        {/* KV photo card — poster-style tile with blue caption ribbon */}
+        {/* KV — full-bleed, masked so it melts into the gradient (no frame) */}
         <div
-          className={`zone ${mounted ? "slide-up-in" : "opacity-0"}`}
+          className={`zone ${mounted ? "fade-in" : "opacity-0"}`}
           style={{ animationDelay: "0.28s" }}
         >
-          <div className="relative w-full max-w-[min(86vw,980px)]">
-            <div style={{ height: "clamp(150px, 16vh, 320px)" }}>
-              <Image
-                src="/asset/kv-hero.jpg"
-                alt=""
-                width={2560}
-                height={1440}
-                priority
-                className="landing-hero-photo"
-              />
-            </div>
-            <span
-              className="landing-ribbon absolute left-1/2 -translate-x-1/2 -bottom-[1.2em]"
-              style={{ fontSize: "clamp(0.7rem, 1.15vw, 1.15rem)" }}
-            >
-              Mini game với nhiều quà tặng
-            </span>
+          <div className="w-screen" style={{ height: "clamp(170px, 19vh, 380px)" }}>
+            <Image
+              src="/asset/kv-hero.jpg"
+              alt=""
+              width={2560}
+              height={1440}
+              priority
+              className="landing-hero-blend"
+            />
           </div>
         </div>
 
@@ -194,6 +200,20 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
           </a>
         </div>
       </div>
+
+      {/* Staff-only lucky-draw entry (double-tap) — deliberately dim */}
+      <button
+        type="button"
+        onClick={handleDrawTap}
+        aria-label="Rút thăm trúng thưởng"
+        className={`fixed bottom-8 left-8 z-50 flex h-12 w-12 items-center justify-center rounded-full border text-xl transition-opacity ${
+          drawArmed
+            ? "opacity-70 border-gold/60 bg-navy-deep/70 text-gold-light"
+            : "opacity-30 border-white/20 bg-navy-deep/40 text-white/70"
+        }`}
+      >
+        <i className="fa-solid fa-gift" />
+      </button>
     </div>
   );
 }

@@ -28,8 +28,19 @@ var DEFAULT_CONFIG = [
   ['tester_phone', '0777863808'],
   ['event_name', 'Mắt Việt Anniversary Event'],
   ['event_location', 'Mắt Việt Sala'],
-  ['auto_reset_seconds', 15]
+  ['auto_reset_seconds', 15],
+  // Shared secret for the lucky-draw admin page (/spin-admin?key=...).
+  // NOTE: setup() does not touch an existing Config sheet — add this row
+  // manually on an already-deployed sheet.
+  ['spin_admin_key', 'CHANGE-ME']
 ];
+
+// ---- Lucky draw ("rút thăm trúng thưởng") ----
+var SHEET_DRAW = 'LuckyDraw';
+var DRAW_HEADERS = ['timestamp', 'number', 'tier', 'status'];
+var FORCE_PROP = 'draw_force';          // script property holding {number, at}
+var FORCE_TTL_MS = 10 * 60 * 1000;      // stale forces (e.g. from rehearsal) expire
+var DRAW_MAX_NUMBER = 50;
 
 // Anniversary event: every gift is effectively unlimited, so each row is
 // seeded with a big stock (500). Weight = stock, so the initial distribution
@@ -68,6 +79,11 @@ function doPost(e) {
     if (action === 'checkPhone')  return _respond(doCheckPhone(body.phone));
     if (action === 'spinWheel')   return _respond(doSpinWheel(body.phone));
     if (action === 'recordLoss')  return _respond(doRecordLoss(body.phone));
+    if (action === 'drawForceSet')   return _respond(doDrawForceSet(body.number, body.key));
+    if (action === 'drawForceGet')   return _respond(doDrawForceGet());
+    if (action === 'drawForceClear') return _respond(doDrawForceClear());
+    if (action === 'drawLogWinner')  return _respond(doDrawLogWinner(body.number, body.tier, body.status));
+    if (action === 'drawGetLog')     return _respond(doDrawGetLog());
     return _respond({ ok: false, error: 'unknown_action' });
   } catch (err) {
     return _respond({ ok: false, error: String(err && err.message || err) });
@@ -350,6 +366,84 @@ function _normalizePhone(p) {
     s = '0' + s;
   }
   return s;
+}
+
+// ============================================================
+//   Lucky draw ("rút thăm trúng thưởng")
+//
+//   The TV app (/spin) draws ticket numbers client-side; the backend only
+//   provides (1) the secret realtime "force" channel the admin phone uses
+//   to dictate the next number, and (2) an audit log that also lets the
+//   admin page grey out already-taken numbers.
+// ============================================================
+
+/** Admin (key-protected): make the next spin land on `number` if available. */
+function doDrawForceSet(number, key) {
+  var expected = String(_readConfig('spin_admin_key') || '').trim();
+  if (!expected) return { ok: false, error: 'admin_key_not_configured' };
+  if (String(key || '').trim() !== expected) return { ok: false, error: 'bad_key' };
+  var n = Math.floor(Number(number));
+  if (!(n >= 1 && n <= DRAW_MAX_NUMBER)) return { ok: false, error: 'invalid_number' };
+  PropertiesService.getScriptProperties()
+    .setProperty(FORCE_PROP, JSON.stringify({ number: n, at: Date.now() }));
+  return { ok: true, number: n };
+}
+
+/** TV polls this. Expired forces are deleted so a rehearsal can't hijack the event. */
+function doDrawForceGet() {
+  var props = PropertiesService.getScriptProperties();
+  var raw = props.getProperty(FORCE_PROP);
+  if (!raw) return { ok: true, force: null };
+  var f;
+  try { f = JSON.parse(raw); } catch (err) { props.deleteProperty(FORCE_PROP); return { ok: true, force: null }; }
+  if (!f || Date.now() - Number(f.at || 0) > FORCE_TTL_MS) {
+    props.deleteProperty(FORCE_PROP);
+    return { ok: true, force: null };
+  }
+  return { ok: true, force: f };
+}
+
+/** Unauthenticated by design — the TV consumes the force and can't hold the key. */
+function doDrawForceClear() {
+  PropertiesService.getScriptProperties().deleteProperty(FORCE_PROP);
+  return { ok: true };
+}
+
+/** Best-effort audit trail; also feeds doDrawGetLog for the admin page. */
+function doDrawLogWinner(number, tier, status) {
+  var n = Math.floor(Number(number));
+  if (!(n >= 1 && n <= DRAW_MAX_NUMBER)) return { ok: false, error: 'invalid_number' };
+  var sh = _getOrCreateDrawSheet();
+  sh.appendRow([new Date(), n, String(tier || ''), String(status || 'received')]);
+  return { ok: true };
+}
+
+/** Numbers already consumed (won or absent), for greying out on the admin page. */
+function doDrawGetLog() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DRAW);
+  var received = [];
+  var absent = [];
+  if (sh) {
+    var values = sh.getDataRange().getValues();
+    for (var i = 1; i < values.length; i++) {
+      var n = Math.floor(Number(values[i][1]));
+      if (!(n >= 1)) continue;
+      if (String(values[i][3]) === 'absent') absent.push(n);
+      else received.push(n);
+    }
+  }
+  return { ok: true, received: received, absent: absent };
+}
+
+function _getOrCreateDrawSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_DRAW);
+  if (!sh) {
+    sh = ss.insertSheet(SHEET_DRAW);
+    sh.getRange(1, 1, 1, DRAW_HEADERS.length).setValues([DRAW_HEADERS]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  return sh;
 }
 
 function _readConfig(key) {

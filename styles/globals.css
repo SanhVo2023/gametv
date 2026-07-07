@@ -1273,27 +1273,52 @@ body {
   text-shadow: 0 4px 24px rgba(0, 16, 51, 0.55);
 }
 
-/* Poster-style photo card + its blue caption ribbon */
-.landing-hero-photo {
+/* Full-bleed KV that melts into the page gradient — no frame, no shadow.
+   Vertical mask fades the sky into the navy zone above and the ground into
+   the light zone below. */
+.landing-hero-blend {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 28px;
-  box-shadow:
-    0 24px 60px -18px rgba(0, 16, 51, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.4);
+  opacity: 0.94;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
 }
 
-.landing-ribbon {
-  background: linear-gradient(90deg, #1138c4, #2156e8);
-  color: #ffffff;
-  border-radius: 999px;
-  padding: 0.55em 1.6em;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+/* Lucky-draw 1–50 grid chips (TV board) */
+.draw-chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 800;
+  font-size: clamp(0.95rem, 1.5vw, 1.7rem);
+  line-height: 1;
+}
+.draw-chip.won {
+  background: linear-gradient(150deg, #f5c842 0%, #fde98a 55%, #c9962a 100%);
+  border-color: #f5c842;
+  color: #001033;
+  box-shadow: 0 6px 18px -6px rgba(245, 200, 66, 0.55);
+}
+.draw-chip.won .draw-chip-tag {
+  font-size: 0.55em;
+  font-weight: 900;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  box-shadow: 0 10px 26px -10px rgba(17, 56, 196, 0.6);
-  white-space: nowrap;
+  margin-top: 2px;
+}
+.draw-chip.absent {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: rgba(252, 165, 165, 0.7);
+  text-decoration: line-through;
 }
 
 /* Step tiles that sit on the LIGHT lower zone of the gradient */

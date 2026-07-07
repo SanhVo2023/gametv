@@ -114,3 +114,59 @@ export function clearPrizesCache(): void {
 export function isGasConfigured(): boolean {
   return GAS_URL.length > 0;
 }
+
+// ============================================================
+//   Lucky draw — admin force channel + audit log
+// ============================================================
+
+export interface DrawForce {
+  number: number;
+  at: number;
+}
+
+/** Admin page only. Throws 'bad_key' / 'invalid_number' via post(). */
+export async function setDrawForce(number: number, key: string): Promise<void> {
+  await post<{ ok: true }>("drawForceSet", { number, key });
+}
+
+/**
+ * Single attempt with a hard timeout, never throws — the spin must NEVER
+ * stall on the network (the default post() retry stack can take ~21 s).
+ */
+export async function getDrawForce(timeoutMs = 1500): Promise<DrawForce | null> {
+  try {
+    const res = await Promise.race([
+      rawPost<{ ok: true; force: DrawForce | null }>("drawForceGet"),
+      delay(timeoutMs).then(() => null),
+    ]);
+    if (!res || res.ok === false) return null;
+    return res.force ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearDrawForce(): void {
+  post<{ ok: true }>("drawForceClear").catch(() => {
+    /* best effort — TTL expires it anyway */
+  });
+}
+
+export function logDrawWin(number: number, tier: string, status: "received" | "absent"): void {
+  post<{ ok: true }>("drawLogWinner", { number, tier, status }).catch((err) => {
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.warn("[gas] drawLogWinner failed (non-blocking):", err);
+    }
+  });
+}
+
+export interface DrawLog {
+  received: number[];
+  absent: number[];
+}
+
+export async function getDrawLog(): Promise<DrawLog> {
+  const res = await post<{ ok: true } & DrawLog>("drawGetLog");
+  return { received: res.received ?? [], absent: res.absent ?? [] };
+}
