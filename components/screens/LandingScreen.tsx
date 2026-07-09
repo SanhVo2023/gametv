@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import type { Prize } from "../../lib/types";
 import Ambient from "../Ambient";
 import PrizeMarquee from "../PrizeMarquee";
+import ViewToolbox from "../showcase/ViewToolbox";
 
 const NEOEYESIGHT_URL = "https://neoeyesight.netlify.app/";
 
@@ -203,12 +204,16 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
         </div>
       </div>
 
-      {/* Staff-only lucky-draw entry (double-tap) — deliberately dim */}
+      {/* Staff navigation between the TV views (also deliberately dim) */}
+      <ViewToolbox current="home" />
+
+      {/* Staff-only lucky-draw entry (double-tap) — deliberately dim, stacked
+          above the toolbox button */}
       <button
         type="button"
         onClick={handleDrawTap}
         aria-label="Rút thăm trúng thưởng"
-        className={`fixed bottom-8 left-8 z-50 flex h-12 w-12 items-center justify-center rounded-full border text-xl transition-opacity ${
+        className={`fixed bottom-24 left-8 z-50 flex h-12 w-12 items-center justify-center rounded-full border text-xl transition-opacity ${
           drawArmed
             ? "opacity-80 border-gold/60 bg-navy-deep/70 text-gold-light"
             : "opacity-40 border-white/25 bg-navy-deep/50 text-white/80"

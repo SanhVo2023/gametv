@@ -1,0 +1,86 @@
+// Manifests for the presentation views (/stores, /brands).
+// Store photos live in public/store/<Store Name>/ — folder + file names contain
+// spaces and Vietnamese diacritics, so every path goes through encodeURI once here.
+
+export interface StoreEntry {
+  name: string;
+  /** First image is the hero shot; the rest fill the 2×2 grid (max 4 used). */
+  images: string[];
+}
+
+function storeImages(folder: string, files: string[]): string[] {
+  return files.map((f) => encodeURI(`/store/${folder}/${f}`));
+}
+
+export const STORES: StoreEntry[] = [
+  {
+    name: "Vincom Đồng Khởi",
+    images: storeImages("Vincom Đồng Khởi", [
+      "z8023534212486_de0bbdd1f558909791d12f7c7e272381.jpg",
+      "z8023534212566_3b7139d25d571c909512220c0c91310d.jpg",
+      "z8023534212571_2e7f0d98a0de9a31fc6217e5b46a65ed.jpg",
+      "z8023534212575_990a059cb415ce35fefdbfefcf7bc6a4.jpg",
+      "z8023534212580_a3740dd3ae7ae0831e85df51c980c8b4.jpg",
+    ]),
+  },
+  {
+    name: "Vincom Vinh",
+    images: storeImages("Vincom Vinh", [
+      "z8023527749904_62a6be64f5b316f4ead2dcce8913078e.jpg",
+      "z8023527750046_57024a9f8aeab8a13028f5563549e8ab.jpg",
+      "z8023527750047_36009bb767ef6957054d86467a73734a.jpg",
+      "z8023527750051_5b27340eea17615f9655fb62b71423b1.jpg",
+      "z8023527750052_f93f13548e30290d280660c0d765f2a3.jpg",
+    ]),
+  },
+  {
+    name: "Vincom Biên Hòa",
+    images: storeImages("Vincom Biên Hòa", [
+      "z8023535072949_3f42abe8918b14361438bf66cc752b19.jpg",
+      "z8023535073000_aceb99c8e1161c756d591d5bf44a227b.jpg",
+      "z8023535073002_ab9a53fbbb52eb8f9b4bf733c8fd1368.jpg",
+      "z8023535073003_2184eeefe3175a0e365bbb141fede5c8.jpg",
+      "z8023535073005_9d18c12e9dcab246850ee0def3542bd5.jpg",
+    ]),
+  },
+  {
+    name: "AEON Mall Tân Phú",
+    images: storeImages("AEON Mall Tân Phú", [
+      "z8023538836918_3d003ca88539733f5f569a877ddbb1e2.jpg",
+      "z8023538856688_1c2919208ffbb3666366cdb06138ff15.jpg",
+      "z8023538856711_c6276a9f2eabe66cdc64e2328a1c8c18.jpg",
+      "z8023538856713_7410f62618bbe5257efa50b964f068d3.jpg",
+      "z8023538856714_dac1c30f13a25a0d65ebb172bffdd27f.jpg",
+    ]),
+  },
+  {
+    // These are 3D renders — the facade render leads; the floor-plan render is skipped.
+    name: "AEON Mall Bình Dương",
+    images: storeImages("AEON Mall Bình Dương", [
+      "z8023625383180_c325295a5d4373d0d7158b877a4cf867.jpg",
+      "z8023625383177_bd831167269a5af38a0bf0281cd9ea9a.jpg",
+      "z8023625383178_d6f1409db5f9e0e63402c0ba1523de3b.jpg",
+      "z8023625383181_0fa22b913c739c5e23cc7d87f0535d59.jpg",
+      "z8023625383182_20b65f19846eb593a8a9143dd735b1c3.jpg",
+    ]),
+  },
+];
+
+export interface BrandEntry {
+  key: string;
+  label: string;
+  /** White logo PNG (resized into public/brand-showcase). null → typographic wordmark. */
+  src: string | null;
+}
+
+// White variants resized from public/brand originals (see brand-showcase folder).
+// Lindberg's source ("Lingberg.png") is black-on-transparent → inverted to white.
+export const BRANDS: BrandEntry[] = [
+  { key: "cartier", label: "Cartier", src: "/brand-showcase/cartier.png" },
+  { key: "lindberg", label: "Lindberg", src: "/brand-showcase/lindberg.png" },
+  { key: "gucci", label: "Gucci", src: "/brand-showcase/gucci.png" },
+  { key: "montblanc", label: "Montblanc", src: "/brand-showcase/montblanc.png" },
+  { key: "miumiu", label: "Miu Miu", src: "/brand-showcase/miumiu.png" },
+  { key: "prada", label: "Prada", src: "/brand-showcase/prada.png" },
+  { key: "swarovski", label: "Swarovski", src: "/brand-showcase/swarovski.png" },
+];

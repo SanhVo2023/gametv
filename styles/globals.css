@@ -1636,3 +1636,248 @@ html[data-perf="low"] .pop-in,
 html[data-perf="low"] .slide-up-in,
 html[data-perf="low"] .spring-in,
 html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
+
+/* ============================================================
+   Presentation views: slideshow, toolbox, store/brand slides,
+   standby orbit (see components/showcase/*)
+   ============================================================ */
+
+/* --- Shared slide mechanism --- */
+.slide-viewport {
+  overflow: hidden;
+  width: 100%;
+  touch-action: pan-y;
+  user-select: none;
+}
+.slide-viewport img {
+  -webkit-user-drag: none;
+  pointer-events: none; /* images never swallow the swipe gesture */
+}
+.slide-strip {
+  display: flex;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.3, 0.8, 0.3, 1);
+  will-change: transform;
+}
+.slide-cell {
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+}
+.slide-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(64px, 6vw, 104px);
+  height: clamp(64px, 6vw, 104px);
+  border-radius: 9999px;
+  border: 1px solid rgba(245, 200, 66, 0.45);
+  background: rgba(0, 16, 51, 0.55);
+  color: #fde98a;
+  font-size: clamp(1.4rem, 2.4vw, 2.4rem);
+  transition: background 0.2s, transform 0.2s;
+}
+.slide-arrow:active {
+  background: rgba(245, 200, 66, 0.25);
+  transform: translateY(-50%) scale(0.94);
+}
+.slide-dot {
+  width: clamp(12px, 1.2vw, 20px);
+  height: clamp(12px, 1.2vw, 20px);
+  border-radius: 9999px;
+  /* sits on the light bottom zone of the backdrop — navy reads there */
+  background: rgba(0, 26, 92, 0.3);
+  transition: background 0.25s, transform 0.25s;
+}
+.slide-dot.active {
+  background: linear-gradient(150deg, #f5c842, #fde98a);
+  transform: scale(1.25);
+  box-shadow: 0 0 12px rgba(245, 200, 66, 0.55);
+}
+
+/* --- Store slides --- */
+.store-photo {
+  position: relative;
+  overflow: hidden;
+  border-radius: clamp(14px, 1.6vw, 26px);
+  box-shadow:
+    0 18px 44px -18px rgba(0, 8, 30, 0.85),
+    0 0 0 1px rgba(245, 200, 66, 0.28);
+}
+
+/* --- Brand slides --- */
+.brand-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: clamp(260px, 34vh, 560px);
+}
+.brand-halo {
+  position: absolute;
+  width: clamp(320px, 52vw, 760px);
+  height: clamp(320px, 52vw, 760px);
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(245, 200, 66, 0.2) 0%,
+    rgba(33, 86, 232, 0.12) 42%,
+    rgba(0, 16, 51, 0) 68%
+  );
+  pointer-events: none;
+}
+.brand-logo-img {
+  position: relative;
+  width: min(70vw, 700px);
+  height: auto;
+  max-height: clamp(220px, 30vh, 480px);
+  object-fit: contain;
+  filter: drop-shadow(0 12px 40px rgba(0, 8, 30, 0.6));
+}
+.brand-wordmark {
+  position: relative;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em; /* recenter: letter-spacing adds a trailing gap */
+  font-size: clamp(3rem, 8vw, 8.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 12px 40px rgba(0, 8, 30, 0.6));
+}
+
+/* --- Toolbox --- */
+.toolbox-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 300px;
+  padding: 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(245, 200, 66, 0.35);
+  background: rgba(0, 16, 51, 0.92);
+  box-shadow: 0 24px 60px -18px rgba(0, 8, 30, 0.9);
+  animation: slideUpIn 0.22s ease both;
+}
+.toolbox-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+.toolbox-item:active {
+  background: rgba(245, 200, 66, 0.18);
+}
+.toolbox-item.active {
+  background: rgba(245, 200, 66, 0.14);
+  color: #fde98a;
+}
+
+/* --- Standby orbit --- */
+.standby-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(340px, 78vw, 900px);
+  aspect-ratio: 1;
+}
+.standby-glow {
+  position: absolute;
+  inset: 12%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(33, 86, 232, 0.28) 0%,
+    rgba(245, 200, 66, 0.1) 45%,
+    rgba(0, 16, 51, 0) 70%
+  );
+  animation: standbyBreathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+.standby-ring {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.standby-ring.ring-a {
+  inset: 16%;
+  border: 1px solid rgba(245, 200, 66, 0.22);
+  /* comet arc sweeping the inner ring */
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(245, 200, 66, 0.55) 0deg,
+      rgba(245, 200, 66, 0) 70deg,
+      rgba(245, 200, 66, 0) 360deg
+    );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  animation: standbyOrbit 24s linear infinite;
+}
+.standby-ring.ring-b {
+  inset: 7%;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  animation: standbyOrbit 40s linear infinite reverse;
+}
+.standby-ring.ring-c {
+  inset: 0;
+  border: 1px solid rgba(33, 86, 232, 0.3);
+  animation: standbyOrbit 56s linear infinite;
+}
+.standby-satellite {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 9999px;
+  background: linear-gradient(150deg, #f5c842, #fde98a);
+  box-shadow: 0 0 16px rgba(245, 200, 66, 0.8);
+}
+.standby-satellite.small {
+  width: 9px;
+  height: 9px;
+  top: -5px;
+  margin-left: -4.5px;
+  background: #7aa0ff;
+  box-shadow: 0 0 12px rgba(33, 86, 232, 0.9);
+}
+.standby-logo {
+  width: clamp(160px, 24vw, 340px);
+  height: auto;
+  filter: drop-shadow(0 0 34px rgba(33, 86, 232, 0.55));
+}
+.standby-hint {
+  animation: standbyBreathe 3.2s ease-in-out infinite;
+}
+
+@keyframes standbyOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes standbyBreathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Low-perf: one slow ring, no breathing, no logo glow filter */
+html[data-perf="low"] .standby-ring.ring-b,
+html[data-perf="low"] .standby-ring.ring-c { display: none; }
+html[data-perf="low"] .standby-glow { animation: none; }
+html[data-perf="low"] .standby-hint { animation: none; }
+html[data-perf="low"] .standby-logo { filter: none; }
+html[data-perf="low"] .brand-logo-img,
+html[data-perf="low"] .brand-wordmark { filter: none; }
+html[data-perf="low"] .toolbox-panel { animation-duration: 0.12s; }

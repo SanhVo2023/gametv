@@ -50,6 +50,21 @@ idle → phone → instructions → difficulty → game → win → wheel → re
   GAS deployment to have the draw* actions — against an older deployment the
   submit toast shows "unknown_action" and the TV spins pure-random (by design).
 
+## Presentation views (/stores, /brands, /standby)
+
+- Staff navigation: the dim **toolbox button** at the landing's bottom-left
+  (`aria-label="Chuyển màn hình trình chiếu"`, single tap) expands a menu with
+  Trang chính / Cửa hàng / Thương hiệu / Màn hình chờ; it also renders on
+  /stores and /brands. The lucky-draw gift button sits just above it.
+- `/stores`: 5 slides (one per store, hero + 2×2 grid), `/brands`: 7 logo
+  slides. Manual-only navigation: arrows (`aria-label="Trang trước"/"Trang sau"`),
+  dots (`aria-label="Trang N"`), or horizontal swipe ≥60 px. Current slide:
+  `.slide-cell[aria-hidden="false"]`.
+- Store/brand manifests live in `lib/showcase.ts` (paths are encodeURI'd —
+  folders contain spaces + diacritics). Brand logos are resized white variants
+  in `public/brand-showcase/`; Lindberg has no file → wordmark fallback.
+- `/standby`: orbit loop animation; ANY pointerdown navigates back to `/`.
+
 ## Gotchas
 
 - Playwright MCP screenshots: relative paths land somewhere unfindable on this
