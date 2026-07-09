@@ -54,6 +54,18 @@ export const STORES: StoreEntry[] = [
     ]),
   },
   {
+    // Pico 3D renders — the facade leads; floor-plan + plain exam-room renders skipped.
+    // crop-* copies have the presentation frame + watermark strip cut off.
+    name: "AEON Mall Bình Tân",
+    images: storeImages("AEON Mall Bình tân", [
+      "crop-z8023906934722_2cc8d4fa445506e2b9899bda98410fd3.jpg",
+      "crop-z8023906934716_c3a49d5026120140cfa43c2e5df2a87f.jpg",
+      "crop-z8023906940889_bddffd90d67fced0f90b76c69479d1e6.jpg",
+      "z8023906945045_a319f6a110fa29e44a071b3736814161.jpg",
+      "z8023906943445_4395e0952105a66758cffefedcd4d483.jpg",
+    ]),
+  },
+  {
     // These are 3D renders — the facade render leads; the floor-plan render is skipped.
     name: "AEON Mall Bình Dương",
     images: storeImages("AEON Mall Bình Dương", [
