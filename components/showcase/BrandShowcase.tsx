@@ -18,8 +18,9 @@ export default function BrandShowcase() {
   const slides = BRANDS.map((brand) => (
     <div
       key={brand.key}
-      className="flex h-full w-full flex-col items-center justify-center gap-[clamp(18px,3vh,52px)] px-[clamp(16px,5vw,100px)]"
+      className="flex h-full w-full flex-col items-center justify-center px-[clamp(16px,5vw,180px)]"
     >
+      {/* The logo IS the name — no caption. Slow float + breathing halo. */}
       <div className="brand-stage">
         <div className="brand-halo" aria-hidden />
         {brand.src ? (
@@ -32,16 +33,8 @@ export default function BrandShowcase() {
             className="brand-logo-img"
           />
         ) : (
-          // No logo file yet (Lindberg) — a clean wordmark stands in.
           <span className="brand-wordmark">{brand.label.toUpperCase()}</span>
         )}
-      </div>
-      <div className="flex items-center gap-4">
-        <span className="h-px w-[7vw] max-w-20 bg-gold/40" />
-        <p className="text-caption font-bold uppercase tracking-[0.32em] text-gold-light">
-          {brand.label}
-        </p>
-        <span className="h-px w-[7vw] max-w-20 bg-gold/40" />
       </div>
     </div>
   ));
@@ -59,7 +52,7 @@ export default function BrandShowcase() {
           <span className="dot-pulse" />
           <span>Thương hiệu tại Mắt Việt</span>
         </div>
-        <div className="flex w-full max-w-[min(94vw,1180px)] flex-1 min-h-0 flex-col">
+        <div className="flex w-full max-w-[min(94vw,2200px)] flex-1 min-h-0 flex-col">
           <Slideshow slides={slides} label="Thương hiệu" />
         </div>
       </div>

@@ -12,7 +12,8 @@ npm run build     # must rebuild after ANY change — npm start serves .next
 npm start         # prod server on http://localhost:3000 (run in background)
 ```
 
-Open with Playwright at viewport **1080×1920** (the kiosk TV). Append
+Open with Playwright at viewport **2160×3840** (the kiosk TV is 4K portrait;
+also sanity-check 1080×1920 — clamp() caps must serve both). Append
 `?perf=high` or `?perf=low` — the value persists to localStorage, so always
 pass it explicitly to avoid a stale profile from a previous run.
 

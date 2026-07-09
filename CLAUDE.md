@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single-device touchscreen **kiosk** app (Next.js Pages Router) for the *Mắt Việt Anniversary Event*. One vertical 43″ portrait TV (1080×1920), many players, identified only by phone number. Player flow: idle → phone → instructions → difficulty → memory game → win → wheel of fortune → prize reveal → auto-reset (15 s). All Vietnamese UI copy.
+A single-device touchscreen **kiosk** app (Next.js Pages Router) for the *Mắt Việt Anniversary Event*. One vertical 43″ portrait 4K TV (2160×3840; layouts must also hold at 1080×1920), many players, identified only by phone number. Player flow: idle → phone → instructions → difficulty → memory game → win → wheel of fortune → prize reveal → auto-reset (15 s). All Vietnamese UI copy.
 
 `README.md` has the full setup, kiosk-launch, and manual test plan; `gas/README.md` documents the backend sheet schema and endpoints. Read those before changing setup/deploy steps or the sheet contract. This file covers the architecture those docs don't.
 
@@ -17,7 +17,7 @@ npm start        # next start — ALWAYS use the prod build on the kiosk
 npm run lint     # next lint
 ```
 
-There is no test runner — verification is the manual checklist in `README.md` (run in Chrome DevTools as a custom 1080×1920 portrait touch device). The "backend smoke test" is `selfTest()` run from the Apps Script editor, not an npm script.
+There is no test runner — verification is the manual checklist in `README.md` (run in Chrome DevTools as a custom 2160×3840 portrait touch device). The "backend smoke test" is `selfTest()` run from the Apps Script editor, not an npm script.
 
 Requires `.env.local` with `NEXT_PUBLIC_GAS_URL=<deployed GAS /exec URL>` (copy from `.env.local.example`). Without it, all backend calls return `{ok:false, error:"GAS_URL_NOT_CONFIGURED"}`.
 

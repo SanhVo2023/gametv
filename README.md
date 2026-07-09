@@ -18,7 +18,7 @@ Flow: idle → enter phone → memory game → win → wheel of fortune → priz
 npm install
 cp .env.local.example .env.local      # then paste your deployed GAS URL
 npm run dev
-# open http://localhost:3000 in Chrome DevTools (custom device 1080×1920, portrait, touch)
+# open http://localhost:3000 in Chrome DevTools (custom device 2160×3840, portrait, touch)
 ```
 
 ## Production build
@@ -135,7 +135,7 @@ public/present/               Prize product photos (ids match the GAS Prizes tab
 | `POST {action:'recordLoss', phone:'0900000002'}` | Plays row `is_win:false`; `checkPhone` still `allowed:true` |
 | Zero all stock → `spinWheel` | `{ok:false, error:'no_prizes_available'}` → FE shows fallback screen |
 
-### Frontend in Chrome DevTools (custom device 1080×1920 portrait, touch)
+### Frontend in Chrome DevTools (custom device 2160×3840 portrait, touch)
 
 - [ ] Idle → tap CTA → phone pad → type `0777863808` → confirm → game starts (board 4×4).
 - [ ] Solve all 8 pairs in time → Win Transition (~1.4 s) → Wheel spins ~4 s and lands on a wedge → Prize Reveal → after 15 s → returns to idle.

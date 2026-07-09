@@ -47,18 +47,19 @@ export default function StandbyView() {
             alt="Mắt Việt"
             width={310}
             height={230}
+            sizes="24vw"
             priority
             className="standby-logo"
           />
           <h1
             className="anniv-headline font-black tracking-[0.08em] leading-none text-center"
-            style={{ fontSize: "clamp(2.6rem, 7vw, 7rem)" }}
+            style={{ fontSize: "clamp(2.6rem, 7vw, 11rem)" }}
           >
             MẮT VIỆT
           </h1>
           <span
             className="script-gold leading-none"
-            style={{ fontSize: "clamp(1.6rem, 3.6vw, 3.8rem)" }}
+            style={{ fontSize: "clamp(1.6rem, 3.6vw, 6rem)" }}
           >
             Anniversary Event
           </span>

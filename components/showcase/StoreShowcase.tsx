@@ -21,19 +21,19 @@ export default function StoreShowcase() {
     return (
       <div
         key={store.name}
-        className="flex h-full w-full flex-col items-center justify-center gap-[clamp(14px,2.2vh,40px)] px-[clamp(16px,4vw,80px)]"
+        className="flex h-full w-full flex-col items-center justify-center gap-[clamp(14px,2.2vh,64px)] px-[clamp(16px,4vw,140px)]"
       >
         {/* Title */}
         <div className="flex flex-col items-center gap-1">
           <span
             className="script-gold leading-none"
-            style={{ fontSize: "clamp(1.8rem, 4vw, 4.2rem)" }}
+            style={{ fontSize: "clamp(1.8rem, 4vw, 6rem)" }}
           >
             Mắt Việt
           </span>
           <h2
             className="anniv-headline font-black tracking-[0.04em] leading-[1.1] text-center text-balance"
-            style={{ fontSize: "clamp(2rem, 4.6vw, 5rem)" }}
+            style={{ fontSize: "clamp(2rem, 4.6vw, 7.5rem)" }}
           >
             {store.name}
           </h2>
@@ -45,21 +45,21 @@ export default function StoreShowcase() {
             src={hero}
             alt={store.name}
             fill
-            sizes="(max-width: 1200px) 92vw, 1000px"
+            sizes="92vw"
             loading="eager"
             className="object-cover"
           />
         </div>
 
         {/* 2×2 grid */}
-        <div className="grid w-full grid-cols-2 gap-[clamp(10px,1.6vw,24px)]">
+        <div className="grid w-full grid-cols-2 gap-[clamp(10px,1.6vw,40px)]">
           {grid.map((src) => (
             <div key={src} className="store-photo" style={{ aspectRatio: "4 / 3" }}>
               <Image
                 src={src}
                 alt={store.name}
                 fill
-                sizes="(max-width: 1200px) 45vw, 500px"
+                sizes="46vw"
                 loading="eager"
                 className="object-cover"
               />
@@ -83,7 +83,7 @@ export default function StoreShowcase() {
           <span className="dot-pulse" />
           <span>Hệ thống cửa hàng Mắt Việt</span>
         </div>
-        <div className="flex w-full max-w-[min(94vw,1180px)] flex-1 min-h-0 flex-col">
+        <div className="flex w-full max-w-[min(94vw,2200px)] flex-1 min-h-0 flex-col">
           <Slideshow slides={slides} label="Cửa hàng" />
         </div>
       </div>
