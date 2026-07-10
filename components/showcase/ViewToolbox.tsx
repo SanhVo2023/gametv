@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export type ToolboxView = "home" | "stores" | "brands";
+export type ToolboxView = "home" | "stores" | "brands" | "company";
 
 interface ViewToolboxProps {
   current: ToolboxView;
@@ -12,6 +12,7 @@ const ITEMS: { view: ToolboxView | "standby"; href: string; icon: string; label:
   { view: "home", href: "/", icon: "fa-house", label: "Trang chính" },
   { view: "stores", href: "/stores", icon: "fa-shop", label: "Cửa hàng" },
   { view: "brands", href: "/brands", icon: "fa-gem", label: "Thương hiệu" },
+  { view: "company", href: "/company", icon: "fa-cake-candles", label: "Sinh nhật 37 năm" },
   { view: "standby", href: "/standby", icon: "fa-moon", label: "Màn hình chờ" },
 ];
 

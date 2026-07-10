@@ -1,4 +1,4 @@
-// Manifests for the presentation views (/stores, /brands).
+// Manifests for the presentation views (/stores, /brands, /company).
 // Store photos live in public/store/<Store Name>/ — folder + file names contain
 // spaces and Vietnamese diacritics, so every path goes through encodeURI once here.
 
@@ -75,6 +75,87 @@ export const STORES: StoreEntry[] = [
       "z8023625383181_0fa22b913c739c5e23cc7d87f0535d59.jpg",
       "z8023625383182_20b65f19846eb593a8a9143dd735b1c3.jpg",
     ]),
+  },
+];
+
+export interface CompanySlide {
+  /** Small script line above the headline. */
+  eyebrow: string;
+  title: string;
+  /** First image is the hero shot; the rest fill a 2-column grid. */
+  images: string[];
+}
+
+// "Sinh nhật 37 năm" slides. Sources are the operator's full-resolution
+// photos in public/company (untracked, 6–21 MB each — never load those on
+// the kiosk); the kiosk serves the ≤2000px copies in public/company-show,
+// regenerated with `node scripts/resize-company.mjs` whenever photos change.
+export const COMPANY_SLIDES: CompanySlide[] = [
+  {
+    eyebrow: "Vinh danh cống hiến",
+    title: "5 – 10 năm",
+    images: ["/company-show/tenure-5-10.jpg"],
+  },
+  {
+    eyebrow: "Vinh danh cống hiến",
+    title: "15 năm",
+    images: ["/company-show/tenure-15.jpg"],
+  },
+  {
+    eyebrow: "Vinh danh cống hiến",
+    title: "Trên 15 năm",
+    images: ["/company-show/tenure-over-15.jpg"],
+  },
+  {
+    eyebrow: "Mắt Việt",
+    title: "Đại gia đình Mắt Việt",
+    images: [
+      "/company-show/party-1.jpg",
+      "/company-show/party-2.jpg",
+      "/company-show/party-3.jpg",
+      "/company-show/party-4.jpg",
+      "/company-show/party-5.jpg",
+    ],
+  },
+  {
+    eyebrow: "Mắt Việt",
+    title: "Nhịp sống Mắt Việt",
+    images: [
+      "/company-show/daily-1.jpg",
+      "/company-show/daily-2.jpg",
+      "/company-show/daily-3.jpg",
+      "/company-show/daily-4.jpg",
+      "/company-show/daily-5.jpg",
+    ],
+  },
+  {
+    eyebrow: "Mắt Việt",
+    title: "Vinh danh Best Award",
+    images: [
+      "/company-show/best-1.jpg",
+      "/company-show/best-2.jpg",
+      "/company-show/best-3.jpg",
+    ],
+  },
+  {
+    eyebrow: "Mắt Việt",
+    title: "Training nâng cao kỹ năng",
+    images: [
+      "/company-show/training-1.jpg",
+      "/company-show/training-2.jpg",
+      "/company-show/training-3.jpg",
+      "/company-show/training-4.jpg",
+    ],
+  },
+  {
+    eyebrow: "Quỹ thiện nguyện",
+    title: "“Gửi niềm tin – Trao ánh sáng”",
+    images: [
+      "/company-show/charity-1.jpg",
+      "/company-show/charity-2.jpg",
+      "/company-show/charity-3.jpg",
+      "/company-show/charity-4.jpg",
+    ],
   },
 ];
 
