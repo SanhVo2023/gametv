@@ -301,7 +301,7 @@ export default function LuckyDraw() {
         type="button"
         onClick={() => setPhase("confirm_reset")}
         aria-label="Làm mới lượt rút thăm"
-        className="fixed bottom-8 right-8 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-navy-deep/50 text-xl text-white/80 opacity-40 transition-opacity active:opacity-80"
+        className="corner-fab fixed bottom-8 right-8 z-40 flex items-center justify-center rounded-full border border-white/25 bg-navy-deep/50 text-white/80 opacity-40 transition-opacity active:opacity-80"
       >
         <i className="fa-solid fa-arrows-rotate" />
       </button>

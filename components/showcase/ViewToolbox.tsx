@@ -78,7 +78,7 @@ export default function ViewToolbox({ current }: ViewToolboxProps) {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label="Chuyển màn hình trình chiếu"
-          className={`flex h-12 w-12 items-center justify-center rounded-full border text-xl transition-opacity ${
+          className={`corner-fab flex items-center justify-center rounded-full border transition-opacity ${
             open
               ? "opacity-90 border-gold/60 bg-navy-deep/80 text-gold-light"
               : "opacity-40 border-white/25 bg-navy-deep/50 text-white/80"

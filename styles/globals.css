@@ -106,7 +106,7 @@ body.allow-scroll {
     radial-gradient(circle at 60% 78%, rgba(245, 200, 66, 0.07), transparent 48%);
   filter: blur(8px);
   opacity: 0.55;
-  animation: swirl 38s linear infinite;
+  animation: swirl 38s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
@@ -180,9 +180,13 @@ body.allow-scroll {
   background: radial-gradient(circle, rgba(110, 170, 255, 0.95), rgba(110, 170, 255, 0));
 }
 
+/* No rotation here: .aurora-layer is a rectangle (inset -20%), and rotating a
+   rectangle on the portrait TV sweeps its straight edges/corners through the
+   viewport. A slow drift + breathe stays inside the 20% overhang instead. */
 @keyframes swirl {
-  from { transform: rotate(0deg) scale(1); }
-  to   { transform: rotate(360deg) scale(1.05); }
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -2.5%, 0) scale(1.07); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
 @keyframes drift {
@@ -1763,6 +1767,15 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
 }
 
 /* --- Toolbox --- */
+/* Shared size for the dim round staff buttons in the screen corners
+   (toolbox, lucky-draw gift, /spin refresh) — 48px was fingertip-sized on
+   the 4K TV, so scale with the viewport. */
+.corner-fab {
+  width: clamp(64px, 4.6vw, 116px);
+  height: clamp(64px, 4.6vw, 116px);
+  font-size: clamp(24px, 1.9vw, 46px);
+}
+
 .toolbox-panel {
   display: flex;
   flex-direction: column;

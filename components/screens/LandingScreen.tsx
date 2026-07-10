@@ -213,7 +213,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
         type="button"
         onClick={handleDrawTap}
         aria-label="Rút thăm trúng thưởng"
-        className={`fixed bottom-24 left-8 z-50 flex h-12 w-12 items-center justify-center rounded-full border text-xl transition-opacity ${
+        className={`corner-fab fixed bottom-[calc(48px+clamp(64px,4.6vw,116px))] left-8 z-50 flex items-center justify-center rounded-full border transition-opacity ${
           drawArmed
             ? "opacity-80 border-gold/60 bg-navy-deep/70 text-gold-light"
             : "opacity-40 border-white/25 bg-navy-deep/50 text-white/80"
