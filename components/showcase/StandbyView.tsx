@@ -28,20 +28,42 @@ export default function StandbyView() {
       <Head>
         <title>Mắt Việt — Màn hình chờ</title>
       </Head>
-      {!isLowPerf() && <Ambient particles={16} />}
+      {!isLowPerf() && <Ambient particles={26} />}
 
       {/* Orbit stage */}
       <div className="standby-stage">
         <div className="standby-glow" aria-hidden />
-        <div className="standby-ring ring-a" aria-hidden />
+        <div className="standby-ring ring-a" aria-hidden>
+          <span className="standby-satellite small" />
+        </div>
         <div className="standby-ring ring-b" aria-hidden>
           <span className="standby-satellite" />
         </div>
         <div className="standby-ring ring-c" aria-hidden>
           <span className="standby-satellite small" />
         </div>
+        {/* second comet, counter-rotating on the outer ring */}
+        <div className="standby-ring ring-d" aria-hidden />
 
-        <div className="relative z-10 flex flex-col items-center gap-[clamp(10px,1.6vh,26px)]">
+        {/* slow-twinkling stars scattered around the stage */}
+        {[
+          { top: "6%", left: "24%", d: "0s" },
+          { top: "14%", left: "72%", d: "1.4s" },
+          { top: "36%", left: "6%", d: "2.6s" },
+          { top: "30%", left: "92%", d: "0.8s" },
+          { top: "74%", left: "10%", d: "1.9s" },
+          { top: "82%", left: "68%", d: "3.1s" },
+          { top: "58%", left: "95%", d: "2.2s" },
+        ].map((s, i) => (
+          <span
+            key={i}
+            className="standby-star"
+            style={{ top: s.top, left: s.left, animationDelay: s.d }}
+            aria-hidden
+          />
+        ))}
+
+        <div className="standby-center relative z-10 flex flex-col items-center gap-[clamp(10px,1.6vh,26px)]">
           <Image
             src="/asset/Artboard 9.png"
             alt="Mắt Việt"
@@ -51,12 +73,16 @@ export default function StandbyView() {
             priority
             className="standby-logo"
           />
-          <h1
-            className="anniv-headline font-black tracking-[0.08em] leading-none text-center"
-            style={{ fontSize: "clamp(2.6rem, 7vw, 11rem)" }}
-          >
-            MẮT VIỆT
-          </h1>
+          {/* overflow-hidden wrapper hosts the periodic light sweep */}
+          <div className="standby-shine-wrap">
+            <h1
+              className="anniv-headline font-black tracking-[0.08em] leading-none text-center"
+              style={{ fontSize: "clamp(2.6rem, 7vw, 11rem)" }}
+            >
+              MẮT VIỆT
+            </h1>
+            <span className="standby-shine" aria-hidden />
+          </div>
           <span
             className="script-gold leading-none"
             style={{ fontSize: "clamp(1.6rem, 3.6vw, 6rem)" }}

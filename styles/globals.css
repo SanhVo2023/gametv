@@ -1847,6 +1847,20 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
   border: 1px solid rgba(33, 86, 232, 0.3);
   animation: standbyOrbit 56s linear infinite;
 }
+/* second comet: blue, counter-rotating on the outermost orbit */
+.standby-ring.ring-d {
+  inset: 0;
+  background:
+    conic-gradient(
+      from 180deg,
+      rgba(122, 160, 255, 0.5) 0deg,
+      rgba(122, 160, 255, 0) 55deg,
+      rgba(122, 160, 255, 0) 360deg
+    );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  animation: standbyOrbit 32s linear infinite reverse;
+}
 .standby-satellite {
   position: absolute;
   top: calc(clamp(14px, 1.1vw, 26px) / -2);
@@ -1874,6 +1888,48 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
 .standby-hint {
   animation: standbyBreathe 3.2s ease-in-out infinite;
 }
+/* the logo + wordmark cluster gently levitates */
+.standby-center {
+  animation: standbyFloat 8s ease-in-out infinite;
+}
+/* twinkling stars scattered around the orbit stage */
+.standby-star {
+  position: absolute;
+  width: clamp(6px, 0.5vw, 12px);
+  height: clamp(6px, 0.5vw, 12px);
+  border-radius: 9999px;
+  background: #fde98a;
+  box-shadow: 0 0 14px rgba(245, 200, 66, 0.9);
+  opacity: 0;
+  animation: standbyTwinkle 4.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.standby-star:nth-child(2n) {
+  background: #bcd0ff;
+  box-shadow: 0 0 14px rgba(122, 160, 255, 0.9);
+}
+/* periodic light sweep across the MẮT VIỆT wordmark */
+.standby-shine-wrap {
+  position: relative;
+  overflow: hidden;
+  padding: 0.1em 0.3em;
+}
+.standby-shine {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 26%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 246, 214, 0.38) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-140%) skewX(-18deg);
+  animation: standbyShine 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
 
 @keyframes standbyOrbit {
   from { transform: rotate(0deg); }
@@ -1883,12 +1939,29 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
   0%, 100% { opacity: 0.55; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }
 }
+@keyframes standbyFloat {
+  0%, 100% { transform: translateY(0.55vh); }
+  50% { transform: translateY(-0.55vh); }
+}
+@keyframes standbyTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.95; transform: scale(1); }
+}
+@keyframes standbyShine {
+  0% { transform: translateX(-140%) skewX(-18deg); }
+  38% { transform: translateX(520%) skewX(-18deg); }
+  100% { transform: translateX(520%) skewX(-18deg); }
+}
 
 /* Low-perf: one slow ring, no breathing, no logo glow filter */
 html[data-perf="low"] .standby-ring.ring-b,
-html[data-perf="low"] .standby-ring.ring-c { display: none; }
+html[data-perf="low"] .standby-ring.ring-c,
+html[data-perf="low"] .standby-ring.ring-d,
+html[data-perf="low"] .standby-star,
+html[data-perf="low"] .standby-shine { display: none; }
 html[data-perf="low"] .standby-glow { animation: none; }
 html[data-perf="low"] .standby-hint { animation: none; }
+html[data-perf="low"] .standby-center { animation: none; }
 html[data-perf="low"] .standby-logo { filter: none; }
 html[data-perf="low"] .brand-logo-img,
 html[data-perf="low"] .brand-wordmark { filter: none; animation: none; }

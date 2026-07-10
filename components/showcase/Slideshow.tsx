@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 interface SlideshowProps {
   slides: ReactNode[];
@@ -25,6 +25,42 @@ export default function Slideshow({ slides, label }: SlideshowProps) {
     },
     [count]
   );
+
+  // Keyboard control (presenter remote / attached keyboard):
+  // ←/→ (also ↑/↓, PageUp/Down, Space), Home/End, digits 1–9 jump to a slide.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowRight":
+        case "ArrowDown":
+        case "PageDown":
+        case " ":
+          e.preventDefault();
+          go(1);
+          break;
+        case "ArrowLeft":
+        case "ArrowUp":
+        case "PageUp":
+          e.preventDefault();
+          go(-1);
+          break;
+        case "Home":
+          e.preventDefault();
+          setIndex(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setIndex(count - 1);
+          break;
+        default: {
+          const n = Number(e.key);
+          if (n >= 1 && n <= count) setIndex(n - 1);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [go, count]);
 
   // Swipe: single-pointer horizontal drag beyond the threshold.
   const touchRef = useRef<{ id: number; x: number } | null>(null);
