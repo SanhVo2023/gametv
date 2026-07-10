@@ -1835,17 +1835,17 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
     );
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
-  animation: standbyOrbit 24s linear infinite;
+  animation: standbyOrbit 9s linear infinite;
 }
 .standby-ring.ring-b {
   inset: 7%;
   border: 1px dashed rgba(255, 255, 255, 0.14);
-  animation: standbyOrbit 40s linear infinite reverse;
+  animation: standbyOrbit 20s linear infinite reverse;
 }
 .standby-ring.ring-c {
   inset: 0;
   border: 1px solid rgba(33, 86, 232, 0.3);
-  animation: standbyOrbit 56s linear infinite;
+  animation: standbyOrbit 28s linear infinite;
 }
 /* second comet: blue, counter-rotating on the outermost orbit */
 .standby-ring.ring-d {
@@ -1859,7 +1859,7 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
     );
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
-  animation: standbyOrbit 32s linear infinite reverse;
+  animation: standbyOrbit 13s linear infinite reverse;
 }
 .standby-satellite {
   position: absolute;
@@ -1880,6 +1880,27 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
   background: #7aa0ff;
   box-shadow: 0 0 12px rgba(33, 86, 232, 0.9);
 }
+/* second satellite on the opposite side of its ring */
+.standby-satellite.opposite {
+  top: auto;
+  bottom: calc(clamp(14px, 1.1vw, 26px) / -2);
+}
+.standby-satellite.small.opposite {
+  top: auto;
+  bottom: calc(clamp(9px, 0.75vw, 17px) / -2);
+}
+/* shooting star: a skewed streak that dashes down-left, then rests */
+.standby-meteor {
+  position: absolute;
+  width: clamp(90px, 8vw, 190px);
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fde98a 65%, #ffffff 100%);
+  transform: rotate(-38deg);
+  opacity: 0;
+  animation: standbyMeteor 7.5s ease-in infinite;
+  pointer-events: none;
+}
 .standby-logo {
   width: clamp(160px, 24vw, 620px);
   height: auto;
@@ -1888,9 +1909,29 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
 .standby-hint {
   animation: standbyBreathe 3.2s ease-in-out infinite;
 }
-/* the logo + wordmark cluster gently levitates */
-.standby-center {
-  animation: standbyFloat 8s ease-in-out infinite;
+/* rotating light rays fanning out behind the logo */
+.standby-rays {
+  position: absolute;
+  inset: 4%;
+  border-radius: 9999px;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(245, 200, 66, 0.14) 0deg 7deg,
+    rgba(245, 200, 66, 0) 7deg 45deg
+  );
+  -webkit-mask: radial-gradient(circle, #000 12%, rgba(0, 0, 0, 0.35) 45%, transparent 72%);
+  mask: radial-gradient(circle, #000 12%, rgba(0, 0, 0, 0.35) 45%, transparent 72%);
+  animation: standbyOrbit 16s linear infinite;
+  pointer-events: none;
+}
+/* sonar pulses expanding outward from the logo */
+.standby-ripple {
+  position: absolute;
+  inset: 30%;
+  border-radius: 9999px;
+  border: 2px solid rgba(245, 200, 66, 0.55);
+  animation: standbyRipple 4.5s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  pointer-events: none;
 }
 /* twinkling stars scattered around the orbit stage */
 .standby-star {
@@ -1901,7 +1942,7 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
   background: #fde98a;
   box-shadow: 0 0 14px rgba(245, 200, 66, 0.9);
   opacity: 0;
-  animation: standbyTwinkle 4.6s ease-in-out infinite;
+  animation: standbyTwinkle 3.2s ease-in-out infinite;
   pointer-events: none;
 }
 .standby-star:nth-child(2n) {
@@ -1939,9 +1980,15 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
   0%, 100% { opacity: 0.55; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }
 }
-@keyframes standbyFloat {
-  0%, 100% { transform: translateY(0.55vh); }
-  50% { transform: translateY(-0.55vh); }
+@keyframes standbyRipple {
+  0% { transform: scale(0.35); opacity: 0; }
+  12% { opacity: 0.75; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+@keyframes standbyMeteor {
+  0%, 74% { transform: translate(0, 0) rotate(-38deg); opacity: 0; }
+  78% { opacity: 1; }
+  88%, 100% { transform: translate(-22vw, 17vw) rotate(-38deg); opacity: 0; }
 }
 @keyframes standbyTwinkle {
   0%, 100% { opacity: 0; transform: scale(0.5); }
@@ -1958,10 +2005,12 @@ html[data-perf="low"] .standby-ring.ring-b,
 html[data-perf="low"] .standby-ring.ring-c,
 html[data-perf="low"] .standby-ring.ring-d,
 html[data-perf="low"] .standby-star,
+html[data-perf="low"] .standby-rays,
+html[data-perf="low"] .standby-ripple,
+html[data-perf="low"] .standby-meteor,
 html[data-perf="low"] .standby-shine { display: none; }
 html[data-perf="low"] .standby-glow { animation: none; }
 html[data-perf="low"] .standby-hint { animation: none; }
-html[data-perf="low"] .standby-center { animation: none; }
 html[data-perf="low"] .standby-logo { filter: none; }
 html[data-perf="low"] .brand-logo-img,
 html[data-perf="low"] .brand-wordmark { filter: none; animation: none; }

@@ -33,19 +33,40 @@ export default function StandbyView() {
       {/* Orbit stage */}
       <div className="standby-stage">
         <div className="standby-glow" aria-hidden />
+        {/* rotating light rays fanning out behind the logo */}
+        <div className="standby-rays" aria-hidden />
+        {/* sonar pulses expanding from the logo */}
+        <span className="standby-ripple" aria-hidden />
+        <span className="standby-ripple" style={{ animationDelay: "1.5s" }} aria-hidden />
+        <span className="standby-ripple" style={{ animationDelay: "3s" }} aria-hidden />
         <div className="standby-ring ring-a" aria-hidden>
           <span className="standby-satellite small" />
+          <span className="standby-satellite small opposite" />
         </div>
         <div className="standby-ring ring-b" aria-hidden>
           <span className="standby-satellite" />
         </div>
         <div className="standby-ring ring-c" aria-hidden>
           <span className="standby-satellite small" />
+          <span className="standby-satellite opposite" />
         </div>
         {/* second comet, counter-rotating on the outer ring */}
         <div className="standby-ring ring-d" aria-hidden />
 
-        {/* slow-twinkling stars scattered around the stage */}
+        {/* shooting stars streaking across the stage */}
+        <span className="standby-meteor" style={{ top: "12%", left: "58%" }} aria-hidden />
+        <span
+          className="standby-meteor"
+          style={{ top: "38%", left: "84%", animationDelay: "2.6s" }}
+          aria-hidden
+        />
+        <span
+          className="standby-meteor"
+          style={{ top: "68%", left: "40%", animationDelay: "5.1s" }}
+          aria-hidden
+        />
+
+        {/* twinkling stars scattered around the stage */}
         {[
           { top: "6%", left: "24%", d: "0s" },
           { top: "14%", left: "72%", d: "1.4s" },
@@ -54,6 +75,9 @@ export default function StandbyView() {
           { top: "74%", left: "10%", d: "1.9s" },
           { top: "82%", left: "68%", d: "3.1s" },
           { top: "58%", left: "95%", d: "2.2s" },
+          { top: "4%", left: "48%", d: "0.5s" },
+          { top: "92%", left: "34%", d: "1.1s" },
+          { top: "48%", left: "2%", d: "2.9s" },
         ].map((s, i) => (
           <span
             key={i}
