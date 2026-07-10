@@ -1966,7 +1966,9 @@ html[data-perf="low"] .fade-in { animation-duration: 0.18s !important; }
 .standby-shine-wrap {
   position: relative;
   overflow: hidden;
-  padding: 0.1em 0.3em;
+  /* generous top padding: the stacked Vietnamese accents on MẮT (breve +
+     acute) reach above the cap height and were clipped at 0.1em */
+  padding: 0.32em 0.3em 0.12em;
 }
 .standby-shine {
   position: absolute;

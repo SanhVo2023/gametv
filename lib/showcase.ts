@@ -169,11 +169,11 @@ export interface BrandEntry {
 // White variants resized from public/brand originals (see brand-showcase folder).
 // Lindberg's source ("Lingberg.png") is black-on-transparent → inverted to white.
 export const BRANDS: BrandEntry[] = [
-  { key: "cartier", label: "Cartier", src: "/brand-showcase/cartier.png" },
   { key: "lindberg", label: "Lindberg", src: "/brand-showcase/lindberg.png" },
-  { key: "gucci", label: "Gucci", src: "/brand-showcase/gucci.png" },
   { key: "montblanc", label: "Montblanc", src: "/brand-showcase/montblanc.png" },
-  { key: "miumiu", label: "Miu Miu", src: "/brand-showcase/miumiu.png" },
+  { key: "gucci", label: "Gucci", src: "/brand-showcase/gucci.png" },
   { key: "prada", label: "Prada", src: "/brand-showcase/prada.png" },
+  { key: "miumiu", label: "Miu Miu", src: "/brand-showcase/miumiu.png" },
   { key: "swarovski", label: "Swarovski", src: "/brand-showcase/swarovski.png" },
+  { key: "cartier", label: "Cartier", src: "/brand-showcase/cartier.png" },
 ];
