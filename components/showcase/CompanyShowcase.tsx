@@ -2,20 +2,51 @@
 
 import Head from "next/head";
 import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import Ambient from "../Ambient";
 import Slideshow from "./Slideshow";
 import ViewToolbox from "./ViewToolbox";
 import { COMPANY_SLIDES } from "../../lib/showcase";
 import { useKioskGuards } from "../../lib/useKioskGuards";
 
+const TOTAL_IMAGES = COMPANY_SLIDES.reduce((n, s) => n + s.images.length, 0);
+
+// If some load events never fire (e.g. a broken file), reveal anyway.
+const LOADING_CAP_MS = 12000;
+
 /**
  * TV presentation for the 37th birthday: one slide per moment — tenure
  * honors, company parties, store life, Best Award. Single-photo slides show
  * a lone hero; multi-photo slides add a 2-column grid beneath it.
  * Manual navigation only (arrows / dots / swipe), like the other showcases.
+ *
+ * All ~24 photos load eagerly, which takes a few seconds on the kiosk — an
+ * opaque loading overlay (with progress) covers the strip until every image
+ * has settled, then fades out.
  */
 export default function CompanyShowcase() {
   useKioskGuards();
+
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [capReached, setCapReached] = useState(false);
+  const [overlayGone, setOverlayGone] = useState(false);
+  const ready = capReached || loadedCount >= TOTAL_IMAGES;
+
+  const handleImageSettled = useCallback(() => {
+    setLoadedCount((c) => c + 1);
+  }, []);
+
+  useEffect(() => {
+    const cap = window.setTimeout(() => setCapReached(true), LOADING_CAP_MS);
+    return () => window.clearTimeout(cap);
+  }, []);
+
+  // Drop the overlay from the tree once its fade-out transition has played.
+  useEffect(() => {
+    if (!ready) return;
+    const t = window.setTimeout(() => setOverlayGone(true), 800);
+    return () => window.clearTimeout(t);
+  }, [ready]);
 
   const slides = COMPANY_SLIDES.map((slide) => {
     const [hero, ...rest] = slide.images;
@@ -53,6 +84,8 @@ export default function CompanyShowcase() {
             sizes="92vw"
             loading="eager"
             className="object-cover"
+            onLoad={handleImageSettled}
+            onError={handleImageSettled}
           />
         </div>
 
@@ -72,6 +105,8 @@ export default function CompanyShowcase() {
                   sizes={grid.length === 3 ? "31vw" : "46vw"}
                   loading="eager"
                   className="object-cover"
+                  onLoad={handleImageSettled}
+                  onError={handleImageSettled}
                 />
               </div>
             ))}
@@ -98,6 +133,40 @@ export default function CompanyShowcase() {
           <Slideshow slides={slides} label="Sinh nhật 37 năm" />
         </div>
       </div>
+
+      {/* Loading overlay — opaque so half-decoded photos never flash.
+          Sits under the staff toolbox (z-60) so navigation stays possible. */}
+      {!overlayGone && (
+        <div
+          className={`absolute inset-0 z-40 transition-opacity duration-700 ${
+            ready ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+          aria-hidden={ready}
+        >
+          <div className="landing-anniv-bg" />
+          <div className="relative z-10 flex h-full flex-col items-center justify-center gap-[clamp(12px,2vh,40px)]">
+            <span
+              className="script-gold leading-none"
+              style={{ fontSize: "clamp(2.4rem, 5.6vw, 8.5rem)" }}
+            >
+              Mắt Việt
+            </span>
+            <h1
+              className="anniv-headline font-black tracking-[0.04em] leading-[1.1] text-center"
+              style={{ fontSize: "clamp(2.8rem, 6.6vw, 11rem)" }}
+            >
+              Sinh nhật 37 năm
+            </h1>
+            <p className="flex items-center gap-4 text-white/80 uppercase tracking-[0.3em]"
+               style={{ fontSize: "clamp(1rem, 1.6vw, 2.2rem)" }}>
+              <i className="fa-solid fa-spinner fa-spin" />
+              <span>
+                Đang tải hình ảnh… {Math.min(loadedCount, TOTAL_IMAGES)}/{TOTAL_IMAGES}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
 
       <ViewToolbox current="company" />
     </div>
