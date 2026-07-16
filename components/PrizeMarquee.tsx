@@ -8,14 +8,15 @@ import { isVoucher, prizeImage, voucherAmount } from "../lib/prizeImages";
 /** Static fallback so the showcase always has content even before GAS responds. */
 const FALLBACK: { id: string; name: string }[] = [
   { id: "HK-BD117", name: "Hộp kính thời trang" },
-  { id: "HK-BD054", name: "Hộp kính thời trang" },
-  { id: "BOOKTRAY2", name: "Hộp kính 2 ngăn" },
   { id: "VIBOLON", name: "Ví Bolon" },
   { id: "BUTBOLON", name: "Bút Bolon" },
   { id: "NONMOLSION", name: "Nón thời trang Molsion" },
   { id: "VOUCHER200K", name: "Voucher 200.000đ" },
   { id: "VOUCHER100K", name: "Voucher 100.000đ" },
 ];
+
+/** Gifts pulled from the event — hidden here even if the live sheet still lists them. */
+const HIDDEN_IDS = new Set(["TUIBLING", "VONGDEO"]);
 
 const CHIP_STYLE = {
   width: "clamp(190px, 17vw, 320px)",
@@ -58,8 +59,14 @@ function Chip({ id, name }: { id: string; name: string }) {
 
 export default function PrizeMarquee({ prizes }: { prizes: Prize[] }) {
   const items = useMemo(() => {
+    // The wheel duplicates the voucher wedges — the showcase lists each
+    // distinct gift once (dedupe by name).
+    const seen = new Set<string>();
+    const unique = prizes.filter(
+      (p) => !HIDDEN_IDS.has(p.id) && !seen.has(p.name) && !!seen.add(p.name),
+    );
     const base =
-      prizes.length > 0 ? prizes.map((p) => ({ id: p.id, name: p.name })) : FALLBACK;
+      unique.length > 0 ? unique.map((p) => ({ id: p.id, name: p.name })) : FALLBACK;
     return [...base, ...base]; // doubled for a seamless loop
   }, [prizes]);
 

@@ -40,8 +40,8 @@ idle → phone → instructions → difficulty → game → win → wheel → re
 
 ## Lucky draw (/spin, /spin-admin)
 
-- `/spin` is the end-of-event draw (numbers 1–50, 10 prize slots). Entry from
-  the landing: **double-tap** the dim gift button bottom-left within 1.5 s.
+- `/spin` is the end-of-event draw (numbers 1–50, 10 prize slots). The landing
+  page has NO staff buttons — open `/spin` by URL.
 - State lives in localStorage `lucky_draw_state_v1` — seed it via
   `page.evaluate` to fast-forward tests; `/spin?reset=1` opens the reset
   confirm panel (also: visible refresh button bottom-right, long-press title).
@@ -53,10 +53,11 @@ idle → phone → instructions → difficulty → game → win → wheel → re
 
 ## Presentation views (/stores, /brands, /standby)
 
-- Staff navigation: the dim **toolbox button** at the landing's bottom-left
+- Staff navigation: the dim **toolbox button** bottom-left
   (`aria-label="Chuyển màn hình trình chiếu"`, single tap) expands a menu with
-  Trang chính / Cửa hàng / Thương hiệu / Màn hình chờ; it also renders on
-  /stores and /brands. The lucky-draw gift button sits just above it.
+  Trang chính / Cửa hàng / Thương hiệu / Sinh nhật 37 năm / Màn hình chờ. It
+  renders on /stores, /brands, and /company — NOT on the landing page (guests
+  kept tapping it); from `/` navigate by URL.
 - `/stores`: 5 slides (one per store, hero + 2×2 grid), `/brands`: 7 logo
   slides. Manual-only navigation: arrows (`aria-label="Trang trước"/"Trang sau"`),
   dots (`aria-label="Trang N"`), or horizontal swipe ≥60 px. Current slide:

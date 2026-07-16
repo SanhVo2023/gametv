@@ -57,16 +57,21 @@ All gifts are effectively unlimited for this event, so every row is seeded with
 a big stock (500). Weight = stock → uniform initial distribution; edit weights
 live in the sheet to bias the wheel.
 
+Each row is one wedge on the wheel, in sheet order. The two vouchers each
+appear **twice** (distinct ids `…K` / `…K2`, same name + code prefix), placed
+on opposite sides of the wheel. Túi Bling Molsion and Vòng đeo kính were
+removed from the event.
+
 | id (mã hàng) | name | stock | weight |
 |---|---|---|---|
-| HK-BD117    | Hộp kính thời trang    | 500 | 500 |
-| VIBOLON     | Ví Bolon               | 500 | 500 |
-| BUTBOLON    | Bút Bolon              | 500 | 500 |
-| NONMOLSION  | Nón thời trang Molsion | 500 | 500 |
-| TUIBLING    | Túi Bling Molsion      | 500 | 500 |
-| VONGDEO     | Vòng đeo kính          | 500 | 500 |
-| VOUCHER200K | Voucher 200.000đ       | 500 | 500 |
-| VOUCHER100K | Voucher 100.000đ       | 500 | 500 |
+| HK-BD117     | Hộp kính thời trang    | 500 | 500 |
+| VOUCHER100K  | Voucher 100.000đ       | 500 | 500 |
+| VIBOLON      | Ví Bolon               | 500 | 500 |
+| VOUCHER200K  | Voucher 200.000đ       | 500 | 500 |
+| BUTBOLON     | Bút Bolon              | 500 | 500 |
+| VOUCHER100K2 | Voucher 100.000đ       | 500 | 500 |
+| NONMOLSION   | Nón thời trang Molsion | 500 | 500 |
+| VOUCHER200K2 | Voucher 200.000đ       | 500 | 500 |
 
 ## Endpoints
 

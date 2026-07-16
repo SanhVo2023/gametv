@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import type { Prize } from "../../lib/types";
 import Ambient from "../Ambient";
 import PrizeMarquee from "../PrizeMarquee";
-import ViewToolbox from "../showcase/ViewToolbox";
 
 const NEOEYESIGHT_URL = "https://neoeyesight.netlify.app/";
 
@@ -27,20 +26,6 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
     const t = setTimeout(() => setMounted(true), 30);
     return () => clearTimeout(t);
   }, []);
-
-  // Staff-only lucky-draw entry: requires two taps within 1.5s so a stray
-  // guest tap does nothing. First tap brightens the button as feedback.
-  const [drawArmed, setDrawArmed] = useState(false);
-  const drawArmTimer = useRef<number | null>(null);
-  const handleDrawTap = () => {
-    if (drawArmed) {
-      window.location.href = "/spin";
-      return;
-    }
-    setDrawArmed(true);
-    if (drawArmTimer.current) window.clearTimeout(drawArmTimer.current);
-    drawArmTimer.current = window.setTimeout(() => setDrawArmed(false), 1500);
-  };
 
   return (
     <div className="fullscreen-portrait relative">
@@ -204,23 +189,9 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
         </div>
       </div>
 
-      {/* Staff navigation between the TV views (also deliberately dim) */}
-      <ViewToolbox current="home" />
-
-      {/* Staff-only lucky-draw entry (double-tap) — deliberately dim, stacked
-          above the toolbox button */}
-      <button
-        type="button"
-        onClick={handleDrawTap}
-        aria-label="Rút thăm trúng thưởng"
-        className={`corner-fab fixed bottom-[calc(48px+clamp(64px,4.6vw,116px))] left-8 z-50 flex items-center justify-center rounded-full border transition-opacity ${
-          drawArmed
-            ? "opacity-80 border-gold/60 bg-navy-deep/70 text-gold-light"
-            : "opacity-40 border-white/25 bg-navy-deep/50 text-white/80"
-        }`}
-      >
-        <i className="fa-solid fa-gift" />
-      </button>
+      {/* No staff corner buttons on the guest-facing main page — staff reach
+          the other views (/stores, /brands, /company, /standby, /spin) by URL
+          or via the toolbox on those pages. */}
     </div>
   );
 }
