@@ -51,27 +51,27 @@ already run `setup()`, run **`resetPrizes()`** from the script editor. It wipes
 just the `Prizes` tab and re-seeds it from the latest code — `Plays` history
 and `Config` are untouched.
 
-## Initial event stock (Anniversary Event — every gift unlimited)
+## Initial event stock (Anniversary Event)
 
-All gifts are effectively unlimited for this event, so every row is seeded with
-a big stock (500). Weight = stock → uniform initial distribution; edit weights
-live in the sheet to bias the wheel.
+Physical presents are seeded with stock 10 and draw weight 10. Voucher wedges
+are seeded with stock 100 and draw weight 20. Edit weights live in the sheet if
+you need to bias the wheel during the event.
 
-Each row is one wedge on the wheel, in sheet order. The two vouchers each
-appear **twice** (distinct ids `…K` / `…K2`, same name + code prefix), placed
-on opposite sides of the wheel. Túi Bling Molsion and Vòng đeo kính were
-removed from the event.
+Each row is one wedge on the wheel, in sheet order. The 100k voucher appears
+twice (distinct ids `VOUCHER100K` / `VOUCHER100K2`, same name + code prefix).
+The 200k voucher appears once; the other 200k slot was replaced by `HOPKINH`.
+Túi Bling Molsion and Vòng đeo kính were removed from the event.
 
 | id (mã hàng) | name | stock | weight |
 |---|---|---|---|
-| HK-BD117     | Hộp kính thời trang    | 500 | 500 |
-| VOUCHER100K  | Voucher 100.000đ       | 500 | 500 |
-| VIBOLON      | Ví Bolon               | 500 | 500 |
-| VOUCHER200K  | Voucher 200.000đ       | 500 | 500 |
-| BUTBOLON     | Bút Bolon              | 500 | 500 |
-| VOUCHER100K2 | Voucher 100.000đ       | 500 | 500 |
-| NONMOLSION   | Nón thời trang Molsion | 500 | 500 |
-| VOUCHER200K2 | Voucher 200.000đ       | 500 | 500 |
+| HK-BD117     | Hộp kính thời trang    | 10 | 10 |
+| VOUCHER100K  | Voucher 100.000đ       | 100 | 20 |
+| VIBOLON      | Ví Bolon               | 10 | 10 |
+| VOUCHER200K  | Voucher 200.000đ       | 100 | 20 |
+| BUTBOLON     | Bút Bolon              | 10 | 10 |
+| VOUCHER100K2 | Voucher 100.000đ       | 100 | 20 |
+| NONMOLSION   | Nón thời trang Molsion | 10 | 10 |
+| HOPKINH      | Hộp kính               | 10 | 10 |
 
 ## Endpoints
 

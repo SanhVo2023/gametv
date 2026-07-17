@@ -46,7 +46,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
       <div className="absolute left-0 right-0 z-20 flex justify-center top-[clamp(18px,3vh,64px)]">
         <div className={`pill pill-gold ${mounted ? "fade-in" : "opacity-0"}`}>
           <span className="dot-pulse" />
-          <span>Mắt Việt Sala — 10.07.2026</span>
+          <span>DIAmond Palza — 17/07/2026</span>
         </div>
       </div>
 

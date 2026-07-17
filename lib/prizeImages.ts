@@ -9,6 +9,7 @@ const PRIZE_IMAGES: Record<string, string> = {
   VIBOLON: "/present/VIBOLON.png",
   BUTBOLON: "/present/BUTBOLON.png",
   NONMOLSION: "/present/NONMOLSION.png",
+  HOPKINH: "/present/hop-kinh.png",
   TUIBLING: "/present/tui-bling.png",
   VONGDEO: "/present/vong-deo.png",
 };

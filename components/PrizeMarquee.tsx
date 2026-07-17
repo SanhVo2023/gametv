@@ -11,6 +11,7 @@ const FALLBACK: { id: string; name: string }[] = [
   { id: "VIBOLON", name: "Ví Bolon" },
   { id: "BUTBOLON", name: "Bút Bolon" },
   { id: "NONMOLSION", name: "Nón thời trang Molsion" },
+  { id: "HOPKINH", name: "Hộp kính" },
   { id: "VOUCHER200K", name: "Voucher 200.000đ" },
   { id: "VOUCHER100K", name: "Voucher 100.000đ" },
 ];
@@ -65,8 +66,10 @@ export default function PrizeMarquee({ prizes }: { prizes: Prize[] }) {
     const unique = prizes.filter(
       (p) => !HIDDEN_IDS.has(p.id) && !seen.has(p.name) && !!seen.add(p.name),
     );
-    const base =
-      unique.length > 0 ? unique.map((p) => ({ id: p.id, name: p.name })) : FALLBACK;
+    const live = unique.map((p) => ({ id: p.id, name: p.name }));
+    const liveNames = new Set(live.map((p) => p.name));
+    const supplemental = FALLBACK.filter((p) => !liveNames.has(p.name));
+    const base = live.length > 0 ? [...live, ...supplemental] : FALLBACK;
     return [...base, ...base]; // doubled for a seamless loop
   }, [prizes]);
 

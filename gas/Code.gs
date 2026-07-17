@@ -42,23 +42,22 @@ var FORCE_PROP = 'draw_force';          // script property holding {number, at}
 var FORCE_TTL_MS = 10 * 60 * 1000;      // stale forces (e.g. from rehearsal) expire
 var DRAW_MAX_NUMBER = 50;
 
-// Anniversary event: every gift is effectively unlimited, so each row is
-// seeded with a big stock (500). Weight = stock, so the initial distribution
-// is uniform; the operator can edit weights live in the Prizes sheet.
+// Anniversary event stock: physical presents start at 10 units and use their
+// stock as draw weight; voucher wedges start at 100 units with weight 20.
 // `id` doubles as the operator's mã hàng so SKU tracking lines up with their inventory list.
 //
 // Each ROW is one WEDGE on the wheel, in this order. The vouchers appear
-// TWICE (ids ...K / ...K2 — distinct ids, same name/prefix) and the
-// duplicates sit on opposite sides so they read as spread out, not stacked.
+// as separate wedges where needed (ids ...K / ...K2 — distinct ids, same
+// name/prefix), spread out so they do not read as stacked.
 var DEFAULT_PRIZES = [
-  ['HK-BD117',     'Hộp kính thời trang',    500, 500, 'HK1',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD117)', '#1138c4'],
-  ['VOUCHER100K',  'Voucher 100.000đ',       500, 500, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',         '#2156e8'],
-  ['VIBOLON',      'Ví Bolon',               500, 500, 'VB',   '', 'Ví thương hiệu Bolon',                          '#0a2070'],
-  ['VOUCHER200K',  'Voucher 200.000đ',       500, 500, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',         '#1d4ed8'],
-  ['BUTBOLON',     'Bút Bolon',              500, 500, 'PB',   '', 'Bút thương hiệu Bolon',                         '#001a5c'],
-  ['VOUCHER100K2', 'Voucher 100.000đ',       500, 500, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',         '#2156e8'],
-  ['NONMOLSION',   'Nón thời trang Molsion', 500, 500, 'NM',   '', 'Nón thời trang thương hiệu Molsion',            '#0d2680'],
-  ['VOUCHER200K2', 'Voucher 200.000đ',       500, 500, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',         '#1d4ed8']
+  ['HK-BD117',     'Hộp kính thời trang',     10, 10, 'HK1',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD117)', '#1138c4'],
+  ['VOUCHER100K',  'Voucher 100.000đ',       100, 20, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',        '#2156e8'],
+  ['VIBOLON',      'Ví Bolon',                10, 10, 'VB',   '', 'Ví thương hiệu Bolon',                         '#0a2070'],
+  ['VOUCHER200K',  'Voucher 200.000đ',       100, 20, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',        '#1d4ed8'],
+  ['BUTBOLON',     'Bút Bolon',               10, 10, 'PB',   '', 'Bút thương hiệu Bolon',                        '#001a5c'],
+  ['VOUCHER100K2', 'Voucher 100.000đ',       100, 20, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',        '#2156e8'],
+  ['NONMOLSION',   'Nón thời trang Molsion',  10, 10, 'NM',   '', 'Nón thời trang thương hiệu Molsion',           '#0d2680'],
+  ['HOPKINH',      'Hộp kính',                10, 10, 'HK2',  '', 'Hộp kính Mắt Việt',                            '#1d4ed8']
 ];
 
 // ============================================================
