@@ -1286,6 +1286,63 @@ body.allow-scroll {
   text-shadow: 0 4px 24px rgba(0, 16, 51, 0.55);
 }
 
+/* Static gold halo behind the hero cluster — focuses the title now that the
+   top pill is gone. No animation: it's one cheap radial gradient. */
+.hero-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(140vw, 2200px);
+  height: 130%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(245, 200, 66, 0.13) 0%,
+    rgba(245, 200, 66, 0.05) 42%,
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+/* Celebration sparks around the hero title. Opacity/transform only so the
+   compositor handles them; hidden entirely on the low-perf profile. */
+.spark {
+  position: absolute;
+  color: #fde98a;
+  text-shadow: 0 0 14px rgba(245, 200, 66, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: sparkTwinkle 3.8s ease-in-out infinite;
+}
+
+@keyframes sparkTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.35) rotate(0deg); }
+  45%      { opacity: 1; transform: scale(1) rotate(25deg); }
+  60%      { opacity: 0.55; transform: scale(0.8) rotate(35deg); }
+}
+
+/* CTA arrow nudges toward the action */
+.cta-arrow-nudge {
+  animation: arrowNudge 1.6s ease-in-out infinite;
+}
+
+@keyframes arrowNudge {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(12px); }
+}
+
+/* How-to-play badges pulse 1 → 2 → 3 (delay staggered inline) so the strip
+   reads as a sequence without any copy. */
+.step-pulse {
+  animation: stepPulse 2.7s ease-in-out infinite;
+}
+
+@keyframes stepPulse {
+  0%, 24%, 100% { transform: scale(1); }
+  12%           { transform: scale(1.22); }
+}
+
 /* KV as the landing's bottom backdrop: anchored to the screen bottom, full
    width, its sky dissolving upward into the page gradient so the two read
    as one continuous scene. No frame, no shadow. */
@@ -1607,6 +1664,8 @@ html[data-perf="low"] .miss-warning,
 html[data-perf="low"] .prize-breathe,
 html[data-perf="low"] .float-soft,
 html[data-perf="low"] .wiggle-soft,
+html[data-perf="low"] .cta-arrow-nudge,
+html[data-perf="low"] .step-pulse,
 html[data-perf="low"] .animate-pulse-glow,
 html[data-perf="low"] .animate-pulse-soft,
 html[data-perf="low"] .animate-spin-slow,
@@ -1626,6 +1685,7 @@ html[data-perf="low"] .demo-pip {
 /* 6) Element-specific replacements after killing their animations */
 html[data-perf="low"] .ember { display: none; }
 html[data-perf="low"] .orbit-sparkle { display: none; }
+html[data-perf="low"] .spark { display: none; }
 html[data-perf="low"] .shine-sweep::after { display: none; }
 html[data-perf="low"] .brand-glow { filter: none; }
 html[data-perf="low"] .danger-vignette { opacity: 0.45; }

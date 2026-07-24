@@ -20,6 +20,19 @@ const STEPS = [
   { icon: "fa-gift", label: "Quay trúng quà" },
 ];
 
+/* Celebration sparks scattered around the hero title (percent coords inside
+   the hero zone). Negative delays de-sync the twinkles from first paint. */
+const SPARKS = [
+  { x: "7%", y: "4%", size: "clamp(16px,1.7vw,36px)", delay: "0s" },
+  { x: "16%", y: "62%", size: "clamp(11px,1.1vw,24px)", delay: "-1.3s" },
+  { x: "26%", y: "-6%", size: "clamp(12px,1.3vw,28px)", delay: "-2.5s" },
+  { x: "71%", y: "-9%", size: "clamp(15px,1.5vw,32px)", delay: "-0.7s" },
+  { x: "84%", y: "30%", size: "clamp(11px,1.1vw,24px)", delay: "-3.1s" },
+  { x: "93%", y: "70%", size: "clamp(16px,1.7vw,36px)", delay: "-1.9s" },
+  { x: "48%", y: "-14%", size: "clamp(10px,1vw,22px)", delay: "-2.9s" },
+  { x: "3%", y: "86%", size: "clamp(12px,1.3vw,28px)", delay: "-0.4s" },
+];
+
 export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -42,22 +55,25 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
       />
       <Ambient rays particles={22} />
 
-      {/* Top chrome — anchored */}
-      <div className="absolute left-0 right-0 z-20 flex justify-center top-[clamp(18px,3vh,64px)]">
-        <div className={`pill pill-gold ${mounted ? "fade-in" : "opacity-0"}`}>
-          <span className="dot-pulse" />
-          <span>Vincom Đồng Khởi — 17/07/2026</span>
-        </div>
-      </div>
-
       {/* Centered content cluster */}
       {/* Content ends above the KV footer zone (see !pb) so the photo reads
           as the page's grand finale instead of a background under text. */}
-      <div className="screen-stack !gap-[clamp(14px,2.5vh,54px)] !pb-[clamp(150px,24vh,480px)] !pt-[clamp(84px,9.5vh,190px)]">
-        {/* Hero — poster typography */}
-        <div className={`zone gap-2 ${mounted ? "spring-in" : "opacity-0"}`}>
+      <div className="screen-stack !gap-[clamp(14px,2.5vh,54px)] !pb-[clamp(150px,24vh,480px)] !pt-[clamp(56px,6.5vh,140px)]">
+        {/* Hero — poster typography with a gold halo + twinkling sparks */}
+        <div className={`zone relative gap-2 ${mounted ? "spring-in" : "opacity-0"}`}>
+          <div className="hero-halo" aria-hidden />
+          {SPARKS.map((s, i) => (
+            <span
+              key={i}
+              className="spark"
+              aria-hidden
+              style={{ left: s.x, top: s.y, fontSize: s.size, animationDelay: s.delay }}
+            >
+              ✦
+            </span>
+          ))}
           <span
-            className="script-gold leading-none"
+            className="script-gold leading-none float-soft"
             style={{ fontSize: "clamp(2.6rem, 6vw, 6.5rem)" }}
           >
             Welcome to
@@ -94,7 +110,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
             style={{ fontSize: "clamp(1.8rem, 4vw, 4rem)" }}
           >
             <span>Bắt Đầu Chơi</span>
-            <i className="fa-solid fa-arrow-right" />
+            <i className="fa-solid fa-arrow-right cta-arrow-nudge" />
           </button>
           <p className="text-caption uppercase tracking-[0.32em] text-white/60">
             Chạm để tham gia trò chơi
@@ -117,11 +133,12 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
                 )}
                 <div className="flex items-center gap-[0.7vw]">
                   <div
-                    className="flex shrink-0 items-center justify-center rounded-full bg-gold text-navy-deep font-black"
+                    className="step-pulse flex shrink-0 items-center justify-center rounded-full bg-gold text-navy-deep font-black"
                     style={{
                       width: "clamp(30px,2.6vw,52px)",
                       height: "clamp(30px,2.6vw,52px)",
                       fontSize: "clamp(0.9rem,1.4vw,1.7rem)",
+                      animationDelay: `${i * 0.55}s`,
                     }}
                   >
                     {i + 1}
