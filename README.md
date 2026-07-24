@@ -1,7 +1,7 @@
 # Mắt Việt — Anniversary Event Kiosk
 
 A vertical 43″ touchscreen kiosk app for the *Mắt Việt Anniversary Event*
-(DIAmond Palza, 17/07/2026). Originally built for the Vision Care + Elite Day
+(Vincom Đồng Khởi, 17/07/2026). Originally built for the Vision Care + Elite Day
 event and re-themed.
 
 Flow: idle → enter phone → memory game → win → wheel of fortune → prize reveal → auto-reset.

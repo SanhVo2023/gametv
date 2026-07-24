@@ -12,6 +12,7 @@ const FALLBACK: { id: string; name: string }[] = [
   { id: "BUTBOLON", name: "Bút Bolon" },
   { id: "NONMOLSION", name: "Nón thời trang Molsion" },
   { id: "HOPKINH", name: "Hộp kính" },
+  { id: "BONUOCRUAKINH", name: "Bộ nước rửa kính" },
   { id: "VOUCHER200K", name: "Voucher 200.000đ" },
   { id: "VOUCHER100K", name: "Voucher 100.000đ" },
 ];

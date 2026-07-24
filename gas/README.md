@@ -53,25 +53,26 @@ and `Config` are untouched.
 
 ## Initial event stock (Anniversary Event)
 
-Physical presents are seeded with stock 10 and draw weight 10. Voucher wedges
-are seeded with stock 100 and draw weight 20. Edit weights live in the sheet if
-you need to bias the wheel during the event.
+Physical presents are seeded with stock 10 and draw weight 10 (weight =
+stock). Vouchers carry their real stock (30× 100k, 20× 200k) but a FIXED draw
+weight of 20. Edit weights live in the sheet if you need to bias the wheel
+during the event.
 
-Each row is one wedge on the wheel, in sheet order. The 100k voucher appears
-twice (distinct ids `VOUCHER100K` / `VOUCHER100K2`, same name + code prefix).
-The 200k voucher appears once; the other 200k slot was replaced by `HOPKINH`.
-Túi Bling Molsion and Vòng đeo kính were removed from the event.
+Each row is one wedge on the wheel, in sheet order — 6 presents + 2 voucher
+wedges. The duplicate voucher slots were replaced by `BONUOCRUAKINH` (2nd
+100k) and `HOPKINH` (2nd 200k). Túi Bling Molsion and Vòng đeo kính were
+removed from the event.
 
 | id (mã hàng) | name | stock | weight |
 |---|---|---|---|
-| HK-BD117     | Hộp kính thời trang    | 10 | 10 |
-| VOUCHER100K  | Voucher 100.000đ       | 100 | 20 |
-| VIBOLON      | Ví Bolon               | 10 | 10 |
-| VOUCHER200K  | Voucher 200.000đ       | 100 | 20 |
-| BUTBOLON     | Bút Bolon              | 10 | 10 |
-| VOUCHER100K2 | Voucher 100.000đ       | 100 | 20 |
-| NONMOLSION   | Nón thời trang Molsion | 10 | 10 |
-| HOPKINH      | Hộp kính               | 10 | 10 |
+| HK-BD117      | Hộp kính thời trang    | 10 | 10 |
+| VOUCHER100K   | Voucher 100.000đ       | 30 | 20 |
+| VIBOLON       | Ví Bolon               | 10 | 10 |
+| VOUCHER200K   | Voucher 200.000đ       | 20 | 20 |
+| BUTBOLON      | Bút Bolon              | 10 | 10 |
+| BONUOCRUAKINH | Bộ nước rửa kính       | 10 | 10 |
+| NONMOLSION    | Nón thời trang Molsion | 10 | 10 |
+| HOPKINH       | Hộp kính               | 10 | 10 |
 
 ## Endpoints
 
