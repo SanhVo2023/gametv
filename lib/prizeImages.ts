@@ -2,21 +2,35 @@
  * Maps a prize id (the operator's mã hàng, also the GAS Prizes.id) to a local
  * product photo under /public/present/. Vouchers have no photo — they render as
  * a designed gold voucher card instead.
+ *
+ * To add a gift for a new event: drop a transparent PNG (square, ≤1000 px)
+ * into /public/present/, add a row here keyed by the sheet's `id`, and add
+ * the same id to the FALLBACK list in components/PrizeMarquee.tsx.
+ * `node scripts/validate-prizes.mjs` checks the three stay in sync.
  */
 
 const PRIZE_IMAGES: Record<string, string> = {
-  "HK-BD117": "/present/HK-BD117.png",
-  VIBOLON: "/present/VIBOLON.png",
-  BUTBOLON: "/present/BUTBOLON.png",
   NONMOLSION: "/present/NONMOLSION.png",
-  HOPKINH: "/present/hop-kinh.png",
-  BONUOCRUAKINH: "/present/bo-nuoc-rua-kinh.png",
-  TUIBLING: "/present/tui-bling.png",
-  VONGDEO: "/present/vong-deo.png",
+  PENBL00001: "/present/PENBL00001.png",
+  VICARDBOLON: "/present/VICARDBOLON.png",
+  "HK-2204-1": "/present/HK-2204-1.png",
+  "HK-BD117": "/present/HK-BD117.png",
+  BONUOCRUA3C: "/present/BONUOCRUA3C.png",
+};
+
+/**
+ * Ids used by earlier sheets for the same physical products. Kept so a sheet
+ * that hasn't been re-keyed yet still shows the right photo.
+ */
+const LEGACY_IDS: Record<string, string> = {
+  BUTBOLON: "PENBL00001",
+  VIBOLON: "VICARDBOLON",
+  HOPKINH: "HK-2204-1",
+  BONUOCRUAKINH: "BONUOCRUA3C",
 };
 
 export function prizeImage(id: string): string | null {
-  return PRIZE_IMAGES[id] ?? null;
+  return PRIZE_IMAGES[id] ?? PRIZE_IMAGES[LEGACY_IDS[id] ?? ""] ?? null;
 }
 
 /**

@@ -55,7 +55,7 @@ idle → phone → instructions → difficulty → game → win → wheel → re
 
 - Staff navigation: the dim **toolbox button** bottom-left
   (`aria-label="Chuyển màn hình trình chiếu"`, single tap) expands a menu with
-  Trang chính / Cửa hàng / Thương hiệu / Sinh nhật 37 năm / Màn hình chờ. It
+  Trang chính / Cửa hàng / Thương hiệu / Về Mắt Việt / Màn hình chờ. It
   renders on /stores, /brands, and /company — NOT on the landing page (guests
   kept tapping it); from `/` navigate by URL.
 - `/stores`: 5 slides (one per store, hero + 2×2 grid), `/brands`: 7 logo

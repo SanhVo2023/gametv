@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import type { Prize } from "../../lib/types";
+import { EVENT_TAGLINE, EVENT_TITLE } from "../../lib/branding";
 import Ambient from "../Ambient";
 import PrizeMarquee from "../PrizeMarquee";
 
@@ -44,7 +45,7 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
     <div className="fullscreen-portrait relative">
       {/* Poster gradient FIRST (opaque), then the KV as the bottom backdrop —
           its sky melts upward into the gradient — then the ambient washes. */}
-      <div className="landing-anniv-bg" />
+      <div className="landing-poster-bg" />
       <Image
         src="/asset/kv-hero.jpg"
         alt=""
@@ -79,13 +80,13 @@ export default function LandingScreen({ onStart, prizes }: LandingScreenProps) {
             Welcome to
           </span>
           <h1
-            className="anniv-headline font-black tracking-[0.04em] leading-[1.08] text-center text-balance max-w-[92vw]"
+            className="poster-headline font-black uppercase tracking-[0.04em] leading-[1.08] text-center text-balance max-w-[92vw]"
             style={{ fontSize: "clamp(2.2rem, 4.5vw, 5.4rem)" }}
           >
-            MẮT VIỆT ANNIVERSARY EVENT
+            {EVENT_TITLE}
           </h1>
-          <p className="text-h2 font-light text-white/85 text-center text-balance max-w-[80vw]">
-            Chơi mini game — <span className="text-gold-light font-semibold">nhận quà liền tay</span>
+          <p className="text-h2 font-light text-gold-light text-center text-balance max-w-[80vw]">
+            {EVENT_TAGLINE}
           </p>
         </div>
 

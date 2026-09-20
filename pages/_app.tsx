@@ -1,6 +1,7 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import "../styles/globals.css";
+import { EVENT_TITLE } from "../lib/branding";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -13,7 +14,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <title>Mắt Việt Anniversary Event</title>
+        <title>{EVENT_TITLE}</title>
       </Head>
       <Component {...pageProps} />
     </>

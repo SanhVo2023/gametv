@@ -15,7 +15,7 @@ const TOTAL_IMAGES = COMPANY_SLIDES.reduce((n, s) => n + s.images.length, 0);
 const LOADING_CAP_MS = 12000;
 
 /**
- * TV presentation for the 37th birthday: one slide per moment — tenure
+ * TV presentation about the company: one slide per moment — tenure
  * honors, company parties, store life, Best Award. Single-photo slides show
  * a lone hero; multi-photo slides add a 2-column grid beneath it.
  * Manual navigation only (arrows / dots / swipe), like the other showcases.
@@ -68,7 +68,7 @@ export default function CompanyShowcase() {
             {slide.eyebrow}
           </span>
           <h2
-            className="anniv-headline font-black tracking-[0.04em] leading-[1.1] text-center text-balance"
+            className="poster-headline font-black tracking-[0.04em] leading-[1.1] text-center text-balance"
             style={{ fontSize: solo ? "clamp(2.8rem, 6.6vw, 11rem)" : "clamp(2rem, 4.6vw, 7.5rem)" }}
           >
             {slide.title}
@@ -119,18 +119,18 @@ export default function CompanyShowcase() {
   return (
     <div className="fullscreen-portrait relative">
       <Head>
-        <title>Mắt Việt — Sinh nhật 37 năm</title>
+        <title>Mắt Việt — Về chúng tôi</title>
       </Head>
-      <div className="landing-anniv-bg" />
+      <div className="landing-poster-bg" />
       <Ambient particles={14} />
 
       <div className="relative z-10 flex h-full flex-col items-center pt-[clamp(18px,3vh,64px)] pb-[clamp(18px,3vh,56px)]">
         <div className="pill pill-gold mb-[clamp(10px,1.8vh,32px)]">
           <span className="dot-pulse" />
-          <span>Sinh nhật 37 năm Mắt Việt</span>
+          <span>Về Mắt Việt</span>
         </div>
         <div className="flex w-full max-w-[min(94vw,2200px)] flex-1 min-h-0 flex-col">
-          <Slideshow slides={slides} label="Sinh nhật 37 năm" />
+          <Slideshow slides={slides} label="Về Mắt Việt" />
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export default function CompanyShowcase() {
           }`}
           aria-hidden={ready}
         >
-          <div className="landing-anniv-bg" />
+          <div className="landing-poster-bg" />
           <div className="relative z-10 flex h-full flex-col items-center justify-center gap-[clamp(12px,2vh,40px)]">
             <span
               className="script-gold leading-none"
@@ -152,10 +152,10 @@ export default function CompanyShowcase() {
               Mắt Việt
             </span>
             <h1
-              className="anniv-headline font-black tracking-[0.04em] leading-[1.1] text-center"
+              className="poster-headline font-black tracking-[0.04em] leading-[1.1] text-center"
               style={{ fontSize: "clamp(2.8rem, 6.6vw, 11rem)" }}
             >
-              Sinh nhật 37 năm
+              Về chúng tôi
             </h1>
             <p className="flex items-center gap-4 text-white/80 uppercase tracking-[0.3em]"
                style={{ fontSize: "clamp(1rem, 1.6vw, 2.2rem)" }}>

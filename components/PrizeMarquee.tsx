@@ -7,18 +7,13 @@ import { isVoucher, prizeImage, voucherAmount } from "../lib/prizeImages";
 
 /** Static fallback so the showcase always has content even before GAS responds. */
 const FALLBACK: { id: string; name: string }[] = [
-  { id: "HK-BD117", name: "Hộp kính thời trang" },
-  { id: "VIBOLON", name: "Ví Bolon" },
-  { id: "BUTBOLON", name: "Bút Bolon" },
-  { id: "NONMOLSION", name: "Nón thời trang Molsion" },
-  { id: "HOPKINH", name: "Hộp kính" },
-  { id: "BONUOCRUAKINH", name: "Bộ nước rửa kính" },
-  { id: "VOUCHER200K", name: "Voucher 200.000đ" },
-  { id: "VOUCHER100K", name: "Voucher 100.000đ" },
+  { id: "NONMOLSION", name: "Nón kết Molsion" },
+  { id: "PENBL00001", name: "Bút bi Bolon" },
+  { id: "VICARDBOLON", name: "Ví đựng card Bolon" },
+  { id: "HK-2204-1", name: "Hộp kính lông vũ" },
+  { id: "HK-BD117", name: "Hộp kính Mắt Việt" },
+  { id: "BONUOCRUA3C", name: "Bộ nước rửa kính" },
 ];
-
-/** Gifts pulled from the event — hidden here even if the live sheet still lists them. */
-const HIDDEN_IDS = new Set(["TUIBLING", "VONGDEO"]);
 
 const CHIP_STYLE = {
   width: "clamp(190px, 17vw, 320px)",
@@ -61,12 +56,10 @@ function Chip({ id, name }: { id: string; name: string }) {
 
 export default function PrizeMarquee({ prizes }: { prizes: Prize[] }) {
   const items = useMemo(() => {
-    // The wheel duplicates the voucher wedges — the showcase lists each
+    // The wheel may repeat a gift on several wedges — the showcase lists each
     // distinct gift once (dedupe by name).
     const seen = new Set<string>();
-    const unique = prizes.filter(
-      (p) => !HIDDEN_IDS.has(p.id) && !seen.has(p.name) && !!seen.add(p.name),
-    );
+    const unique = prizes.filter((p) => !seen.has(p.name) && !!seen.add(p.name));
     const live = unique.map((p) => ({ id: p.id, name: p.name }));
     const liveNames = new Set(live.map((p) => p.name));
     const supplemental = FALLBACK.filter((p) => !liveNames.has(p.name));

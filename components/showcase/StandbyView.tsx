@@ -5,6 +5,7 @@ import Image from "next/image";
 import Ambient from "../Ambient";
 import { isLowPerf } from "../../lib/perf";
 import { useKioskGuards } from "../../lib/useKioskGuards";
+import { EVENT_TAGLINE } from "../../lib/branding";
 
 /**
  * Standby screen: continuous abstract orbit animation around the Mắt Việt
@@ -100,7 +101,7 @@ export default function StandbyView() {
           {/* overflow-hidden wrapper hosts the periodic light sweep */}
           <div className="standby-shine-wrap">
             <h1
-              className="anniv-headline font-black tracking-[0.08em] leading-none text-center"
+              className="poster-headline font-black tracking-[0.08em] leading-none text-center"
               style={{ fontSize: "clamp(2.6rem, 7vw, 11rem)" }}
             >
               MẮT VIỆT
@@ -109,9 +110,9 @@ export default function StandbyView() {
           </div>
           <span
             className="script-gold leading-none"
-            style={{ fontSize: "clamp(1.6rem, 3.6vw, 6rem)" }}
+            style={{ fontSize: "clamp(1.4rem, 3vw, 5rem)" }}
           >
-            Anniversary Event
+            {EVENT_TAGLINE}
           </span>
         </div>
       </div>

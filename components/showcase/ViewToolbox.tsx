@@ -12,7 +12,7 @@ const ITEMS: { view: ToolboxView | "standby"; href: string; icon: string; label:
   { view: "home", href: "/", icon: "fa-house", label: "Trang chính" },
   { view: "stores", href: "/stores", icon: "fa-shop", label: "Cửa hàng" },
   { view: "brands", href: "/brands", icon: "fa-gem", label: "Thương hiệu" },
-  { view: "company", href: "/company", icon: "fa-cake-candles", label: "Sinh nhật 37 năm" },
+  { view: "company", href: "/company", icon: "fa-people-group", label: "Về Mắt Việt" },
   { view: "standby", href: "/standby", icon: "fa-moon", label: "Màn hình chờ" },
 ];
 

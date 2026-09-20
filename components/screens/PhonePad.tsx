@@ -6,6 +6,7 @@ import { checkPhone } from "../../lib/gas";
 import { formatPhoneDisplay, isValidVietnamesePhone, normalizePhone } from "../../lib/phone";
 import { playErrorSound, playKeyTap, playMatchSound } from "../../lib/audio";
 import Ambient from "../Ambient";
+import { EVENT_TITLE } from "../../lib/branding";
 
 interface PhonePadProps {
   onAllowed: (phone: string, isTester: boolean) => void;
@@ -131,14 +132,14 @@ export default function PhonePad({ onAllowed, onCancel }: PhonePadProps) {
       <div className="absolute left-0 right-0 z-20 flex justify-center bottom-[clamp(18px,3vh,60px)]">
         <div className="pill">
           <i className="fa-solid fa-gift text-gold-light" />
-          <span>Chơi để nhận 1 trong 8 phần quà hấp dẫn từ Mắt Việt</span>
+          <span>Chơi để nhận quà hấp dẫn từ Mắt Việt</span>
         </div>
       </div>
 
       {/* Centered content cluster */}
       <div className="screen-stack">
         <div className="zone gap-3 slide-up-in">
-          <p className="text-eyebrow text-gold-light">Mắt Việt Anniversary Event</p>
+          <p className="text-eyebrow text-gold-light">{EVENT_TITLE}</p>
           <h2 className="text-h1 font-black tracking-tight text-center text-balance">
             Nhập <span className="text-gold-light">số điện thoại</span> để chơi
           </h2>

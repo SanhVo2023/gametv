@@ -32,7 +32,7 @@ export default function StoreShowcase() {
             Mắt Việt
           </span>
           <h2
-            className="anniv-headline font-black tracking-[0.04em] leading-[1.1] text-center text-balance"
+            className="poster-headline font-black tracking-[0.04em] leading-[1.1] text-center text-balance"
             style={{ fontSize: "clamp(2rem, 4.6vw, 7.5rem)" }}
           >
             {store.name}
@@ -75,7 +75,7 @@ export default function StoreShowcase() {
       <Head>
         <title>Mắt Việt — Hệ thống cửa hàng</title>
       </Head>
-      <div className="landing-anniv-bg" />
+      <div className="landing-poster-bg" />
       <Ambient particles={14} />
 
       <div className="relative z-10 flex h-full flex-col items-center pt-[clamp(18px,3vh,64px)] pb-[clamp(18px,3vh,56px)]">
