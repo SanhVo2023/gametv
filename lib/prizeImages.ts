@@ -5,18 +5,28 @@
  */
 
 const PRIZE_IMAGES: Record<string, string> = {
-  "HK-BD117": "/present/HK-BD117.png",
+  // --- Current event (ids are the operator's mã hàng) ---
+  NONMOLSION: "/present/NONMOLSION.png", // Nón kết Molsion
+  PENBL00001: "/present/BUTBOLON.png", // Bút bi BOLON
+  VICARDBOLON: "/present/VIBOLON.png", // Ví đựng card BOLON
+  "HK-2204-1": "/present/hop-kinh.png", // Hộp đựng kính 2204-1 (loại lông vũ)
+  "HK-BD117": "/present/HK-BD117.png", // Hộp đựng kính BD117
+  BONUOCRUA3C: "/present/BONUOCRUA3C.png", // Bộ nước rửa kính 3 màu
+  // --- Legacy ids (previous events) — kept so an older Prizes sheet still renders ---
   VIBOLON: "/present/VIBOLON.png",
   BUTBOLON: "/present/BUTBOLON.png",
-  NONMOLSION: "/present/NONMOLSION.png",
   HOPKINH: "/present/hop-kinh.png",
   BONUOCRUAKINH: "/present/bo-nuoc-rua-kinh.png",
   TUIBLING: "/present/tui-bling.png",
   VONGDEO: "/present/vong-deo.png",
 };
 
+/**
+ * Photo for a prize id. Any id without a photo renders as a voucher card, so
+ * the lookup is forgiving about stray whitespace / casing typed into the sheet.
+ */
 export function prizeImage(id: string): string | null {
-  return PRIZE_IMAGES[id] ?? null;
+  return PRIZE_IMAGES[id] ?? PRIZE_IMAGES[id.trim().toUpperCase()] ?? null;
 }
 
 /**

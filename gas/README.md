@@ -29,7 +29,7 @@ Columns:
 | `stock` | remaining inventory; 0 hides the prize |
 | `weight` | random weight (relative) |
 | `code_prefix` | prefix for generated voucher code, e.g. `MV100` |
-| `image_url` | (optional) future use |
+| `image_url` | unused (photos come from the kiosk build, keyed by `id`) |
 | `description` | shown under the prize on reveal |
 | `color_hex` | (optional) override wheel wedge color |
 
@@ -51,28 +51,65 @@ already run `setup()`, run **`resetPrizes()`** from the script editor. It wipes
 just the `Prizes` tab and re-seeds it from the latest code — `Plays` history
 and `Config` are untouched.
 
-## Initial event stock (Anniversary Event)
+## Configuring gifts from the sheet only (no redeploy)
 
-Physical presents are seeded with stock 10 and draw weight 10 (weight =
-stock). Vouchers carry their real stock (30× 100k, 20× 200k) but a FIXED draw
-weight of 20. Edit weights live in the sheet if you need to bias the wheel
-during the event.
+The `Prizes` tab is read live on every spin, so a new gift list needs **no new
+Apps Script deployment**: edit the rows and the kiosk picks them up within
+~1 minute (30 s frontend cache). Rules that matter:
 
-Each row is one wedge on the wheel, in sheet order — 6 presents + 2 voucher
-wedges. The duplicate voucher slots were replaced by `BONUOCRUAKINH` (2nd
-100k) and `HOPKINH` (2nd 200k). Túi Bling Molsion and Vòng đeo kính were
-removed from the event.
+1. **`id` must be one the kiosk knows.** The kiosk maps `id` → product photo in
+   `lib/prizeImages.ts`. An unknown `id` (or a typo) is drawn as a *voucher*
+   card on the wheel and reveal screen, not as a photo. Changing the photo map
+   requires rebuilding the kiosk (`npm run build`), the sheet alone cannot add
+   a new picture.
+2. **One row = one wedge**, in sheet order. `stock = 0` hides the row, so to
+   pull a gift set its stock to 0 (or delete the row).
+3. `weight` is the relative draw chance; `code_prefix` is the voucher-code
+   prefix printed on the reveal screen; `description` shows under the name;
+   `color_hex` (optional) overrides the wedge colour. `image_url` is unused.
+4. Don't rename the header row and don't rename the tab.
+5. Rows whose `id` contains `VOUCHER` (e.g. `VOUCHER100K`) render as vouchers
+   by design — add them back the same way if the event has vouchers.
 
-| id (mã hàng) | name | stock | weight |
-|---|---|---|---|
-| HK-BD117      | Hộp kính thời trang    | 10 | 10 |
-| VOUCHER100K   | Voucher 100.000đ       | 30 | 20 |
-| VIBOLON       | Ví Bolon               | 10 | 10 |
-| VOUCHER200K   | Voucher 200.000đ       | 20 | 20 |
-| BUTBOLON      | Bút Bolon              | 10 | 10 |
-| BONUOCRUAKINH | Bộ nước rửa kính       | 10 | 10 |
-| NONMOLSION    | Nón thời trang Molsion | 10 | 10 |
-| HOPKINH       | Hộp kính               | 10 | 10 |
+Ids the current kiosk build understands (photo in `public/present/`):
+
+| id (mã hàng) | gift | photo |
+|---|---|---|
+| `NONMOLSION`  | Nón kết Molsion                                   | NONMOLSION.png  |
+| `PENBL00001`  | Bút bi BOLON                                      | BUTBOLON.png    |
+| `VICARDBOLON` | Ví đựng card hiệu BOLON                           | VIBOLON.png     |
+| `HK-2204-1`   | Hộp đựng kính MẮT VIỆT 2204-1 (loại lông vũ)      | hop-kinh.png    |
+| `HK-BD117`    | Hộp đựng kính MẮT VIỆT BD117                      | HK-BD117.png    |
+| `BONUOCRUA3C` | Bộ nước rửa kính 3 màu                            | BONUOCRUA3C.png |
+| `BUTBOLON`, `VIBOLON`, `HOPKINH`, `BONUOCRUAKINH` | legacy ids from the previous event, still accepted | |
+
+**A kiosk built before this commit only knows the legacy ids.** Until it is
+rebuilt, enter the new gifts under the legacy ids and put the real mã hàng in
+`description`:
+
+| id to type | use for |
+|---|---|
+| `NONMOLSION`    | Nón kết Molsion |
+| `BUTBOLON`      | Bút bi BOLON (PENBL00001) |
+| `VIBOLON`       | Ví đựng card BOLON (VICARDBOLON) |
+| `HOPKINH`       | Hộp đựng kính 2204-1 |
+| `HK-BD117`      | Hộp đựng kính BD117 |
+| `BONUOCRUAKINH` | Bộ nước rửa kính 3 màu (BONUOCRUA3C) — old photo until rebuilt |
+
+## Current event seed
+
+`DEFAULT_PRIZES` in `Code.gs` seeds the six gifts below with placeholder
+stock 10 / weight 10 (only applied by `setup()` on a fresh sheet or by
+`resetPrizes()`). Set the real counts in the sheet.
+
+| id (mã hàng) | name | stock | weight | code_prefix |
+|---|---|---|---|---|
+| NONMOLSION  | Nón kết Molsion        | 10 | 10 | NM  |
+| PENBL00001  | Bút bi BOLON           | 10 | 10 | PB  |
+| VICARDBOLON | Ví đựng card BOLON     | 10 | 10 | VB  |
+| HK-2204-1   | Hộp đựng kính 2204-1   | 10 | 10 | HK2 |
+| HK-BD117    | Hộp đựng kính BD117    | 10 | 10 | HK1 |
+| BONUOCRUA3C | Bộ nước rửa kính 3 màu | 10 | 10 | NRK |
 
 ## Endpoints
 

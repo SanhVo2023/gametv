@@ -42,23 +42,18 @@ var FORCE_PROP = 'draw_force';          // script property holding {number, at}
 var FORCE_TTL_MS = 10 * 60 * 1000;      // stale forces (e.g. from rehearsal) expire
 var DRAW_MAX_NUMBER = 50;
 
-// Anniversary event stock: physical presents start at 10 units and use their
-// stock as draw weight; vouchers use a FIXED draw weight of 20 with real
-// stock (30× 100k, 20× 200k).
-// `id` doubles as the operator's mã hàng so SKU tracking lines up with their inventory list.
-//
-// Each ROW is one WEDGE on the wheel, in this order — 6 presents + the two
-// voucher wedges. The second 100k/200k voucher slots were replaced by
-// BONUOCRUAKINH and HOPKINH.
+// Current event seed (used only by setup() on a fresh sheet and by
+// resetPrizes()). `id` is the operator's mã hàng — it MUST match a key in the
+// frontend's lib/prizeImages.ts or the kiosk draws the wedge as a voucher.
+// Each ROW is one WEDGE on the wheel, in this order. Stock 10 / weight 10 are
+// placeholders — set the real counts in the sheet.
 var DEFAULT_PRIZES = [
-  ['HK-BD117',      'Hộp kính thời trang',     10, 10, 'HK1',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD117)', '#1138c4'],
-  ['VOUCHER100K',   'Voucher 100.000đ',        30, 20, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',        '#2156e8'],
-  ['VIBOLON',       'Ví Bolon',                10, 10, 'VB',   '', 'Ví thương hiệu Bolon',                         '#0a2070'],
-  ['VOUCHER200K',   'Voucher 200.000đ',        20, 20, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',        '#1d4ed8'],
-  ['BUTBOLON',      'Bút Bolon',               10, 10, 'PB',   '', 'Bút thương hiệu Bolon',                        '#001a5c'],
-  ['BONUOCRUAKINH', 'Bộ nước rửa kính',        10, 10, 'NRK',  '', 'Bộ nước rửa kính và khăn lau Mắt Việt',        '#2156e8'],
-  ['NONMOLSION',    'Nón thời trang Molsion',  10, 10, 'NM',   '', 'Nón thời trang thương hiệu Molsion',           '#0d2680'],
-  ['HOPKINH',       'Hộp kính',                10, 10, 'HK2',  '', 'Hộp kính Mắt Việt',                            '#1d4ed8']
+  ['NONMOLSION',  'Nón kết Molsion',              10, 10, 'NM',  '', 'Nón kết thương hiệu Molsion',                              '#0d2680'],
+  ['PENBL00001',  'Bút bi BOLON',                 10, 10, 'PB',  '', 'Bút bi thương hiệu BOLON',                                 '#001a5c'],
+  ['VICARDBOLON', 'Ví đựng card BOLON',           10, 10, 'VB',  '', 'Ví đựng card thương hiệu BOLON',                           '#0a2070'],
+  ['HK-2204-1',   'Hộp đựng kính 2204-1',         10, 10, 'HK2', '', 'Hộp đựng kính Mắt Việt 2204-1 (loại lông vũ)',             '#1d4ed8'],
+  ['HK-BD117',    'Hộp đựng kính BD117',          10, 10, 'HK1', '', 'Hộp đựng kính Mắt Việt BD117',                             '#1138c4'],
+  ['BONUOCRUA3C', 'Bộ nước rửa kính 3 màu',       10, 10, 'NRK', '', 'Bộ nước rửa kính 3 màu Mắt Việt (chai xịt + khăn lau)',   '#2156e8']
 ];
 
 // ============================================================

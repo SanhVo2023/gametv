@@ -7,14 +7,12 @@ import { isVoucher, prizeImage, voucherAmount } from "../lib/prizeImages";
 
 /** Static fallback so the showcase always has content even before GAS responds. */
 const FALLBACK: { id: string; name: string }[] = [
-  { id: "HK-BD117", name: "Hộp kính thời trang" },
-  { id: "VIBOLON", name: "Ví Bolon" },
-  { id: "BUTBOLON", name: "Bút Bolon" },
-  { id: "NONMOLSION", name: "Nón thời trang Molsion" },
-  { id: "HOPKINH", name: "Hộp kính" },
-  { id: "BONUOCRUAKINH", name: "Bộ nước rửa kính" },
-  { id: "VOUCHER200K", name: "Voucher 200.000đ" },
-  { id: "VOUCHER100K", name: "Voucher 100.000đ" },
+  { id: "NONMOLSION", name: "Nón kết Molsion" },
+  { id: "PENBL00001", name: "Bút bi BOLON" },
+  { id: "VICARDBOLON", name: "Ví đựng card BOLON" },
+  { id: "HK-2204-1", name: "Hộp đựng kính 2204-1" },
+  { id: "HK-BD117", name: "Hộp đựng kính BD117" },
+  { id: "BONUOCRUA3C", name: "Bộ nước rửa kính 3 màu" },
 ];
 
 /** Gifts pulled from the event — hidden here even if the live sheet still lists them. */
