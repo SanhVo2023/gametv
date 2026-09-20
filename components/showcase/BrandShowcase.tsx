@@ -44,7 +44,7 @@ export default function BrandShowcase() {
       <Head>
         <title>Mắt Việt — Thương hiệu</title>
       </Head>
-      <div className="landing-anniv-bg" />
+      <div className="landing-poster-bg" />
       <Ambient particles={14} />
 
       <div className="relative z-10 flex h-full flex-col items-center pt-[clamp(18px,3vh,64px)] pb-[clamp(18px,3vh,56px)]">

@@ -1249,7 +1249,7 @@ body.allow-scroll {
 }
 
 /* ============================================================
-   Anniversary landing — mirrors the event poster: deep navy on
+   Poster landing — deep navy on
    top fading to a soft silver/beige lower third, gold script
    "Welcome to", cream headline. Static gradients only (cheap on
    low-perf), so no perf overrides are needed.
@@ -1257,7 +1257,7 @@ body.allow-scroll {
 
 /* Rendered first inside the screen, before the Ambient layers — no z-index,
    so the aurora/particles (later siblings) still paint on top of it. */
-.landing-anniv-bg {
+.landing-poster-bg {
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -1281,7 +1281,7 @@ body.allow-scroll {
   filter: drop-shadow(0 2px 12px rgba(245, 200, 66, 0.35));
 }
 
-.anniv-headline {
+.poster-headline {
   color: #f7f3e6;
   text-shadow: 0 4px 24px rgba(0, 16, 51, 0.55);
 }
@@ -1601,7 +1601,7 @@ html[data-perf="low"] .pq-node.current { animation: none; box-shadow: 0 0 14px r
 
 /* The AI card also sits on the light zone — solid navy so its white copy
    stays readable (echoes the poster's blue ribbon tiles). */
-.landing-anniv-bg ~ .screen-stack .ai-section {
+.landing-poster-bg ~ .screen-stack .ai-section {
   background: rgba(0, 16, 51, 0.8);
 }
 

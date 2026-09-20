@@ -86,7 +86,7 @@ export interface CompanySlide {
   images: string[];
 }
 
-// "Sinh nhật 37 năm" slides. Sources are the operator's full-resolution
+// "Về Mắt Việt" (/company) slides. Sources are the operator's full-resolution
 // photos in public/company (untracked, 6–21 MB each — never load those on
 // the kiosk); the kiosk serves the ≤2000px copies in public/company-show,
 // regenerated with `node scripts/resize-company.mjs` whenever photos change.

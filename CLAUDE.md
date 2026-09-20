@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single-device touchscreen **kiosk** app (Next.js Pages Router) for the *Mắt Việt Anniversary Event*. One vertical 43″ portrait 4K TV (2160×3840; layouts must also hold at 1080×1920), many players, identified only by phone number. Player flow: idle → phone → instructions → difficulty → memory game → win → wheel of fortune → prize reveal → auto-reset (15 s). All Vietnamese UI copy.
+A single-device touchscreen **kiosk** app (Next.js Pages Router) for Mắt Việt in-store events. It is **event-agnostic**: no screen hardcodes an event name, date or venue — the title/tagline come from `NEXT_PUBLIC_EVENT_TITLE` / `NEXT_PUBLIC_EVENT_TAGLINE` via `lib/branding.ts`, and the gift list lives in the Google Sheet (photos keyed by prize id in `lib/prizeImages.ts`). Keep it that way when adding copy. One vertical 43″ portrait 4K TV (2160×3840; layouts must also hold at 1080×1920), many players, identified only by phone number. Player flow: idle → phone → instructions → difficulty → memory game → win → wheel of fortune → prize reveal → auto-reset (15 s). All Vietnamese UI copy.
 
 `README.md` has the full setup, kiosk-launch, and manual test plan; `gas/README.md` documents the backend sheet schema and endpoints. Read those before changing setup/deploy steps or the sheet contract. This file covers the architecture those docs don't.
 

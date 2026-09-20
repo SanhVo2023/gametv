@@ -1,8 +1,9 @@
-# Mắt Việt — Anniversary Event Kiosk
+# Mắt Việt — Mini Game Kiosk
 
-A vertical 43″ touchscreen kiosk app for the *Mắt Việt Anniversary Event*
-(Vincom Đồng Khởi, 17/07/2026). Originally built for the Vision Care + Elite Day
-event and re-themed.
+A vertical 43″ touchscreen kiosk app for Mắt Việt in-store events. It is
+event-agnostic: the title/tagline come from env vars (`lib/branding.ts`) and
+the gift list lives in the Google Sheet, so the same build is reused from
+event to event.
 
 Flow: idle → enter phone → memory game → win → wheel of fortune → prize reveal → auto-reset.
 
@@ -43,6 +44,24 @@ npm start
 5. Paste the URL into `.env.local`:
    `NEXT_PUBLIC_GAS_URL=https://script.google.com/macros/s/.../exec`
 6. Edit `Prizes` / `Config` in the sheet to taste. Prize stock/weights are read live (30 s frontend cache).
+
+### Per-event branding
+
+```
+NEXT_PUBLIC_EVENT_TITLE="Mini Game Mắt Việt"                 # landing headline, phone screen, tab title
+NEXT_PUBLIC_EVENT_TAGLINE="Chơi mini game — nhận quà liền tay" # line under the headline + standby screen
+```
+
+Both are optional (defaults shown). They are read at build time, so rebuild
+after changing them. Nothing else in the UI names an event, date or venue.
+
+### Changing the gifts
+
+Edit the `Prizes` tab of the sheet — see [`gas/README.md`](gas/README.md)
+("Changing gifts WITHOUT touching the script"). For a gift to show its photo,
+its `id` must be a key in `lib/prizeImages.ts` with a transparent PNG in
+`public/present/`. `node scripts/validate-prizes.mjs` checks the seed list,
+photo map and landing marquee agree.
 
 See [`gas/README.md`](gas/README.md) for the full endpoint reference.
 
@@ -87,7 +106,7 @@ button once after page load — the touch unlocks the WebAudio context.
 components/
   KioskApp.tsx                State machine: idle → phone → instructions → difficulty → game → win → wheel → reveal.
   screens/
-    LandingScreen.tsx         Idle: anniversary poster look, CTA, AI QR.
+    LandingScreen.tsx         Idle: poster look, CTA, AI QR (title/tagline from lib/branding.ts).
     PhonePad.tsx              Touch numpad.
     InstructionsScreen.tsx    Looping how-to demos.
     DifficultyScreen.tsx      Easy / hard selection.
@@ -107,12 +126,13 @@ lib/
   audio.ts                    Web Audio SFX + ambient pad.
   types.ts                    Shared types.
   phone.ts                    Vietnam mobile validation.
+  branding.ts                 Event title/tagline from NEXT_PUBLIC_EVENT_* env vars.
+  prizeImages.ts              Prize id → /present photo map.
 gas/
   Code.gs                     The Google Apps Script web app.
   README.md                   Setup + endpoint docs.
 public/asset/
-  kv-hero.jpg                 Anniversary KV (family + lens arch) → landing photo card.
-  kv-poster.jpg               Event poster (reference / crops).
+  kv-hero.jpg                 Brand KV (family + lens arch) → landing photo card.
   Artboard 9.png              Eye-heart icon → card backs, wheel hub, watermark.
 public/present/               Prize product photos (ids match the GAS Prizes tab).
 ```
@@ -125,8 +145,8 @@ public/present/               Prize product photos (ids match the GAS Prizes tab
 
 | step | expect |
 |---|---|
-| `POST {action:'setup'}` | `ok:true`, 3 sheets created, 8 prizes seeded |
-| `POST {action:'getPrizes'}` | 8 prizes returned, all `stock>0` |
+| `POST {action:'setup'}` | `ok:true`, 3 sheets created, 6 prizes seeded |
+| `POST {action:'getPrizes'}` | 6 prizes returned, all `stock>0` |
 | `POST {action:'checkPhone', phone:'0777863808'}` | `{allowed:true, isTester:true}` |
 | `POST {action:'checkPhone', phone:'0900000001'}` | `{allowed:true, isTester:false}` |
 | `POST {action:'spinWheel', phone:'0777863808'}` ×3 | valid `wedgeIndex` each; **stock unchanged** in sheet |

@@ -1,5 +1,5 @@
 /**
- * Mắt Việt — Anniversary Event kiosk backend.
+ * Mắt Việt — mini-game kiosk backend (event-agnostic).
  *
  * Single Apps Script Web App. Deploy as:
  *   Execute as:        Me
@@ -26,8 +26,8 @@ var PLAYS_HEADERS  = ['timestamp', 'phone', 'prize_id', 'prize_name', 'prize_cod
 
 var DEFAULT_CONFIG = [
   ['tester_phone', '0777863808'],
-  ['event_name', 'Mắt Việt Anniversary Event'],
-  ['event_location', 'Vincom Đồng Khởi'],
+  // Informational only — the kiosk UI takes its title from NEXT_PUBLIC_EVENT_TITLE.
+  ['event_name', 'Mini Game Mắt Việt'],
   ['auto_reset_seconds', 15],
   // Shared secret for the lucky-draw admin page (/spin-admin?key=...).
   // NOTE: setup() does not touch an existing Config sheet — add this row
@@ -42,23 +42,20 @@ var FORCE_PROP = 'draw_force';          // script property holding {number, at}
 var FORCE_TTL_MS = 10 * 60 * 1000;      // stale forces (e.g. from rehearsal) expire
 var DRAW_MAX_NUMBER = 50;
 
-// Anniversary event stock: physical presents start at 10 units and use their
-// stock as draw weight; vouchers use a FIXED draw weight of 20 with real
-// stock (30× 100k, 20× 200k).
-// `id` doubles as the operator's mã hàng so SKU tracking lines up with their inventory list.
+// Default gift list seeded into the Prizes tab by setup()/resetPrizes().
+// `id` is the operator's mã hàng so SKU tracking lines up with the inventory
+// list, and it must match the photo keys in the frontend's lib/prizeImages.ts.
 //
-// Each ROW is one WEDGE on the wheel, in this order — 6 presents + the two
-// voucher wedges. The second 100k/200k voucher slots were replaced by
-// BONUOCRUAKINH and HOPKINH.
+// Each ROW is one WEDGE on the wheel, in sheet order. Stock and weight are
+// placeholders (10/10 = equal odds) — set the real quantities in the sheet
+// before the event; the sheet is the source of truth, not this list.
 var DEFAULT_PRIZES = [
-  ['HK-BD117',      'Hộp kính thời trang',     10, 10, 'HK1',  '', 'Hộp đựng kính thời trang Mắt Việt (HK-BD117)', '#1138c4'],
-  ['VOUCHER100K',   'Voucher 100.000đ',        30, 20, 'V100', '', 'Voucher 100.000đ áp dụng tại Mắt Việt',        '#2156e8'],
-  ['VIBOLON',       'Ví Bolon',                10, 10, 'VB',   '', 'Ví thương hiệu Bolon',                         '#0a2070'],
-  ['VOUCHER200K',   'Voucher 200.000đ',        20, 20, 'V200', '', 'Voucher 200.000đ áp dụng tại Mắt Việt',        '#1d4ed8'],
-  ['BUTBOLON',      'Bút Bolon',               10, 10, 'PB',   '', 'Bút thương hiệu Bolon',                        '#001a5c'],
-  ['BONUOCRUAKINH', 'Bộ nước rửa kính',        10, 10, 'NRK',  '', 'Bộ nước rửa kính và khăn lau Mắt Việt',        '#2156e8'],
-  ['NONMOLSION',    'Nón thời trang Molsion',  10, 10, 'NM',   '', 'Nón thời trang thương hiệu Molsion',           '#0d2680'],
-  ['HOPKINH',       'Hộp kính',                10, 10, 'HK2',  '', 'Hộp kính Mắt Việt',                            '#1d4ed8']
+  ['NONMOLSION',  'Nón kết Molsion',     10, 10, 'NM',  '', 'Nón kết thời trang thương hiệu Molsion',            '#1138c4'],
+  ['PENBL00001',  'Bút bi Bolon',        10, 10, 'PB',  '', 'Bút bi thương hiệu Bolon',                          '#2156e8'],
+  ['VICARDBOLON', 'Ví đựng card Bolon',  10, 10, 'VC',  '', 'Ví đựng card thương hiệu Bolon',                    '#0a2070'],
+  ['HK-2204-1',   'Hộp kính lông vũ',    10, 10, 'HK1', '', 'Hộp đựng kính Mắt Việt loại lông vũ (mã 2204-1)',   '#1d4ed8'],
+  ['HK-BD117',    'Hộp kính Mắt Việt',   10, 10, 'HK2', '', 'Hộp đựng kính Mắt Việt (mã BD117)',                 '#001a5c'],
+  ['BONUOCRUA3C', 'Bộ nước rửa kính',    10, 10, 'NRK', '', 'Bộ nước rửa kính 3 màu Mắt Việt (mã BONUOCRUA3C)',  '#0d2680']
 ];
 
 // ============================================================
@@ -393,7 +390,7 @@ function doDrawForceSet(number, key) {
   return { ok: true, number: n };
 }
 
-/** TV polls this. Expired forces are deleted so a rehearsal can't hijack the event. */
+/** TV polls this. Expired forces are deleted so a rehearsal can't hijack the live draw. */
 function doDrawForceGet() {
   var props = PropertiesService.getScriptProperties();
   var raw = props.getProperty(FORCE_PROP);
